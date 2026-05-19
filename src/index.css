@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-blue: #19658c;
+  --color-brand-orange: #ea6324;
+  --color-brand-yellow: #f2a71e;
+  --color-brand-bg: #0A0A0A;
+  --color-brand-gray: #1E1E1E;
+  
+  /* Overwrite the default zincs to match the design */
+  --color-zinc-950: #0A0A0A;
+  --color-zinc-900: #1E1E1E;
+  --color-zinc-800: rgba(255,255,255,0.1);
+  
+  --font-sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-display: "Arial Black", "Helvetica Neue", sans-serif;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    @apply bg-brand-bg text-white font-sans antialiased selection:bg-brand-orange selection:text-brand-bg border-[12px] border-brand-orange min-h-screen overflow-x-hidden;
+    background-image: none;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display uppercase tracking-normal;
+  }
+}
+
+.text-stroke {
+  -webkit-text-stroke: 2px rgba(255, 255, 255, 0.2);
+  color: transparent;
+}
+.text-stroke-active {
+  -webkit-text-stroke: 2px var(--color-brand-orange, #ea6324);
+  color: transparent;
+}
