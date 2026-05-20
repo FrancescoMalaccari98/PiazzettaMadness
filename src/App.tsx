@@ -22,6 +22,8 @@ const Scoreboard = lazy(() => import("./pages/Scoreboard").then(m => ({ default:
 const Projection = lazy(() => import("./pages/Projection").then(m => ({ default: m.Projection })));
 const Privacy = lazy(() => import("./pages/Privacy").then(m => ({ default: m.Privacy })));
 const Sponsors = lazy(() => import("./pages/Sponsors").then(m => ({ default: m.Sponsors })));
+const PlayerDetail = lazy(() => import("./pages/PlayerDetail").then(m => ({ default: m.PlayerDetail })));
+const Players = lazy(() => import("./pages/Players").then(m => ({ default: m.Players })));
 
 export function App() {
   const location = useLocation();
@@ -46,6 +48,8 @@ export function App() {
             <Route path="/projection" element={<Projection />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/sponsor" element={<Sponsors />} />
+            <Route path="/statistiche/:slug" element={<PlayerDetail />} />
+            <Route path="/giocatori" element={<Players />} />
           </Routes>
         </Suspense>
       </main>
