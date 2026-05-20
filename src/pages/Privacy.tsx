@@ -57,9 +57,9 @@ export function Privacy() {
               Il Titolare del Trattamento dei dati personali è:
             </p>
             <div className="bg-zinc-950 border border-zinc-700 p-4 font-mono text-sm space-y-1">
-              <p><strong className="text-white">Associazione Sant'Anna</strong></p>
-              <p>Sede legale: <span className="text-brand-orange">[INDIRIZZO DA COMPLETARE]</span></p>
-              <p>C.F. / P.IVA: <span className="text-brand-orange">[CODICE FISCALE DA COMPLETARE]</span></p>
+              <p><strong className="text-white">Francesco Emiliani</strong></p>
+              <p>Residenza: <span className="text-brand-orange">[INDIRIZZO DA COMPLETARE]</span></p>
+              <p>C.F.: <span className="text-brand-orange">[CODICE FISCALE DA COMPLETARE]</span></p>
               <p>Email: <a href="mailto:info@piazzettamadness.it" className="text-brand-orange hover:underline">info@piazzettamadness.it</a></p>
             </div>
             <p className="text-zinc-400 text-sm">
@@ -100,6 +100,21 @@ export function Privacy() {
                 </p>
                 <p className="mt-2 text-sm text-zinc-500">
                   <strong>Base giuridica:</strong> legittimo interesse del Titolare (art. 6, par. 1, lett. f GDPR).
+                </p>
+              </div>
+
+              <div className="border-l-4 border-brand-blue pl-4">
+                <h4 className="font-display text-white uppercase text-lg mb-2">Statistiche di accesso (Google Analytics)</h4>
+                <p>
+                  Solo previo tuo consenso, utilizziamo Google Analytics 4 per raccogliere dati
+                  statistici anonimi sugli accessi al sito (numero di visitatori, pagine più visitate,
+                  picchi di traffico, provenienza geografica aggregata, tipo di dispositivo).
+                  L'IP viene anonimizzato prima di qualsiasi elaborazione.
+                </p>
+                <p className="mt-2 text-sm text-zinc-500">
+                  <strong>Base giuridica:</strong> consenso dell'interessato (art. 6, par. 1, lett. a GDPR).
+                  Puoi revocare il consenso in qualsiasi momento cancellando i dati del browser o
+                  contattandoci via email.
                 </p>
               </div>
 
@@ -154,11 +169,18 @@ export function Privacy() {
                 (hosting, server), designati come Responsabili del Trattamento ai sensi dell'art. 28 GDPR.
               </li>
               <li>
+                <strong className="text-white">Google LLC</strong> — esclusivamente se hai prestato consenso
+                all'uso di Google Analytics. Google agisce come Responsabile del Trattamento ai sensi
+                dell'art. 28 GDPR. I dati statistici aggregati possono essere elaborati su server situati
+                negli USA, nel rispetto delle garanzie previste dagli artt. 45-46 GDPR (Standard Contractual Clauses).
+              </li>
+              <li>
                 Autorità competenti, esclusivamente nei casi previsti dalla legge.
               </li>
             </ul>
             <p>
-              I dati non vengono trasferiti al di fuori dell'Unione Europea.
+              Ad eccezione di Google Analytics (solo con consenso), i dati non vengono trasferiti
+              al di fuori dell'Unione Europea.
             </p>
           </Section>
 
@@ -199,11 +221,12 @@ export function Privacy() {
 
           <Section icon={Cookie} title="6. Cookie e tecnologie simili">
             <p>
-              Questo sito utilizza esclusivamente <strong className="text-white">cookie tecnici necessari</strong>,
-              indispensabili al corretto funzionamento del sito. Non utilizziamo cookie di profilazione
-              o di tracciamento di terze parti.
+              Questo sito utilizza <strong className="text-white">cookie tecnici necessari</strong> e,
+              solo previo consenso, <strong className="text-white">cookie analitici</strong> di Google Analytics.
+              Non utilizziamo cookie di profilazione o di marketing.
             </p>
 
+            <h4 className="font-display text-white uppercase text-sm tracking-widest mt-2">Cookie tecnici (sempre attivi)</h4>
             <div className="overflow-hidden border border-zinc-700">
               <table className="w-full text-sm text-left">
                 <thead className="bg-zinc-800">
@@ -219,25 +242,53 @@ export function Privacy() {
                     <td className="p-3 font-mono text-brand-orange">pm_cookie_consent</td>
                     <td className="p-3 text-zinc-400">localStorage</td>
                     <td className="p-3 text-zinc-400">Memorizza la scelta dell'utente sul banner cookie</td>
-                    <td className="p-3 text-zinc-400">Persistente (fino a cancellazione manuale)</td>
+                    <td className="p-3 text-zinc-400">Persistente</td>
                   </tr>
                   <tr className="bg-zinc-950/50">
                     <td className="p-3 font-mono text-brand-orange">madness_scoreboard</td>
                     <td className="p-3 text-zinc-400">localStorage</td>
                     <td className="p-3 text-zinc-400">Sincronizzazione tabellone live tra finestre (solo staff)</td>
-                    <td className="p-3 text-zinc-400">Sessione (rimosso alla fine del match)</td>
+                    <td className="p-3 text-zinc-400">Sessione</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h4 className="font-display text-white uppercase text-sm tracking-widest mt-4">Cookie analitici (solo con consenso)</h4>
+            <div className="overflow-hidden border border-zinc-700">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-zinc-800">
+                  <tr>
+                    <th className="p-3 font-display uppercase text-zinc-300 text-xs tracking-widest">Nome</th>
+                    <th className="p-3 font-display uppercase text-zinc-300 text-xs tracking-widest">Terza parte</th>
+                    <th className="p-3 font-display uppercase text-zinc-300 text-xs tracking-widest">Finalità</th>
+                    <th className="p-3 font-display uppercase text-zinc-300 text-xs tracking-widest">Durata</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-800">
+                  <tr className="bg-zinc-950">
+                    <td className="p-3 font-mono text-brand-blue">_ga</td>
+                    <td className="p-3 text-zinc-400">Google Analytics</td>
+                    <td className="p-3 text-zinc-400">Distingue gli utenti unici (ID anonimo)</td>
+                    <td className="p-3 text-zinc-400">2 anni</td>
+                  </tr>
+                  <tr className="bg-zinc-950/50">
+                    <td className="p-3 font-mono text-brand-blue">_ga_*</td>
+                    <td className="p-3 text-zinc-400">Google Analytics</td>
+                    <td className="p-3 text-zinc-400">Mantiene lo stato della sessione</td>
+                    <td className="p-3 text-zinc-400">2 anni</td>
                   </tr>
                 </tbody>
               </table>
             </div>
 
             <p>
-              I cookie tecnici non richiedono consenso ai sensi del Provvedimento del Garante
-              dell'8 maggio 2014 e delle successive Linee Guida del 10 giugno 2021.
+              I cookie tecnici non richiedono consenso ai sensi delle Linee Guida del Garante del 10 giugno 2021.
+              I cookie analitici di Google Analytics vengono attivati solo dopo il tuo consenso esplicito.
             </p>
             <p className="text-zinc-400 text-sm">
-              Puoi eliminare i dati memorizzati in qualsiasi momento dalle impostazioni del tuo browser
-              (Strumenti → Impostazioni → Privacy → Cancella dati di navigazione).
+              Puoi revocare il consenso in qualsiasi momento cancellando i dati del browser:
+              Impostazioni → Privacy → Cancella dati di navigazione.
             </p>
           </Section>
 

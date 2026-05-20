@@ -92,6 +92,7 @@ export function Footer() {
                 { label: "Match & Bracket", to: "/match" },
                 { label: "Statistiche", to: "/statistiche" },
                 { label: "Staff", to: "/staff" },
+                { label: "Player", to: "/giocatori" },
                 { label: "Sponsor", to: "/sponsor" },
               ].map(({ label, to }) => (
                 <li key={to}>
@@ -116,8 +117,7 @@ export function Footer() {
             </h4>
             <ul className="space-y-3">
               {[
-                { label: "Privacy Policy", to: "/privacy" },
-                { label: "Cookie Policy", to: "/privacy" },
+                { label: "Privacy & Cookie Policy", to: "/privacy" },
               ].map(({ label, to }) => (
                 <li key={label}>
                   <Link
@@ -141,7 +141,7 @@ export function Footer() {
       <div className="relative z-10 border-t-2 border-brand-bg/20 py-5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-2">
           <p className="font-sans font-semibold text-brand-bg/50 text-xs uppercase tracking-widest">
-            © {new Date().getFullYear()} Piazzetta Madness — Associazione Sant'Anna — Roma
+            © {new Date().getFullYear()} Piazzetta Madness — Porto Potenza Picena
           </p>
           <p className="font-sans font-semibold text-brand-bg/35 text-xs uppercase tracking-widest">
             Estate 2026

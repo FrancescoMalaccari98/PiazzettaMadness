@@ -10,6 +10,7 @@ const navLinks: { name: string; path: string; live?: boolean }[] = [
   { name: "Match", path: "/match" },
   { name: "Stat.", path: "/statistiche" },
   { name: "Staff", path: "/staff" },
+  { name: "Player", path: "/giocatori" },
   { name: "Sponsor", path: "/sponsor" },
   { name: "Live", path: "/scoreboard", live: true },
 ];

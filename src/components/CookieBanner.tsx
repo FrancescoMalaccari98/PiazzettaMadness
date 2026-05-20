@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { initGA } from "../lib/analytics";
 
-// Chiave usata per memorizzare la scelta dell'utente nel localStorage.
-// Non è un cookie ma una storage entry — ugualmente soggetta a GDPR/ePrivacy in Italia.
 const CONSENT_KEY = "pm_cookie_consent";
 
 export type ConsentStatus = "accepted" | "necessary_only" | null;
@@ -15,14 +14,18 @@ export function CookieBanner() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    // Mostra il banner solo se l'utente non ha ancora espresso una preferenza
-    if (!localStorage.getItem(CONSENT_KEY)) {
+    const consent = localStorage.getItem(CONSENT_KEY);
+    if (!consent) {
       setVisible(true);
+    } else if (consent === "accepted") {
+      // Utente di ritorno che aveva già accettato: init GA subito
+      initGA();
     }
   }, []);
 
   const handleAccept = () => {
     localStorage.setItem(CONSENT_KEY, "accepted");
+    initGA();
     setVisible(false);
   };
 
@@ -47,9 +50,9 @@ export function CookieBanner() {
             Informativa Cookie
           </p>
           <p className="font-sans text-sm text-zinc-300 leading-relaxed">
-            Questo sito utilizza esclusivamente cookie tecnici necessari al funzionamento.
-            I tuoi dati personali sono trattati dall'<strong className="text-white">Associazione Sant'Anna</strong> nel
-            rispetto del GDPR (Reg. UE 2016/679) e del Codice Privacy italiano.{" "}
+            Questo sito usa cookie tecnici necessari e, con il tuo consenso, cookie analitici
+            (Google Analytics) per misurare gli accessi. I tuoi dati sono trattati da{" "}
+            <strong className="text-white">Francesco Emiliani</strong> nel rispetto del GDPR (Reg. UE 2016/679).{" "}
             <Link
               to="/privacy"
               className="text-brand-orange underline underline-offset-2 hover:text-white transition-colors"
