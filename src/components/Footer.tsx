@@ -116,21 +116,17 @@ export function Footer() {
               Legale
             </h4>
             <ul className="space-y-3">
-              {[
-                { label: "Privacy & Cookie Policy", to: "/privacy" },
-              ].map(({ label, to }) => (
-                <li key={label}>
-                  <Link
-                    to={to}
-                    className="group inline-flex items-center gap-2 font-sans font-bold text-brand-bg/75 text-sm hover:text-brand-bg transition-colors"
-                  >
-                    <span className="opacity-0 group-hover:opacity-100 transition-opacity -translate-x-1 group-hover:translate-x-0 duration-200">
-                      <ArrowIcon />
-                    </span>
-                    {label}
-                  </Link>
-                </li>
-              ))}
+              <li>
+                <Link
+                  to="/privacy"
+                  className="group inline-flex items-center gap-2 font-sans font-bold text-brand-bg/75 text-sm hover:text-brand-bg transition-colors"
+                >
+                  <span className="opacity-0 group-hover:opacity-100 transition-opacity -translate-x-1 group-hover:translate-x-0 duration-200">
+                    <ArrowIcon />
+                  </span>
+                  Privacy & Cookie Policy
+                </Link>
+              </li>
             </ul>
           </div>
 
