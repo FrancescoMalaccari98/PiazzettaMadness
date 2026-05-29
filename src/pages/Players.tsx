@@ -30,8 +30,8 @@ export function Players() {
           className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 text-center"
         >
           <p className="font-display text-brand-orange uppercase tracking-[0.3em] text-sm mb-3">Piazzetta Madness 2026</p>
-          <h1 className="font-display text-6xl md:text-[100px] uppercase leading-[0.85] tracking-[-3px] text-white mb-4">
-            <span className="text-brand-orange">Players</span>
+          <h1 className="font-display text-[80px] md:text-[120px] uppercase leading-[0.8] tracking-[-4px] text-brand-orange mb-8">
+            Players
           </h1>
           <p className="font-sans text-zinc-400 text-lg max-w-xl mx-auto">
             {allPlayers.length} atleti, 8 squadre. Clicca su un giocatore per vedere le sue statistiche.

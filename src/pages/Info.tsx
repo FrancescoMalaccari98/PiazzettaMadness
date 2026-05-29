@@ -8,10 +8,10 @@ export function Info() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <h1 className="font-display text-[80px] md:text-[120px] text-brand-orange uppercase leading-[0.8] mb-8 tracking-[-4px]">
+        <h1 className="font-display text-[80px] md:text-[120px] text-brand-orange uppercase leading-[0.8] mb-8 tracking-[-4px] text-center">
           Info & Rules
         </h1>
-        <p className="text-xl font-sans text-zinc-400 mb-12">
+        <p className="text-xl font-sans text-zinc-400 mb-12 text-center">
           Le regole della strada. Leggi attentamente o non scendere in campo.
         </p>
 

@@ -246,7 +246,7 @@ export function Matches() {
 
         {/* Header */}
         <div className="text-center mb-16">
-          <h1 className="font-display text-[80px] md:text-[120px] text-brand-orange uppercase leading-[0.8] mb-6 tracking-[-4px]">
+          <h1 className="font-display text-[80px] md:text-[120px] text-brand-orange uppercase leading-[0.8] mb-8 tracking-[-4px]">
             Match
           </h1>
           <p className="text-xl font-sans text-zinc-400 max-w-2xl mx-auto">

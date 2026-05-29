@@ -21,7 +21,7 @@ export function Privacy() {
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
 
         <div className="mb-12">
-          <h1 className="font-display text-[60px] md:text-[90px] text-brand-orange uppercase leading-[0.8] mb-6 tracking-[-3px]">
+          <h1 className="font-display text-[80px] md:text-[120px] text-brand-orange uppercase leading-[0.8] mb-8 tracking-[-4px]">
             Privacy &amp;<br/>Cookie Policy
           </h1>
           <p className="font-sans text-zinc-400 text-lg">

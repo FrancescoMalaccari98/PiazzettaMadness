@@ -88,7 +88,7 @@ export function PlayerDetail() {
             {/* Info */}
             <div>
               <p className="font-display text-brand-orange uppercase tracking-[0.3em] text-sm mb-3">{player.team}</p>
-              <h1 className="font-display text-5xl md:text-8xl uppercase leading-[0.85] tracking-[-3px] text-white mb-4">
+              <h1 className="font-display text-[80px] md:text-[120px] uppercase leading-[0.8] tracking-[-4px] text-white mb-8">
                 {player.name}
               </h1>
               <div className="flex items-center gap-4 flex-wrap">

@@ -6,7 +6,7 @@ export function Home() {
   return (
     <div className="w-full">
       {/* Hero Section */}
-      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden pt-20">
+      <section className="relative min-h-[70vh] md:min-h-[90vh] flex items-center justify-center overflow-hidden pt-20">
         <div className="absolute inset-0 z-0">
           {/* &w=1920: Unsplash ritaglia a 1920px invece di mandare l'originale 5650px (da ~2.5MB a ~200KB).
               fetchPriority="high": segnala al browser che questa è l'immagine più importante (LCP).
@@ -23,8 +23,18 @@ export function Home() {
           <div className="absolute inset-0 bg-brand-blue/10 mix-blend-overlay"></div>
         </div>
 
-        <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-start text-left mt-20">
-          <motion.p 
+        {/* Mascotte desktop — grande in basso a destra */}
+        <div className="absolute right-0 bottom-0 w-[400px] lg:w-[520px] z-10 pointer-events-none select-none hidden md:block">
+          <img
+            src="/assets/beer.png"
+            alt=""
+            className="w-full h-auto object-contain drop-shadow-[0_0_40px_rgba(234,99,36,0.25)]"
+            style={{ animation: 'mascotFloat 4s ease-in-out infinite' }}
+          />
+        </div>
+
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-start text-left mt-6 md:mt-20 pb-8 md:pb-0">
+          <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4, duration: 0.6 }}
@@ -48,27 +58,39 @@ export function Home() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.6, duration: 0.4 }}
-            className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto mt-6"
+            className="flex items-end gap-4 w-full mt-2"
           >
-            {/* Bottone iscrizioni nascosto — le iscrizioni sono gestite manualmente per ora */}
-            <Link
-              to="/info"
-              className="bg-brand-orange text-brand-bg px-5 py-5 font-black uppercase text-xl -rotate-2 w-fit hover:-rotate-1 transition-transform border-[3px] border-transparent hover:border-white shadow-[8px_8px_0_var(--color-brand-blue)] hover:shadow-[4px_4px_0_var(--color-brand-blue)]"
-            >
-              Scopri il Torneo
-            </Link>
-            <Link
-              to="/match"
-              className="px-8 py-4 border-[3px] border-white text-white font-display text-xl uppercase tracking-wider hover:bg-white hover:text-black transition-colors w-fit mt-4 sm:mt-0 shadow-[8px_8px_0_var(--color-brand-orange)] hover:shadow-[4px_4px_0_var(--color-brand-orange)] transform hover:translate-x-1 hover:translate-y-1"
-            >
-              Vedi i Match
-            </Link>
+            {/* Bottoni */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Link
+                to="/info"
+                className="bg-brand-orange text-brand-bg px-5 py-5 font-black uppercase text-xl -rotate-2 w-fit hover:-rotate-1 transition-transform border-[3px] border-transparent hover:border-white shadow-[8px_8px_0_var(--color-brand-blue)] hover:shadow-[4px_4px_0_var(--color-brand-blue)]"
+              >
+                Scopri il Torneo
+              </Link>
+              <Link
+                to="/match"
+                className="px-8 py-4 border-[3px] border-white text-white font-display text-xl uppercase tracking-wider hover:bg-white hover:text-black transition-colors w-fit shadow-[8px_8px_0_var(--color-brand-orange)] hover:shadow-[4px_4px_0_var(--color-brand-orange)] transform hover:translate-x-1 hover:translate-y-1"
+              >
+                Vedi i Match
+              </Link>
+            </div>
+
+            {/* Mascotte mobile — affiancata ai bottoni */}
+            <div className="md:hidden flex-shrink-0 w-[110px] pointer-events-none select-none">
+              <img
+                src="/assets/beer.png"
+                alt=""
+                className="w-full h-auto object-contain"
+                style={{ animation: 'mascotFloat 4s ease-in-out infinite' }}
+              />
+            </div>
           </motion.div>
         </div>
       </section>
 
       {/* Marquee Ticker */}
-      <div className="overflow-hidden whitespace-nowrap border-y-[4px] border-brand-blue bg-brand-orange py-3 md:py-4 -rotate-2 scale-105 relative z-20 -mt-8 shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
+      <div className="overflow-hidden whitespace-nowrap border-y-[4px] border-brand-blue bg-brand-orange py-3 md:py-4 -rotate-2 scale-105 relative z-20 md:-mt-8 shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
         <motion.div 
           animate={{ x: ["0%", "-50%"] }} 
           transition={{ repeat: Infinity, ease: "linear", duration: 20 }}

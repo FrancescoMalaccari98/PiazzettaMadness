@@ -41,3 +41,24 @@
   -webkit-text-stroke: 2px var(--color-brand-orange, #ea6324);
   color: transparent;
 }
+
+@keyframes logoPulse {
+  0%   { transform: rotate(0deg)   scale(1);    filter: drop-shadow(0 0 4px  rgba(234,99,36,0.5)); }
+  25%  { transform: rotate(90deg)  scale(1.08); filter: drop-shadow(0 0 14px rgba(234,99,36,0.9)); }
+  50%  { transform: rotate(180deg) scale(1.12); filter: drop-shadow(0 0 20px rgba(234,99,36,1));   }
+  75%  { transform: rotate(270deg) scale(1.08); filter: drop-shadow(0 0 14px rgba(234,99,36,0.9)); }
+  100% { transform: rotate(360deg) scale(1);    filter: drop-shadow(0 0 4px  rgba(234,99,36,0.5)); }
+}
+
+@keyframes logoSpin {
+  0%   { transform: rotate(0deg)   scale(1); }
+  25%  { transform: rotate(90deg)  scale(1.08); }
+  50%  { transform: rotate(180deg) scale(1.12); }
+  75%  { transform: rotate(270deg) scale(1.08); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+@keyframes mascotFloat {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50%       { transform: translateY(-14px) rotate(1deg); }
+}

@@ -89,12 +89,13 @@ export function Navigation() {
             onClick={() => setIsOpen(false)}
           >
             <img
-              src="/logo.png"
+              src="/assets/logo.png"
               alt="Piazzetta Madness Logo"
               className={cn(
                 "w-auto transition-all duration-300",
-                scrolled ? "h-7" : "h-10"
+                scrolled ? "h-9" : "h-14"
               )}
+              style={{ animation: 'logoPulse 8s linear infinite' }}
             />
             <div className={cn(
               "font-display uppercase leading-[0.85] border-l-[3px] border-brand-orange pl-3 text-white transition-all duration-300",
