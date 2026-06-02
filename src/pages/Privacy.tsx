@@ -60,7 +60,7 @@ export function Privacy() {
               <p><strong className="text-white">Francesco Emiliani</strong></p>
               <p>Residenza: <span className="text-brand-orange">[INDIRIZZO DA COMPLETARE]</span></p>
               <p>C.F.: <span className="text-brand-orange">[CODICE FISCALE DA COMPLETARE]</span></p>
-              <p>Email: <a href="mailto:info@piazzettamadness.it" className="text-brand-orange hover:underline">info@piazzettamadness.it</a></p>
+              <p>Email: <a href="mailto:f.emiliani@piazzettamadness.it" className="text-brand-orange hover:underline">f.emiliani@piazzettamadness.it</a></p>
             </div>
             <p className="text-zinc-400 text-sm">
               Per esercitare i tuoi diritti o per qualsiasi domanda relativa al trattamento dei tuoi
@@ -86,8 +86,30 @@ export function Privacy() {
                   <li>Elenco opzionale dei giocatori (nomi e cognomi)</li>
                 </ul>
                 <p className="mt-2 text-sm text-zinc-500">
-                  <strong>Base giuridica:</strong> consenso dell'interessato (art. 6, par. 1, lett. a GDPR)
-                  e adempimento di obblighi precontrattuali (lett. b).
+                  <strong>Base giuridica:</strong> esecuzione del contratto/accordo di partecipazione (art. 6, par. 1, lett. b GDPR),
+                  adempimento di obblighi organizzativi e di sicurezza (lett. c) e consenso dell'interessato per la pubblicazione di immagini (lett. a).
+                </p>
+              </div>
+
+              <div className="border-l-4 border-brand-orange pl-4">
+                <h4 className="font-display text-white uppercase text-lg mb-2">Moduli cartacei individuali</h4>
+                <p>
+                  Per ogni partecipante al torneo vengono raccolti, tramite moduli cartacei firmati, i seguenti dati:
+                </p>
+                <ul className="list-disc pl-5 space-y-1 mt-2 text-zinc-400">
+                  <li>Nome e cognome</li>
+                  <li>Data di nascita</li>
+                  <li>Codice fiscale (esclusivamente per finalità organizzative e assicurative)</li>
+                  <li>Squadra di appartenenza</li>
+                </ul>
+                <p className="mt-2 text-zinc-400">
+                  Per i partecipanti minorenni, i medesimi dati sono raccolti tramite liberatoria firmata dal genitore o tutore legale,
+                  unitamente ai dati identificativi del genitore/tutore e copia del documento d'identità.
+                </p>
+                <p className="mt-2 text-sm text-zinc-500">
+                  <strong>Base giuridica:</strong> esecuzione del contratto/accordo di partecipazione (art. 6, par. 1, lett. b GDPR)
+                  e adempimento di obblighi organizzativi e di sicurezza (lett. c).
+                  Data di nascita, codice fiscale e documenti personali non saranno pubblicati online.
                 </p>
               </div>
 
@@ -207,8 +229,8 @@ export function Privacy() {
             </div>
             <p>
               Per esercitare i tuoi diritti scrivi a:{" "}
-              <a href="mailto:info@piazzettamadness.it" className="text-brand-orange hover:underline">
-                info@piazzettamadness.it
+              <a href="mailto:f.emiliani@piazzettamadness.it" className="text-brand-orange hover:underline">
+                f.emiliani@piazzettamadness.it
               </a>.
               Risponderemo entro 30 giorni dalla ricezione della richiesta.
             </p>

@@ -136,6 +136,17 @@ export function Footer() {
                   Privacy & Cookie Policy
                 </Link>
               </li>
+              <li>
+                <button
+                  onClick={() => { localStorage.removeItem("pm_cookie_consent"); window.location.reload(); }}
+                  className="group inline-flex items-center gap-2 font-sans font-bold text-brand-bg/75 text-xs md:text-sm hover:text-brand-bg transition-colors bg-transparent"
+                >
+                  <span className="opacity-0 group-hover:opacity-100 transition-opacity -translate-x-1 group-hover:translate-x-0 duration-200">
+                    <ArrowIcon />
+                  </span>
+                  Gestisci Cookie
+                </button>
+              </li>
             </ul>
           </div>
 
