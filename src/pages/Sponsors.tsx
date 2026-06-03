@@ -1,161 +1,89 @@
-import { ExternalLink } from "lucide-react";
+import { useState, useEffect } from "react";
+import { motion } from "motion/react";
+import { ExternalLink, Instagram } from "lucide-react";
+
+const API = import.meta.env.VITE_API_URL ?? "";
 
 type Sponsor = {
   id: number;
-  name: string;
+  nome: string;
   url: string;
-  logo?: string;
+  logo: string;
+  ig?: string;
 };
 
-type Tier = {
-  key: string;
-  label: string;
-  description: string;
-  borderClass: string;
-  accentClass: string;
-  bgClass: string;
-  sponsors: Sponsor[];
-};
-
-const tiers: Tier[] = [
-  {
-    key: "main",
-    label: "Main Partner",
-    description: "I partner principali che rendono possibile tutto questo.",
-    borderClass: "border-brand-orange",
-    accentClass: "text-brand-orange",
-    bgClass: "bg-brand-orange/10",
-    sponsors: [
-      { id: 1, name: "Sponsor Principale 1", url: "#" },
-      { id: 2, name: "Sponsor Principale 2", url: "#" },
-    ],
-  },
-  {
-    key: "gold",
-    label: "Gold Sponsor",
-    description: "Partner fondamentali del torneo.",
-    borderClass: "border-brand-yellow",
-    accentClass: "text-brand-yellow",
-    bgClass: "bg-brand-yellow/5",
-    sponsors: [
-      { id: 3, name: "Gold Sponsor 1", url: "#" },
-      { id: 4, name: "Gold Sponsor 2", url: "#" },
-      { id: 5, name: "Gold Sponsor 3", url: "#" },
-      { id: 6, name: "Gold Sponsor 4", url: "#" },
-      { id: 7, name: "Gold Sponsor 5", url: "#" },
-    ],
-  },
-  {
-    key: "silver",
-    label: "Silver Sponsor",
-    description: "Il supporto che fa la differenza.",
-    borderClass: "border-brand-blue",
-    accentClass: "text-brand-blue",
-    bgClass: "bg-brand-blue/5",
-    sponsors: [
-      { id: 8,  name: "Silver Sponsor 1",  url: "#" },
-      { id: 9,  name: "Silver Sponsor 2",  url: "#" },
-      { id: 10, name: "Silver Sponsor 3",  url: "#" },
-      { id: 11, name: "Silver Sponsor 4",  url: "#" },
-      { id: 12, name: "Silver Sponsor 5",  url: "#" },
-      { id: 13, name: "Silver Sponsor 6",  url: "#" },
-      { id: 14, name: "Silver Sponsor 7",  url: "#" },
-      { id: 15, name: "Silver Sponsor 8",  url: "#" },
-    ],
-  },
-  {
-    key: "supporter",
-    label: "Supporter",
-    description: "Grazie a chi ci ha dato una mano.",
-    borderClass: "border-zinc-700",
-    accentClass: "text-zinc-400",
-    bgClass: "bg-zinc-900/50",
-    sponsors: [
-      { id: 16, name: "Supporter 1",  url: "#" },
-      { id: 17, name: "Supporter 2",  url: "#" },
-      { id: 18, name: "Supporter 3",  url: "#" },
-      { id: 19, name: "Supporter 4",  url: "#" },
-      { id: 20, name: "Supporter 5",  url: "#" },
-      { id: 21, name: "Supporter 6",  url: "#" },
-      { id: 22, name: "Supporter 7",  url: "#" },
-      { id: 23, name: "Supporter 8",  url: "#" },
-      { id: 24, name: "Supporter 9",  url: "#" },
-      { id: 25, name: "Supporter 10", url: "#" },
-      { id: 26, name: "Supporter 11", url: "#" },
-      { id: 27, name: "Supporter 12", url: "#" },
-      { id: 28, name: "Supporter 13", url: "#" },
-      { id: 29, name: "Supporter 14", url: "#" },
-      { id: 30, name: "Supporter 15", url: "#" },
-    ],
-  },
+const defaultSponsors: Sponsor[] = [
+  { id: 1,  nome: "Sponsor 1",  url: "#", logo: "" },
+  { id: 2,  nome: "Sponsor 2",  url: "#", logo: "" },
+  { id: 3,  nome: "Sponsor 3",  url: "#", logo: "" },
+  { id: 4,  nome: "Sponsor 4",  url: "#", logo: "" },
+  { id: 5,  nome: "Sponsor 5",  url: "#", logo: "" },
+  { id: 6,  nome: "Sponsor 6",  url: "#", logo: "" },
+  { id: 7,  nome: "Sponsor 7",  url: "#", logo: "" },
+  { id: 8,  nome: "Sponsor 8",  url: "#", logo: "" },
+  { id: 9,  nome: "Sponsor 9",  url: "#", logo: "" },
+  { id: 10, nome: "Sponsor 10", url: "#", logo: "" },
 ];
 
-const gridCols: Record<string, string> = {
-  main:      "grid-cols-1 sm:grid-cols-2",
-  gold:      "grid-cols-2 sm:grid-cols-3 lg:grid-cols-5",
-  silver:    "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4",
-  supporter: "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5",
-};
-
-const cardHeight: Record<string, string> = {
-  main:      "h-44 md:h-56",
-  gold:      "h-36 md:h-44",
-  silver:    "h-32 md:h-36",
-  supporter: "h-24 md:h-28",
-};
-
-const logoSize: Record<string, string> = {
-  main:      "text-2xl md:text-3xl",
-  gold:      "text-base md:text-xl",
-  silver:    "text-sm md:text-base",
-  supporter: "text-xs md:text-sm",
-};
-
-function SponsorCard({ sponsor, tier }: { sponsor: Sponsor; tier: Tier }) {
+function SponsorCard({ sponsor }: { sponsor: Sponsor }) {
   return (
-    <a
-      href={sponsor.url}
-      target="_blank"
-      rel="noreferrer"
-      className={`
-        group relative flex flex-col items-center justify-center
-        ${cardHeight[tier.key]} border-[3px] ${tier.borderClass}
-        ${tier.bgClass} hover:bg-zinc-800 transition-all duration-300
-        hover:-translate-y-1 hover:shadow-[6px_6px_0_rgba(0,0,0,0.4)]
-        overflow-hidden p-4
-      `}
-    >
-      {/* Numero decorativo di sfondo */}
-      <span className="absolute top-1 right-2 font-display text-[40px] leading-none text-white/[0.03] pointer-events-none select-none">
-        {String(sponsor.id).padStart(2, "0")}
-      </span>
+    <div className="group relative flex flex-col border-[3px] border-zinc-700 bg-zinc-900 hover:border-brand-orange hover:bg-zinc-800 transition-all duration-300 hover:-translate-y-1 hover:shadow-[6px_6px_0_var(--color-brand-orange)] overflow-hidden">
 
-      {/* Logo o placeholder */}
-      {sponsor.logo ? (
-        <img
-          src={sponsor.logo}
-          alt={sponsor.name}
-          className="max-h-[60%] max-w-[80%] object-contain filter brightness-0 invert opacity-70 group-hover:opacity-100 transition-opacity"
-        />
-      ) : (
-        <div className="flex flex-col items-center gap-2 text-center">
-          {/* Rettangolo placeholder logo */}
-          <div className={`w-16 h-8 ${tier.bgClass} border-2 ${tier.borderClass} opacity-40 group-hover:opacity-70 transition-opacity`} />
-          <span className={`font-display uppercase tracking-wide ${logoSize[tier.key]} text-zinc-400 group-hover:text-white transition-colors leading-tight`}>
-            {sponsor.name}
+      {/* Logo / nome cliccabile */}
+      <a
+        href={sponsor.url}
+        target="_blank"
+        rel="noreferrer"
+        className="flex items-center justify-center h-36 md:h-44 p-6 flex-1"
+      >
+        {sponsor.logo ? (
+          <img
+            src={sponsor.logo}
+            alt={sponsor.nome}
+            className="max-h-[65%] max-w-[75%] object-contain filter brightness-0 invert opacity-60 group-hover:opacity-100 transition-opacity"
+          />
+        ) : (
+          <span className="font-display text-lg uppercase tracking-wide text-zinc-500 group-hover:text-white transition-colors text-center leading-tight">
+            {sponsor.nome}
           </span>
+        )}
+        <ExternalLink className="absolute top-2 right-2 w-3.5 h-3.5 text-brand-orange opacity-0 group-hover:opacity-100 transition-opacity" />
+      </a>
+
+      {/* Footer con nome + instagram se presente */}
+      {(sponsor.nome || sponsor.ig) && (
+        <div className="border-t border-zinc-800 px-4 py-2 flex items-center justify-between gap-2 bg-zinc-950/60">
+          <span className="font-display text-xs uppercase tracking-wide text-zinc-500 group-hover:text-zinc-300 transition-colors truncate">
+            {sponsor.nome}
+          </span>
+          {sponsor.ig && (
+            <a
+              href={`https://instagram.com/${sponsor.ig}`}
+              target="_blank"
+              rel="noreferrer"
+              onClick={e => e.stopPropagation()}
+              className="text-zinc-600 hover:text-brand-orange transition-colors shrink-0"
+              title={`@${sponsor.ig}`}
+            >
+              <Instagram size={14} />
+            </a>
+          )}
         </div>
       )}
-
-      {/* Link icon */}
-      <ExternalLink
-        className={`absolute bottom-2 right-2 w-3.5 h-3.5 ${tier.accentClass} opacity-0 group-hover:opacity-100 transition-opacity`}
-      />
-    </a>
+    </div>
   );
 }
 
 export function Sponsors() {
+  const [sponsors, setSponsors] = useState<Sponsor[]>(defaultSponsors);
+
+  useEffect(() => {
+    fetch(`${API}/api/sponsor`)
+      .then(r => r.ok ? r.json() as Promise<Sponsor[]> : null)
+      .then(data => { if (data) setSponsors(data); })
+      .catch(() => {});
+  }, []);
+
   return (
     <div className="w-full min-h-screen bg-brand-bg pt-28 pb-24">
 
@@ -180,35 +108,24 @@ export function Sponsors() {
         </div>
       </div>
 
-      {/* Tier sections */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-20">
-        {tiers.map((tier) => (
-          <section key={tier.key}>
-
-            {/* Tier header */}
-            <div className="flex items-center gap-6 mb-8">
-              <div className={`h-1 w-10 ${tier.borderClass} bg-current ${tier.accentClass}`} />
-              <div>
-                <h2 className={`font-display text-3xl md:text-4xl uppercase tracking-wide ${tier.accentClass}`}>
-                  {tier.label}
-                </h2>
-                <p className="font-sans text-zinc-500 text-sm mt-1">{tier.description}</p>
-              </div>
-              <div className={`flex-1 h-[2px] ${tier.bgClass} border-t-2 ${tier.borderClass} opacity-30`} />
-            </div>
-
-            {/* Cards grid */}
-            <div className={`grid ${gridCols[tier.key]} gap-4`}>
-              {tier.sponsors.map((sponsor) => (
-                <SponsorCard key={sponsor.id} sponsor={sponsor} tier={tier} />
-              ))}
-            </div>
-
-          </section>
-        ))}
+      {/* Griglia sponsor */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {sponsors.map((sponsor, i) => (
+            <motion.div
+              key={sponsor.id}
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ delay: (i % 5) * 0.07, duration: 0.4, ease: "easeOut" }}
+            >
+              <SponsorCard sponsor={sponsor} />
+            </motion.div>
+          ))}
+        </div>
       </div>
 
-      {/* CTA footer interno */}
+      {/* CTA */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-24">
         <div className="border-[4px] border-brand-orange bg-brand-orange/5 p-10 md:p-14 flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
           <div>

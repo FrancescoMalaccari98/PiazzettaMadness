@@ -13,7 +13,6 @@ import { Home } from "./pages/Home";
 // Tutte le altre pagine sono lazy: vengono scaricate solo quando l'utente ci naviga,
 // riducendo il bundle iniziale di ~2MB (non minificati) / ~200KB in produzione.
 const Info = lazy(() => import("./pages/Info").then(m => ({ default: m.Info })));
-const Registration = lazy(() => import("./pages/Registration").then(m => ({ default: m.Registration })));
 const Photos = lazy(() => import("./pages/Photos").then(m => ({ default: m.Photos })));
 const Stats = lazy(() => import("./pages/Stats").then(m => ({ default: m.Stats })));
 const Matches = lazy(() => import("./pages/Matches").then(m => ({ default: m.Matches })));
@@ -39,7 +38,6 @@ export function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/info" element={<Info />} />
-            <Route path="/iscrizioni" element={<Registration />} />
             <Route path="/foto" element={<Photos />} />
             <Route path="/statistiche" element={<Stats />} />
             <Route path="/match" element={<Matches />} />
@@ -50,6 +48,13 @@ export function App() {
             <Route path="/sponsor" element={<Sponsors />} />
             <Route path="/statistiche/:slug" element={<PlayerDetail />} />
             <Route path="/giocatori" element={<Players />} />
+            <Route path="*" element={
+              <div className="pt-40 pb-20 text-center">
+                <p className="font-display text-[80px] md:text-[120px] text-brand-orange uppercase leading-none tracking-[-4px] mb-4">404</p>
+                <p className="font-display text-2xl text-zinc-500 uppercase tracking-widest mb-8">Pagina non trovata</p>
+                <a href="/" className="font-display text-sm uppercase tracking-widest text-brand-orange hover:underline">← Torna alla home</a>
+              </div>
+            } />
           </Routes>
         </Suspense>
       </main>

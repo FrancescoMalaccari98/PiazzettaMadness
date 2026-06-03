@@ -48,7 +48,7 @@ export function Info() {
               <ul className="list-disc pl-5 space-y-2">
                 <li>Roster minimo di 7 giocatori, massimo 12 giocatori per squadra.</li>
                 <li>Età minima 16 anni compiuti (con liberatoria genitori per minorenni).</li>
-                <li>Quota di iscrizione: indicata nella pagina <a href="/iscrizioni" className="text-brand-orange hover:underline">Iscrizioni</a>.</li>
+                <li>Quota di iscrizione: da definire. Contatta lo staff su <a href="mailto:info@piazzettamadness.it" className="text-brand-orange hover:underline">info@piazzettamadness.it</a>.</li>
                 <li>Certificato medico non agonistico o agonistico in corso di validità obbligatorio per ogni partecipante.</li>
               </ul>
             </div>

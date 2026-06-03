@@ -1,7 +1,10 @@
+import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
 import { ArrowLeft, Flame, Target, Shield, Zap, Trophy, Star } from "lucide-react";
-import { allPlayers } from "../data/stats";
+import { allPlayers, type Player } from "../data/stats";
+
+const API = import.meta.env.VITE_API_URL ?? "";
 
 const statCards = [
   { key: "pts" as const, label: "Punti",    unit: "PPG", Icon: Flame,  accent: "text-brand-orange", border: "border-brand-orange", bg: "bg-brand-orange/10", shadow: "shadow-[6px_6px_0_var(--color-brand-orange)]" },
@@ -13,7 +16,35 @@ const statCards = [
 export function PlayerDetail() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
-  const player = allPlayers.find(p => p.slug === slug);
+
+  // Fallback ai dati statici mentre il backend non è pronto
+  const staticPlayer = allPlayers.find(p => p.slug === slug) ?? null;
+  const [player, setPlayer] = useState<Player | null>(staticPlayer);
+  const [allForRanking, setAllForRanking] = useState<Player[]>(allPlayers);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!slug) { setLoading(false); return; }
+    // Fetch giocatore + lista completa per ranking in parallelo
+    Promise.all([
+      fetch(`${API}/api/giocatori/${slug}`).then(r => r.ok ? r.json() as Promise<Player> : null),
+      fetch(`${API}/api/giocatori`).then(r => r.ok ? r.json() as Promise<Player[]> : null),
+    ])
+      .then(([playerData, allData]) => {
+        if (playerData) setPlayer(playerData);
+        if (allData) setAllForRanking(allData);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [slug]);
+
+  if (loading && !player) {
+    return (
+      <div className="pt-40 pb-20 text-center">
+        <p className="font-display text-2xl text-zinc-500 uppercase tracking-widest">Caricamento...</p>
+      </div>
+    );
+  }
 
   if (!player) {
     return (
@@ -29,10 +60,11 @@ export function PlayerDetail() {
   const playedMatches = player.matchLog.filter(m => m.result !== "-");
   const bestGame = [...playedMatches].sort((a, b) => b.pts - a.pts)[0];
 
-  // Ranking del giocatore nelle varie stat tra tutti
+  // Ranking calcolato sulla lista reale dal backend (fallback ai dati statici)
   const rank = (key: "pts" | "ast" | "reb" | "stl") => {
-    const sorted = [...allPlayers].sort((a, b) => b[key] - a[key]);
-    return sorted.findIndex(p => p.slug === player.slug) + 1;
+    const sorted = [...allForRanking].sort((a, b) => b[key] - a[key]);
+    const idx = sorted.findIndex(p => p.slug === player.slug);
+    return idx >= 0 ? idx + 1 : null;
   };
 
   return (
@@ -95,7 +127,7 @@ export function PlayerDetail() {
                 <span className="font-display text-xs uppercase tracking-[0.2em] text-zinc-500 border border-zinc-700 px-3 py-1">
                   {playedMatches.length} partite giocate
                 </span>
-                {rank("pts") <= 3 && (
+                {(rank("pts") ?? 999) <= 3 && (
                   <span className="font-display text-xs uppercase tracking-[0.2em] text-brand-yellow border border-brand-yellow px-3 py-1 flex items-center gap-1">
                     <Star className="w-3 h-3" /> Top {rank("pts")} scorer
                   </span>
@@ -120,7 +152,46 @@ export function PlayerDetail() {
                 </div>
                 <div className="p-4">
                   <div className={`font-mono text-4xl font-bold ${card.accent} mb-1`}>{player[card.key]}</div>
-                  <div className="font-display text-xs uppercase tracking-widest text-zinc-600">{card.unit} · #{rank(card.key)} nel torneo</div>
+                  <div className="font-display text-xs uppercase tracking-widest text-zinc-600">{card.unit}{rank(card.key) ? ` · #${rank(card.key)} nel torneo` : ""}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Stat aggiuntive FIBA */}
+        <section>
+          <h2 className="font-display text-xl uppercase tracking-widest text-zinc-500 mb-5">Statistiche avanzate</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            {[
+              { label: "Rim. Off.",  val: player.rebOff,    accent: "text-zinc-300" },
+              { label: "Rim. Dif.",  val: player.rebDef,    accent: "text-zinc-300" },
+              { label: "Stoppate",   val: player.sd,        accent: "text-purple-400" },
+              { label: "Palle Perse",val: player.pp,        accent: "text-red-400" },
+              { label: "Valutazione",val: player.val,       accent: "text-brand-yellow" },
+              { label: "+/-",        val: player.plusMinus >= 0 ? `+${player.plusMinus}` : player.plusMinus, accent: player.plusMinus >= 0 ? "text-green-400" : "text-red-400" },
+            ].map(s => (
+              <div key={s.label} className="border-2 border-zinc-800 bg-zinc-900 p-4 text-center">
+                <div className={`font-mono text-2xl font-bold ${s.accent} mb-1`}>{s.val}</div>
+                <div className="font-display text-[10px] uppercase tracking-widest text-zinc-600">{s.label}/G</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Percentuali di tiro */}
+          <div className="grid grid-cols-3 gap-3 mt-3">
+            {[
+              { label: "2PT%", val: player.p2pct, color: "bg-brand-orange" },
+              { label: "3PT%", val: player.p3pct, color: "bg-brand-blue" },
+              { label: "TL%",  val: player.tlpct, color: "bg-brand-yellow" },
+            ].map(s => (
+              <div key={s.label} className="border-2 border-zinc-800 bg-zinc-900 p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-display text-xs uppercase tracking-widest text-zinc-500">{s.label}</span>
+                  <span className="font-mono text-lg font-bold text-white">{s.val > 0 ? `${s.val}%` : "—"}</span>
+                </div>
+                <div className="h-1.5 bg-zinc-800 w-full">
+                  <div className={`h-full ${s.color} transition-all`} style={{ width: `${s.val}%` }} />
                 </div>
               </div>
             ))}
@@ -157,7 +228,7 @@ export function PlayerDetail() {
           </section>
         )}
 
-        {/* Log partite */}
+        {/* Log partite — solo giocate */}
         <section>
           <h2 className="font-display text-xl uppercase tracking-widest text-zinc-500 mb-5">Statistiche per partita</h2>
           <div className="border-[3px] border-zinc-800 bg-zinc-900 overflow-hidden">

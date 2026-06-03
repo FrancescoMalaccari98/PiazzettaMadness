@@ -58,8 +58,8 @@ export function Privacy() {
             </p>
             <div className="bg-zinc-950 border border-zinc-700 p-4 font-mono text-sm space-y-1">
               <p><strong className="text-white">Francesco Emiliani</strong></p>
-              <p>Residenza: <span className="text-brand-orange">[INDIRIZZO DA COMPLETARE]</span></p>
-              <p>C.F.: <span className="text-brand-orange">[CODICE FISCALE DA COMPLETARE]</span></p>
+              <p>Residenza: Via Vespucci 12, Porto Potenza Picena (MC)</p>
+              <p>C.F.: MLNFNC98L22H211Z</p>
               <p>Email: <a href="mailto:f.emiliani@piazzettamadness.it" className="text-brand-orange hover:underline">f.emiliani@piazzettamadness.it</a></p>
             </div>
             <p className="text-zinc-400 text-sm">

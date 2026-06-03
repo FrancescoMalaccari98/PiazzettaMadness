@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { DownloadCloud, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { X, ChevronLeft, ChevronRight } from "lucide-react";
 
-// Sostituisci questi URL con i percorsi reali delle foto (es. "/images/foto1.jpg")
-// dopo averle caricate nella cartella /public/images/
-// &w=1200 limita la risoluzione scaricata da Unsplash: le miniature della griglia
-// sono ~400px wide, il lightbox ~1000px — 1200px copre entrambi a 2x retina.
-const photos = [
+const API = import.meta.env.VITE_API_URL ?? "";
+
+const defaultPhotos = [
   "https://images.unsplash.com/photo-1546519638-68e109498ffc?auto=format&fit=crop&q=80&w=1200",
   "https://images.unsplash.com/photo-1515523110800-9415d13b84a8?auto=format&fit=crop&q=80&w=1200",
   "https://images.unsplash.com/photo-1518481612222-68bbe828def1?auto=format&fit=crop&q=80&w=1200",
@@ -18,7 +16,15 @@ const photos = [
 ];
 
 export function Photos() {
+  const [photos, setPhotos] = useState<string[]>(defaultPhotos);
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetch(`${API}/api/foto`)
+      .then(r => r.ok ? r.json() as Promise<string[]> : null)
+      .then(data => { if (data) setPhotos(data); })
+      .catch(() => {});
+  }, []);
 
   const handleNext = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -44,7 +50,7 @@ export function Photos() {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedPhotoIndex]);
+  }, [selectedPhotoIndex, photos]);
 
   return (
     <div className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
@@ -60,10 +66,6 @@ export function Photos() {
           <p className="text-xl font-sans text-zinc-400">
             I momenti più epici della Madness. Sudore, sangue e highlights.
           </p>
-          <div className="mt-6 inline-flex items-center gap-3 bg-brand-blue/10 border border-brand-blue/30 text-brand-blue px-4 py-2 text-sm rounded">
-            <DownloadCloud size={16} />
-            Nota: Per utilizzare le immagini dal Drive, caricatele nella cartella <code>/public/images/</code> e aggiornate i percorsi.
-          </div>
         </motion.div>
 
         <div className="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6">
