@@ -89,15 +89,11 @@ export function Home() {
         </div>
       </section>
 
-      {/* Marquee Ticker */}
+      {/* Marquee Ticker — CSS puro per evitare blocchi sul main thread mobile */}
       <div className="overflow-hidden whitespace-nowrap border-y-[4px] border-brand-blue bg-brand-orange py-3 md:py-4 -rotate-2 scale-105 relative z-20 md:-mt-8 shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
-        <motion.div 
-          animate={{ x: ["0%", "-50%"] }} 
-          transition={{ repeat: Infinity, ease: "linear", duration: 20 }}
-          className="inline-block text-brand-bg font-display text-3xl md:text-5xl uppercase tracking-widest font-black"
-        >
-          PIAZZETTA MADNESS // STREET BASKETBALL // NO EXCUSES // PLAY HARD // PIAZZETTA MADNESS // STREET BASKETBALL // NO EXCUSES // PLAY HARD // PIAZZETTA MADNESS // STREET BASKETBALL // NO EXCUSES // PLAY HARD //
-        </motion.div>
+        <div className="marquee-track inline-block text-brand-bg font-display text-3xl md:text-5xl uppercase tracking-widest font-black">
+          PIAZZETTA MADNESS // STREET BASKETBALL // NO EXCUSES // PLAY HARD // PIAZZETTA MADNESS // STREET BASKETBALL // NO EXCUSES // PLAY HARD // PIAZZETTA MADNESS // STREET BASKETBALL // NO EXCUSES // PLAY HARD //&nbsp;&nbsp;PIAZZETTA MADNESS // STREET BASKETBALL // NO EXCUSES // PLAY HARD // PIAZZETTA MADNESS // STREET BASKETBALL // NO EXCUSES // PLAY HARD // PIAZZETTA MADNESS // STREET BASKETBALL // NO EXCUSES // PLAY HARD //&nbsp;
+        </div>
       </div>
 
       {/* Info Quick Look - Bento Grid Layout */}

@@ -1,22 +1,19 @@
 # ============================================================
-# public/.htaccess  →  dist/.htaccess (Vite lo copia automaticamente)
-# Root del sito su Aruba: public_html/.htaccess
-#
-# Scopo: fare in modo che ricaricare una pagina React (es. /statistiche)
-# non dia 404, perché Apache cerca un file fisico che non esiste.
+# public/.htaccess  →  dist/.htaccess
+# Root del sito su Aruba: www.piazzettamadness.it/.htaccess
 # ============================================================
 
 Options -Indexes -MultiViews
 RewriteEngine On
 RewriteBase /
 
-# ── Serve i file statici esistenti (JS, CSS, immagini, ecc.) ──
-RewriteCond %{REQUEST_FILENAME} -f [OR]
-RewriteCond %{REQUEST_FILENAME} -d
-RewriteRule ^ - [L]
+# ── File statici: serve direttamente per estensione ──────────
+# Più affidabile di %{REQUEST_FILENAME} -f su hosting condiviso Aruba,
+# perché non dipende da come Apache risolve il percorso assoluto.
+RewriteRule \.(js|mjs|css|png|jpg|jpeg|gif|ico|svg|webp|woff|woff2|ttf|eot|map|json|txt|xml)$ - [L,NC]
 
-# ── Le richieste /api/* vengono gestite dal .htaccess in api/ ──
+# ── API: lascia gestire ad Apache + api/.htaccess ────────────
 RewriteRule ^api/ - [L]
 
-# ── Tutto il resto → index.html (React Router gestisce il routing) ──
+# ── Tutto il resto → index.html (React Router) ───────────────
 RewriteRule ^ index.html [L]
