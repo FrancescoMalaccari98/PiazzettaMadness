@@ -94,12 +94,12 @@ export function PlayerDetail() {
           className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12"
         >
           {player.number && (
-            <span className="font-display text-[100px] md:text-[160px] leading-none text-white/[0.06] font-black absolute top-0 right-8 pointer-events-none select-none">
+            <span className="font-display text-[50px] sm:text-[100px] md:text-[160px] leading-none text-white/[0.06] font-black absolute top-0 right-4 md:right-8 pointer-events-none select-none">
               #{player.number}
             </span>
           )}
 
-          <div className="flex items-end gap-8 flex-wrap">
+          <div className="flex flex-col sm:flex-row sm:items-end gap-5 sm:gap-8">
             {/* Foto o placeholder iniziali */}
             <div className="shrink-0">
               {player.photo ? (
@@ -119,8 +119,8 @@ export function PlayerDetail() {
 
             {/* Info */}
             <div>
-              <p className="font-display text-brand-orange uppercase tracking-[0.3em] text-sm mb-3">{player.team}</p>
-              <h1 className="font-display text-[80px] md:text-[120px] uppercase leading-[0.8] tracking-[-4px] text-white mb-8">
+              <p className="font-display text-brand-orange uppercase tracking-[0.2em] text-xs sm:text-sm mb-2">{player.team}</p>
+              <h1 className="font-display text-[26px] sm:text-[48px] md:text-[100px] lg:text-[120px] uppercase leading-[0.85] tracking-[-1px] md:tracking-[-4px] text-white mb-4 md:mb-8 break-words">
                 {player.name}
               </h1>
               <div className="flex items-center gap-4 flex-wrap">
@@ -231,8 +231,8 @@ export function PlayerDetail() {
         {/* Log partite — solo giocate */}
         <section>
           <h2 className="font-display text-xl uppercase tracking-widest text-zinc-500 mb-5">Statistiche per partita</h2>
-          <div className="border-[3px] border-zinc-800 bg-zinc-900 overflow-hidden">
-            <table className="w-full text-sm">
+          <div className="border-[3px] border-zinc-800 bg-zinc-900 overflow-hidden overflow-x-auto">
+            <table className="w-full min-w-[480px] text-sm">
               <thead>
                 <tr className="bg-zinc-950 border-b-2 border-zinc-800">
                   <th className="text-left px-5 py-3 font-display text-xs uppercase tracking-widest text-zinc-500">Data</th>

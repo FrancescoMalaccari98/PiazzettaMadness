@@ -4,11 +4,13 @@
   --color-brand-blue: #19658c;
   --color-brand-orange: #ea6324;
   --color-brand-yellow: #f2a71e;
-  --color-brand-bg: #0A0A0A;
+  --color-brand-bg: #141414;
   --color-brand-gray: #1E1E1E;
-  
-  /* Overwrite the default zincs to match the design */
-  --color-zinc-950: #0A0A0A;
+
+  /* Overwrite the default zincs to match the design.
+     bg/950 alzati da #0A0A0A a #141414: nero meno profondo, più piacevole
+     su schermi OLED mobile mantenendo il contrasto con le card (#1E1E1E). */
+  --color-zinc-950: #141414;
   --color-zinc-900: #1E1E1E;
   --color-zinc-800: rgba(255,255,255,0.1);
   

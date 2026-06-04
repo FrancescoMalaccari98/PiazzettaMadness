@@ -177,10 +177,10 @@ function LiveScoreboard() {
   return (
     <div className="pt-24 pb-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-screen flex flex-col">
       <div className="flex justify-between items-center mb-8 border-b-2 border-zinc-800 pb-4 flex-wrap gap-4">
-        <h1 className="font-display text-4xl text-white uppercase flex items-center gap-3">
-          <AlertTriangle className="text-brand-orange" /> Tabellone Live Control
+        <h1 className="font-display text-2xl sm:text-4xl text-white uppercase flex items-center gap-3">
+          <AlertTriangle className="text-brand-orange shrink-0" /> Tabellone Live Control
         </h1>
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-3 sm:gap-6 flex-wrap">
           <button 
             onClick={() => window.open('/projection', 'ScoreboardProjection', 'width=1280,height=720')}
             className="bg-zinc-800 text-white px-4 py-2 hover:bg-zinc-700 font-display uppercase tracking-widest text-sm flex items-center gap-2 border-[2px] border-zinc-600 hover:border-brand-blue transition-colors shadow-[4px_4px_0_var(--color-brand-blue)] hover:shadow-none hover:translate-x-1 hover:translate-y-1"
@@ -205,17 +205,17 @@ function LiveScoreboard() {
             {TEAMS.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
           
-          <div className="bg-black border-4 border-zinc-800 p-8 flex flex-col items-center flex-1 justify-center rounded-sm relative">
-             <div className="text-[120px] md:text-[180px] leading-none font-mono text-brand-orange font-black">
+          <div className="bg-black border-4 border-zinc-800 p-4 sm:p-8 pb-20 flex flex-col items-center flex-1 justify-center rounded-sm relative">
+             <div className="text-[88px] sm:text-[120px] md:text-[180px] leading-none font-mono text-brand-orange font-black">
                {score1}
              </div>
-             
+
              {/* Score Controls */}
-             <div className="flex gap-2 mt-8 absolute bottom-4">
-               <button onClick={() => adjustScore(1, -1)} className="bg-zinc-800 p-3 hover:bg-zinc-700 active:scale-95"><Minus className="w-6 h-6 text-white" /></button>
-               <button onClick={() => adjustScore(1, 1)} className="bg-brand-blue text-brand-bg font-black px-6 hover:bg-white hover:text-black active:scale-95 text-xl">+1</button>
-               <button onClick={() => adjustScore(1, 2)} className="bg-brand-blue text-brand-bg font-black px-6 hover:bg-white hover:text-black active:scale-95 text-xl">+2</button>
-               <button onClick={() => adjustScore(1, 3)} className="bg-brand-blue text-brand-bg font-black px-6 hover:bg-white hover:text-black active:scale-95 text-xl">+3</button>
+             <div className="flex gap-1.5 sm:gap-2 absolute bottom-4 left-1/2 -translate-x-1/2">
+               <button onClick={() => adjustScore(1, -1)} className="bg-zinc-800 p-2.5 sm:p-3 hover:bg-zinc-700 active:scale-95"><Minus className="w-5 h-5 sm:w-6 sm:h-6 text-white" /></button>
+               <button onClick={() => adjustScore(1, 1)} className="bg-brand-blue text-brand-bg font-black px-4 sm:px-6 hover:bg-white hover:text-black active:scale-95 text-lg sm:text-xl">+1</button>
+               <button onClick={() => adjustScore(1, 2)} className="bg-brand-blue text-brand-bg font-black px-4 sm:px-6 hover:bg-white hover:text-black active:scale-95 text-lg sm:text-xl">+2</button>
+               <button onClick={() => adjustScore(1, 3)} className="bg-brand-blue text-brand-bg font-black px-4 sm:px-6 hover:bg-white hover:text-black active:scale-95 text-lg sm:text-xl">+3</button>
              </div>
           </div>
           
@@ -289,17 +289,17 @@ function LiveScoreboard() {
             {TEAMS.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
           
-          <div className="bg-black border-4 border-zinc-800 p-8 flex flex-col items-center flex-1 justify-center rounded-sm relative">
-             <div className="text-[120px] md:text-[180px] leading-none font-mono text-white font-black">
+          <div className="bg-black border-4 border-zinc-800 p-4 sm:p-8 pb-20 flex flex-col items-center flex-1 justify-center rounded-sm relative">
+             <div className="text-[88px] sm:text-[120px] md:text-[180px] leading-none font-mono text-white font-black">
                {score2}
              </div>
-             
+
              {/* Score Controls */}
-             <div className="flex gap-2 mt-8 absolute bottom-4">
-               <button onClick={() => adjustScore(2, -1)} className="bg-zinc-800 p-3 hover:bg-zinc-700 active:scale-95"><Minus className="w-6 h-6 text-white" /></button>
-               <button onClick={() => adjustScore(2, 1)} className="bg-zinc-300 text-black font-black px-6 hover:bg-white hover:text-black active:scale-95 text-xl">+1</button>
-               <button onClick={() => adjustScore(2, 2)} className="bg-zinc-300 text-black font-black px-6 hover:bg-white hover:text-black active:scale-95 text-xl">+2</button>
-               <button onClick={() => adjustScore(2, 3)} className="bg-zinc-300 text-black font-black px-6 hover:bg-white hover:text-black active:scale-95 text-xl">+3</button>
+             <div className="flex gap-1.5 sm:gap-2 absolute bottom-4 left-1/2 -translate-x-1/2">
+               <button onClick={() => adjustScore(2, -1)} className="bg-zinc-800 p-2.5 sm:p-3 hover:bg-zinc-700 active:scale-95"><Minus className="w-5 h-5 sm:w-6 sm:h-6 text-white" /></button>
+               <button onClick={() => adjustScore(2, 1)} className="bg-zinc-300 text-black font-black px-4 sm:px-6 hover:bg-white hover:text-black active:scale-95 text-lg sm:text-xl">+1</button>
+               <button onClick={() => adjustScore(2, 2)} className="bg-zinc-300 text-black font-black px-4 sm:px-6 hover:bg-white hover:text-black active:scale-95 text-lg sm:text-xl">+2</button>
+               <button onClick={() => adjustScore(2, 3)} className="bg-zinc-300 text-black font-black px-4 sm:px-6 hover:bg-white hover:text-black active:scale-95 text-lg sm:text-xl">+3</button>
              </div>
           </div>
           

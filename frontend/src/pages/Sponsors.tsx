@@ -98,11 +98,11 @@ export function Sponsors() {
           <p className="font-display text-brand-orange uppercase tracking-[0.3em] text-sm mb-4">
             Piazzetta Madness 2026
           </p>
-          <h1 className="font-display text-[80px] md:text-[120px] uppercase leading-[0.8] tracking-[-4px] text-white mb-8">
+          <h1 className="font-display text-[44px] sm:text-[70px] md:text-[120px] uppercase leading-[0.8] tracking-[-2px] md:tracking-[-4px] text-white mb-6">
             I Nostri<br />
             <span className="text-brand-orange">Sponsor</span>
           </h1>
-          <p className="font-sans text-zinc-400 text-lg max-w-xl mx-auto">
+          <p className="font-sans text-zinc-400 text-base sm:text-lg max-w-xl mx-auto">
             Senza di loro la Piazzetta Madness non esisterebbe. Supporta chi supporta noi.
           </p>
         </div>

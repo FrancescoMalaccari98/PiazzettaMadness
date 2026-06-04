@@ -210,11 +210,11 @@ const defaultGroups: Group[] = [
 
 const defaultBracket = {
   semis: [
-    { id: "sf1", round: "Semifinale 1", date: "12 Ago 18:00", status: "IN PROGRAMMA" as const, team1: { name: "1° Girone A", score: 0 }, team2: { name: "2° Girone B", score: 0 }, details: { mvp: "TBD", summary: "Semifinale in programma." } },
-    { id: "sf2", round: "Semifinale 2", date: "12 Ago 20:30", status: "IN PROGRAMMA" as const, team1: { name: "1° Girone B", score: 0 }, team2: { name: "2° Girone A", score: 0 }, details: { mvp: "TBD", summary: "Semifinale in programma." } },
+    { id: "sf1", round: "Semifinale 1", date: "12 Ago 18:00", status: "IN PROGRAMMA" as Match["status"], team1: { name: "1° Girone A", score: 0 }, team2: { name: "2° Girone B", score: 0 }, details: { mvp: "TBD", summary: "Semifinale in programma." } },
+    { id: "sf2", round: "Semifinale 2", date: "12 Ago 20:30", status: "IN PROGRAMMA" as Match["status"], team1: { name: "1° Girone B", score: 0 }, team2: { name: "2° Girone A", score: 0 }, details: { mvp: "TBD", summary: "Semifinale in programma." } },
   ],
-  third: { id: "third", round: "Finale 3°-4° Posto", date: "14 Ago 18:30", status: "IN PROGRAMMA" as const, team1: { name: "TBD", score: 0 }, team2: { name: "TBD", score: 0 }, details: { mvp: "TBD", summary: "Finale per il terzo posto." } },
-  final: { id: "final", round: "Finale", date: "14 Ago 21:00", status: "IN PROGRAMMA" as const, team1: { name: "TBD", score: 0 }, team2: { name: "TBD", score: 0 }, details: { mvp: "TBD", summary: "La grande finale." } },
+  third: { id: "third", round: "Finale 3°-4° Posto", date: "14 Ago 18:30", status: "IN PROGRAMMA" as Match["status"], team1: { name: "TBD", score: 0 }, team2: { name: "TBD", score: 0 }, details: { mvp: "TBD", summary: "Finale per il terzo posto." } },
+  final: { id: "final", round: "Finale", date: "14 Ago 21:00", status: "IN PROGRAMMA" as Match["status"], team1: { name: "TBD", score: 0 }, team2: { name: "TBD", score: 0 }, details: { mvp: "TBD", summary: "La grande finale." } },
 };
 
 // — Classifica —
@@ -250,13 +250,13 @@ function StandingsTable({ group }: { group: Group }) {
     <table className="w-full text-sm">
       <thead>
         <tr className={`border-b-2 ${group.borderClass} border-opacity-30`}>
-          <th className="text-left pb-3 pr-3 font-display text-xs uppercase tracking-widest text-zinc-500 w-8">#</th>
+          <th className="text-left pb-3 pr-1.5 sm:pr-3 font-display text-xs uppercase tracking-widest text-zinc-500 w-6 sm:w-8">#</th>
           <th className="text-left pb-3 font-display text-xs uppercase tracking-widest text-zinc-500">Squadra</th>
-          <th className="text-center pb-3 px-3 font-display text-xs uppercase tracking-widest text-zinc-500">G</th>
-          <th className="text-center pb-3 px-3 font-display text-xs uppercase tracking-widest text-zinc-500">V</th>
-          <th className="text-center pb-3 px-3 font-display text-xs uppercase tracking-widest text-zinc-500">P</th>
-          <th className="text-center pb-3 px-3 font-display text-xs uppercase tracking-widest text-brand-orange">PT</th>
-          <th className="text-center pb-3 pl-3 font-display text-xs uppercase tracking-widest text-zinc-500">+/-</th>
+          <th className="text-center pb-3 px-1.5 sm:px-3 font-display text-xs uppercase tracking-widest text-zinc-500">G</th>
+          <th className="text-center pb-3 px-1.5 sm:px-3 font-display text-xs uppercase tracking-widest text-zinc-500">V</th>
+          <th className="text-center pb-3 px-1.5 sm:px-3 font-display text-xs uppercase tracking-widest text-zinc-500">P</th>
+          <th className="text-center pb-3 px-1.5 sm:px-3 font-display text-xs uppercase tracking-widest text-brand-orange">PT</th>
+          <th className="text-center pb-3 pl-1.5 sm:pl-3 font-display text-xs uppercase tracking-widest text-zinc-500">+/-</th>
         </tr>
       </thead>
       <tbody>
@@ -289,11 +289,11 @@ function StandingsTable({ group }: { group: Group }) {
                   )}
                 </div>
               </td>
-              <td className="py-3 text-center font-mono text-xs text-zinc-400 px-3">{row.g}</td>
-              <td className="py-3 text-center font-mono text-xs text-zinc-400 px-3">{row.v}</td>
-              <td className="py-3 text-center font-mono text-xs text-zinc-400 px-3">{row.p}</td>
-              <td className={`py-3 text-center font-mono font-bold text-sm px-3 ${i === 0 ? group.accentClass : "text-brand-orange/70"}`}>{row.pt}</td>
-              <td className={`py-3 text-center font-mono text-xs pl-3 font-bold ${row.g === 0 ? "text-zinc-600" : diff > 0 ? "text-green-500" : diff < 0 ? "text-red-500" : "text-zinc-400"}`}>
+              <td className="py-3 text-center font-mono text-xs text-zinc-400 px-1.5 sm:px-3">{row.g}</td>
+              <td className="py-3 text-center font-mono text-xs text-zinc-400 px-1.5 sm:px-3">{row.v}</td>
+              <td className="py-3 text-center font-mono text-xs text-zinc-400 px-1.5 sm:px-3">{row.p}</td>
+              <td className={`py-3 text-center font-mono font-bold text-sm px-1.5 sm:px-3 ${i === 0 ? group.accentClass : "text-brand-orange/70"}`}>{row.pt}</td>
+              <td className={`py-3 text-center font-mono text-xs pl-1.5 sm:pl-3 font-bold ${row.g === 0 ? "text-zinc-600" : diff > 0 ? "text-green-500" : diff < 0 ? "text-red-500" : "text-zinc-400"}`}>
                 {row.g === 0 ? "—" : `${diff > 0 ? "+" : ""}${diff}`}
               </td>
             </tr>
@@ -305,6 +305,25 @@ function StandingsTable({ group }: { group: Group }) {
 }
 
 // — Match row orizzontale (girone) —
+
+// Riga partita a due righe (una per squadra): i nomi reali dal backend
+// restano sempre leggibili anche su mobile in verticale.
+function TeamScoreLine({ name, score, win, pending, accent = "text-brand-orange" }: {
+  name: string; score: number; win: boolean; pending: boolean; accent?: string;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <span className={`font-sans font-bold text-xs sm:text-sm uppercase truncate transition-colors
+        ${win ? "text-white" : pending ? "text-zinc-400" : "text-zinc-500"}`}>
+        {name}
+      </span>
+      <span className={`font-mono text-base sm:text-lg font-bold shrink-0 tabular-nums w-7 text-right
+        ${win ? accent : pending ? "text-zinc-600" : "text-zinc-500"}`}>
+        {pending ? "—" : score}
+      </span>
+    </div>
+  );
+}
 
 function GroupMatchRow({ match, onClick }: { match: Match; onClick: () => void }) {
   const isLive = match.status === "LIVE";
@@ -319,35 +338,17 @@ function GroupMatchRow({ match, onClick }: { match: Match; onClick: () => void }
         ${isLive ? "bg-brand-orange/5" : ""}`}
     >
       {/* Data */}
-      <span className="font-mono text-[10px] text-zinc-600 w-20 shrink-0">{match.date}</span>
+      <span className="font-mono text-[10px] text-zinc-600 w-12 sm:w-20 shrink-0">{match.date}</span>
 
-      {/* Team 1 */}
-      <span className={`font-sans font-bold text-xs uppercase flex-1 text-right truncate transition-colors
-        ${t1Wins ? "text-white" : isPending ? "text-zinc-400" : "text-zinc-500"}`}>
-        {match.team1.name}
-      </span>
-
-      {/* Score */}
-      <div className={`flex items-center gap-1 shrink-0 px-3 py-1 border
-        ${isLive ? "border-brand-orange bg-brand-orange/10" : "border-zinc-800 bg-zinc-950"}`}>
-        <span className={`font-mono text-base font-bold w-7 text-right ${t1Wins ? "text-brand-orange" : isPending ? "text-zinc-600" : "text-zinc-500"}`}>
-          {isPending ? "—" : match.team1.score}
-        </span>
-        <span className="text-zinc-700 text-xs mx-0.5">:</span>
-        <span className={`font-mono text-base font-bold w-7 ${t2Wins ? "text-brand-orange" : isPending ? "text-zinc-600" : "text-zinc-500"}`}>
-          {isPending ? "—" : match.team2.score}
-        </span>
+      {/* Squadre impilate con punteggio allineato a destra */}
+      <div className="flex-1 min-w-0 flex flex-col gap-1.5 border-l border-zinc-800 pl-3">
+        <TeamScoreLine name={match.team1.name} score={match.team1.score} win={t1Wins} pending={isPending} />
+        <TeamScoreLine name={match.team2.name} score={match.team2.score} win={t2Wins} pending={isPending} />
       </div>
 
-      {/* Team 2 */}
-      <span className={`font-sans font-bold text-xs uppercase flex-1 truncate transition-colors
-        ${t2Wins ? "text-white" : isPending ? "text-zinc-400" : "text-zinc-500"}`}>
-        {match.team2.name}
-      </span>
-
       {/* Status */}
-      <div className="w-16 shrink-0 text-right">
-        {isLive && <span className="font-display text-[10px] uppercase text-brand-orange animate-pulse">● LIVE</span>}
+      <div className="w-5 shrink-0 text-right">
+        {isLive && <span className="font-display text-[10px] uppercase text-brand-orange animate-pulse">●</span>}
         {match.status === "COMPLETA" && <span className="font-display text-[10px] uppercase text-zinc-600">✓</span>}
         {isPending && <ChevronRight className="w-3 h-3 text-zinc-700 inline opacity-0 group-hover:opacity-100 transition-opacity" />}
       </div>
@@ -539,18 +540,18 @@ export function Matches() {
 
         {/* Header */}
         <div className="text-center mb-16">
-          <h1 className="font-display text-[80px] md:text-[120px] text-brand-orange uppercase leading-[0.8] mb-8 tracking-[-4px]">
+          <h1 className="font-display text-[56px] sm:text-[80px] md:text-[120px] text-brand-orange uppercase leading-[0.8] mb-6 tracking-[-2px] md:tracking-[-4px]">
             Match
           </h1>
-          <p className="text-xl font-sans text-zinc-400 max-w-2xl mx-auto">
+          <p className="text-base sm:text-xl font-sans text-zinc-400 max-w-2xl mx-auto">
             Dal girone all'italiana fino alla pazzesca finale dei playoff. Ripercorri ogni canestro.
           </p>
         </div>
 
         {/* — CALENDARIO — */}
         <div className="mb-24">
-          <h2 className="font-display text-4xl md:text-5xl uppercase flex items-center gap-4 border-t-[6px] border-zinc-800 pt-6 pb-10 text-white">
-            <Calendar className="w-10 h-10 text-brand-orange" /> Calendario
+          <h2 className="font-display text-2xl sm:text-4xl md:text-5xl uppercase flex items-center gap-4 border-t-[6px] border-zinc-800 pt-6 pb-10 text-white">
+            <Calendar className="w-6 h-6 sm:w-10 sm:h-10 text-brand-orange shrink-0" /> Calendario
           </h2>
 
           <div className="space-y-6">
@@ -566,64 +567,49 @@ export function Matches() {
                 </div>
 
                 {/* Partite del giorno */}
-                {dayMatches.map(match => (
+                {dayMatches.map(match => {
+                  const isPending = match.status === "IN PROGRAMMA";
+                  const t1Wins = !isPending && match.team1.score > match.team2.score;
+                  const t2Wins = !isPending && match.team2.score > match.team1.score;
+                  return (
                   <div
                     key={match.id}
                     onClick={() => handleSelectMatch(match)}
-                    className={`flex items-center gap-3 px-4 py-3 border-b border-zinc-800/60 last:border-0
+                    className={`flex items-center gap-3 px-3 sm:px-4 py-3 border-b border-zinc-800/60 last:border-0
                       hover:bg-zinc-800/30 cursor-pointer transition-colors group
                       ${match.status === "LIVE" ? "bg-brand-orange/5" : ""}`}
                   >
-                    {/* Orario */}
-                    <div className="w-24 shrink-0">
-                      <span className="font-mono text-[10px] text-zinc-600 block">
+                    {/* Orario + round */}
+                    <div className="w-12 sm:w-28 shrink-0">
+                      <span className="font-mono text-xs text-zinc-500 block">
                         {match.date.split(" ").slice(2).join(" ")}
                       </span>
-                      <span className="font-display text-[9px] uppercase tracking-widest text-zinc-700">
+                      <span className="font-display text-[8px] uppercase tracking-wider text-zinc-700 hidden sm:block truncate">
                         {match.round}
                       </span>
                     </div>
 
-                    {/* Team 1 */}
-                    <span className={`font-sans font-bold text-xs uppercase flex-1 text-right truncate
-                      ${match.status !== "IN PROGRAMMA" && match.team1.score > match.team2.score ? "text-white" : "text-zinc-400"}`}>
-                      {match.team1.name}
-                    </span>
-
-                    {/* Score */}
-                    <div className={`flex items-center gap-1 shrink-0 px-3 py-1 border
-                      ${match.status === "LIVE" ? "border-brand-orange bg-brand-orange/10" : "border-zinc-800 bg-zinc-950"}`}>
-                      <span className={`font-mono text-base font-bold w-7 text-right
-                        ${match.status !== "IN PROGRAMMA" && match.team1.score > match.team2.score ? "text-brand-orange" : "text-zinc-600"}`}>
-                        {match.status === "IN PROGRAMMA" ? "—" : match.team1.score}
-                      </span>
-                      <span className="text-zinc-700 text-xs mx-0.5">:</span>
-                      <span className={`font-mono text-base font-bold w-7
-                        ${match.status !== "IN PROGRAMMA" && match.team2.score > match.team1.score ? "text-brand-orange" : "text-zinc-600"}`}>
-                        {match.status === "IN PROGRAMMA" ? "—" : match.team2.score}
-                      </span>
+                    {/* Squadre impilate */}
+                    <div className="flex-1 min-w-0 flex flex-col gap-1.5 border-l border-zinc-800 pl-3">
+                      <TeamScoreLine name={match.team1.name} score={match.team1.score} win={t1Wins} pending={isPending} />
+                      <TeamScoreLine name={match.team2.name} score={match.team2.score} win={t2Wins} pending={isPending} />
                     </div>
 
-                    {/* Team 2 */}
-                    <span className={`font-sans font-bold text-xs uppercase flex-1 truncate
-                      ${match.status !== "IN PROGRAMMA" && match.team2.score > match.team1.score ? "text-white" : "text-zinc-400"}`}>
-                      {match.team2.name}
-                    </span>
-
                     {/* Status badge */}
-                    <div className="w-16 shrink-0 text-right">
+                    <div className="w-5 shrink-0 text-right">
                       {match.status === "LIVE" && (
-                        <span className="font-display text-[10px] uppercase text-brand-orange animate-pulse">● LIVE</span>
+                        <span className="font-display text-[10px] uppercase text-brand-orange animate-pulse">●</span>
                       )}
                       {match.status === "COMPLETA" && (
                         <span className="font-display text-[10px] uppercase text-zinc-600">✓</span>
                       )}
-                      {match.status === "IN PROGRAMMA" && (
+                      {isPending && (
                         <ChevronRight className="w-3 h-3 text-zinc-700 inline opacity-0 group-hover:opacity-100 transition-opacity" />
                       )}
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             ))}
           </div>
@@ -631,8 +617,8 @@ export function Matches() {
 
         {/* — FASE A GIRONI — */}
         <div className="mb-24">
-          <h2 className="font-display text-4xl md:text-5xl uppercase flex items-center gap-4 border-t-[6px] border-zinc-800 pt-6 pb-10 text-white">
-            <Calendar className="w-10 h-10 text-brand-blue" /> Fase a Gironi
+          <h2 className="font-display text-2xl sm:text-4xl md:text-5xl uppercase flex items-center gap-4 border-t-[6px] border-zinc-800 pt-6 pb-10 text-white">
+            <Calendar className="w-6 h-6 sm:w-10 sm:h-10 text-brand-blue shrink-0" /> Fase a Gironi
           </h2>
 
           {/* Classifiche */}
@@ -674,8 +660,8 @@ export function Matches() {
 
         {/* — PLAYOFF — */}
         <div>
-          <h2 className="font-display text-4xl md:text-5xl uppercase flex items-center gap-4 border-t-[6px] border-zinc-800 pt-6 pb-10 text-white">
-            <Swords className="w-10 h-10 text-brand-orange" /> Playoff Bracket
+          <h2 className="font-display text-2xl sm:text-4xl md:text-5xl uppercase flex items-center gap-4 border-t-[6px] border-zinc-800 pt-6 pb-10 text-white">
+            <Swords className="w-6 h-6 sm:w-10 sm:h-10 text-brand-orange shrink-0" /> Playoff Bracket
           </h2>
 
           <div className="overflow-x-auto pb-6 cursor-grab active:cursor-grabbing">
@@ -731,27 +717,24 @@ export function Matches() {
             </div>
             <div
               onClick={() => handleSelectMatch(displayBracket.third)}
-              className="flex items-center gap-4 px-6 py-4 cursor-pointer hover:bg-zinc-800/30 transition-colors"
+              className="flex items-center gap-3 px-4 sm:px-6 py-4 cursor-pointer hover:bg-zinc-800/30 transition-colors"
             >
-              <span className={`font-sans font-bold text-sm uppercase flex-1 text-right truncate
-                ${displayBracket.third.status === "COMPLETA" && displayBracket.third.team1.score > displayBracket.third.team2.score ? "text-white" : "text-zinc-400"}`}>
-                {displayBracket.third.team1.name}
-              </span>
-              <div className="flex items-center gap-2 shrink-0">
-                {displayBracket.third.status === "COMPLETA" ? (
-                  <>
-                    <span className="font-display text-2xl text-white w-10 text-right">{displayBracket.third.team1.score}</span>
-                    <span className="font-display text-zinc-600 text-lg">:</span>
-                    <span className="font-display text-2xl text-white w-10 text-left">{displayBracket.third.team2.score}</span>
-                  </>
-                ) : (
-                  <span className="font-display text-zinc-600 text-base px-2">VS</span>
-                )}
+              <div className="flex-1 min-w-0 flex flex-col gap-2">
+                <TeamScoreLine
+                  name={displayBracket.third.team1.name}
+                  score={displayBracket.third.team1.score}
+                  win={displayBracket.third.status === "COMPLETA" && displayBracket.third.team1.score > displayBracket.third.team2.score}
+                  pending={displayBracket.third.status !== "COMPLETA"}
+                  accent="text-white"
+                />
+                <TeamScoreLine
+                  name={displayBracket.third.team2.name}
+                  score={displayBracket.third.team2.score}
+                  win={displayBracket.third.status === "COMPLETA" && displayBracket.third.team2.score > displayBracket.third.team1.score}
+                  pending={displayBracket.third.status !== "COMPLETA"}
+                  accent="text-white"
+                />
               </div>
-              <span className={`font-sans font-bold text-sm uppercase flex-1 truncate
-                ${displayBracket.third.status === "COMPLETA" && displayBracket.third.team2.score > displayBracket.third.team1.score ? "text-white" : "text-zinc-400"}`}>
-                {displayBracket.third.team2.name}
-              </span>
               {displayBracket.third.status === "COMPLETA" && (
                 <span className="font-display text-[9px] uppercase tracking-widest text-zinc-600 shrink-0">Tabellino →</span>
               )}
@@ -776,14 +759,14 @@ export function Matches() {
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="relative w-full max-w-5xl bg-zinc-950 border-[4px] border-brand-orange shadow-[16px_16px_0_var(--color-brand-blue)] z-10 flex flex-col max-h-[90vh]"
             >
-              <div className="flex justify-between items-center p-6 border-b-[3px] border-zinc-800 bg-zinc-900">
-                <h3 className="font-display text-2xl uppercase text-white tracking-wide">{selectedMatch.round}</h3>
-                <button onClick={() => setSelectedMatch(null)} className="text-zinc-400 hover:text-white border-2 border-transparent hover:border-brand-orange p-1 transition-colors">
+              <div className="flex justify-between items-center gap-3 p-4 sm:p-6 border-b-[3px] border-zinc-800 bg-zinc-900">
+                <h3 className="font-display text-lg sm:text-2xl uppercase text-white tracking-wide truncate">{selectedMatch.round}</h3>
+                <button onClick={() => setSelectedMatch(null)} className="text-zinc-400 hover:text-white border-2 border-transparent hover:border-brand-orange p-1 transition-colors shrink-0">
                   <X size={28} />
                 </button>
               </div>
 
-              <div className="p-6 overflow-y-auto">
+              <div className="p-4 sm:p-6 overflow-y-auto">
                 {selectedMatch.status === "IN PROGRAMMA" ? (
                   <div className="text-center py-10">
                     <p className="font-display text-3xl uppercase text-zinc-500 mb-2">Match in programma</p>

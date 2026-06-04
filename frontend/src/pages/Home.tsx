@@ -48,9 +48,9 @@ export function Home() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <h1 className="font-display leading-[0.85] mb-6 tracking-[-4px]">
-              <span className="block text-6xl md:text-[100px] lg:text-[120px] text-white">PRONTI PER LA</span>
-              <span className="block text-6xl md:text-[100px] lg:text-[120px] text-brand-orange">MADNESS?</span>
+            <h1 className="font-display leading-[0.85] mb-6 tracking-[-2px] md:tracking-[-4px]">
+              <span className="block text-5xl sm:text-6xl md:text-[100px] lg:text-[120px] text-white">PRONTI PER LA</span>
+              <span className="block text-5xl sm:text-6xl md:text-[100px] lg:text-[120px] text-brand-orange">MADNESS?</span>
             </h1>
           </motion.div>
 
@@ -64,20 +64,20 @@ export function Home() {
             <div className="flex flex-col sm:flex-row gap-4">
               <Link
                 to="/info"
-                className="bg-brand-orange text-brand-bg px-5 py-5 font-black uppercase text-xl -rotate-2 w-fit hover:-rotate-1 transition-transform border-[3px] border-transparent hover:border-white shadow-[8px_8px_0_var(--color-brand-blue)] hover:shadow-[4px_4px_0_var(--color-brand-blue)]"
+                className="bg-brand-orange text-brand-bg px-5 py-4 sm:py-5 font-black uppercase text-base sm:text-xl -rotate-2 w-fit hover:-rotate-1 transition-transform border-[3px] border-transparent hover:border-white shadow-[6px_6px_0_var(--color-brand-blue)] sm:shadow-[8px_8px_0_var(--color-brand-blue)] hover:shadow-[4px_4px_0_var(--color-brand-blue)]"
               >
                 Scopri il Torneo
               </Link>
               <Link
                 to="/match"
-                className="px-8 py-4 border-[3px] border-white text-white font-display text-xl uppercase tracking-wider hover:bg-white hover:text-black transition-colors w-fit shadow-[8px_8px_0_var(--color-brand-orange)] hover:shadow-[4px_4px_0_var(--color-brand-orange)] transform hover:translate-x-1 hover:translate-y-1"
+                className="px-6 sm:px-8 py-4 border-[3px] border-white text-white font-display text-base sm:text-xl uppercase tracking-wider hover:bg-white hover:text-black transition-colors w-fit shadow-[6px_6px_0_var(--color-brand-orange)] sm:shadow-[8px_8px_0_var(--color-brand-orange)] hover:shadow-[4px_4px_0_var(--color-brand-orange)] transform hover:translate-x-1 hover:translate-y-1"
               >
                 Vedi i Match
               </Link>
             </div>
 
             {/* Mascotte mobile — affiancata ai bottoni */}
-            <div className="md:hidden flex-shrink-0 w-[110px] pointer-events-none select-none">
+            <div className="md:hidden flex-shrink-0 w-[80px] sm:w-[110px] pointer-events-none select-none">
               <img
                 src="/assets/beer.png"
                 alt=""
@@ -146,10 +146,10 @@ export function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6">
             <div>
-              <h2 className="font-display text-5xl md:text-7xl uppercase flex items-center gap-4 text-white mb-4">
-                <Swords className="w-12 h-12 text-brand-orange" /> Formato Torneo
+              <h2 className="font-display text-3xl sm:text-5xl md:text-7xl uppercase flex items-center gap-3 sm:gap-4 text-white mb-4">
+                <Swords className="w-8 h-8 sm:w-12 sm:h-12 text-brand-orange shrink-0" /> Formato Torneo
               </h2>
-              <p className="font-sans text-xl text-zinc-400 max-w-2xl">Dal girone all'italiana (tutti contro tutti) fino all'eliminazione diretta. Scopri le date e i super-match della Piazzetta Madness.</p>
+              <p className="font-sans text-base sm:text-xl text-zinc-400 max-w-2xl">Dal girone all'italiana (tutti contro tutti) fino all'eliminazione diretta. Scopri le date e i super-match della Piazzetta Madness.</p>
             </div>
             <Link 
               to="/match" 
@@ -172,10 +172,10 @@ export function Home() {
                   <span>Match Clou:</span>
                   <span>14 Ago</span>
                 </div>
-                <div className="flex items-center justify-between font-sans font-bold text-xl uppercase">
-                  <span>Saluta Andonio Spurs</span>
-                  <span className="text-brand-orange">VS</span>
-                  <span>Miami Spritz</span>
+                <div className="flex items-center justify-between gap-2 font-sans font-bold text-sm sm:text-lg md:text-xl uppercase">
+                  <span className="flex-1 text-left leading-tight">Saluta Andonio Spurs</span>
+                  <span className="text-brand-orange shrink-0 px-1">VS</span>
+                  <span className="flex-1 text-right leading-tight">Miami Spritz</span>
                 </div>
               </div>
             </div>
@@ -212,8 +212,8 @@ export function Home() {
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row items-center gap-16 text-white">
           <div className="flex-1 pr-0 lg:pr-10">
-            <h2 className="font-display text-6xl md:text-8xl font-black uppercase leading-[0.85] mb-8">
-              Non è solo <br/> 
+            <h2 className="font-display text-5xl sm:text-6xl md:text-8xl font-black uppercase leading-[0.85] mb-8">
+              Non è solo <br/>
               <span className="text-stroke-active text-transparent">un gioco</span>
             </h2>
             <div className="w-24 h-2 bg-brand-orange mb-8 transform -rotate-2"></div>

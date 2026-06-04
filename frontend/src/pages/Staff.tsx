@@ -37,10 +37,10 @@ export function Staff() {
         animate={{ opacity: 1, y: 0 }}
       >
         <div className="text-center mb-16">
-          <h1 className="font-display text-[80px] md:text-[120px] text-brand-orange uppercase leading-[0.8] mb-8 tracking-[-4px]">
+          <h1 className="font-display text-[44px] sm:text-[70px] md:text-[120px] text-brand-orange uppercase leading-[0.8] mb-6 tracking-[-2px] md:tracking-[-4px]">
             Lo Staff
           </h1>
-          <p className="text-xl font-sans text-zinc-400 max-w-3xl mx-auto">
+          <p className="text-base sm:text-xl font-sans text-zinc-400 max-w-3xl mx-auto">
             Le persone dietro le quinte che rendono possibile il Piazzetta Madness.
           </p>
         </div>

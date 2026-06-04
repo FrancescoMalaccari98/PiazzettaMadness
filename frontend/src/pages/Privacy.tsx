@@ -2,10 +2,10 @@ import { motion } from "motion/react";
 import { ShieldCheck, Cookie, User, Clock, Mail, FileText, AlertTriangle } from "lucide-react";
 
 const Section = ({ icon: Icon, title, children }: { icon: any; title: string; children: React.ReactNode }) => (
-  <section className="bg-zinc-900 border border-zinc-800 p-8 relative overflow-hidden">
-    <div className="flex items-start gap-4 mb-6 border-t-4 border-brand-orange pt-6">
-      <Icon className="w-8 h-8 text-brand-orange flex-shrink-0 mt-1" />
-      <h2 className="font-display text-3xl uppercase text-white">{title}</h2>
+  <section className="bg-zinc-900 border border-zinc-800 p-6 sm:p-8 relative overflow-hidden">
+    <div className="flex items-start gap-3 sm:gap-4 mb-6 border-t-4 border-brand-orange pt-6">
+      <Icon className="w-7 h-7 sm:w-8 sm:h-8 text-brand-orange flex-shrink-0 mt-1" />
+      <h2 className="font-display text-2xl sm:text-3xl uppercase text-white leading-tight">{title}</h2>
     </div>
     <div className="font-sans text-zinc-300 space-y-4 leading-relaxed text-base">
       {children}
@@ -21,7 +21,7 @@ export function Privacy() {
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
 
         <div className="mb-12">
-          <h1 className="font-display text-[80px] md:text-[120px] text-brand-orange uppercase leading-[0.8] mb-8 tracking-[-4px]">
+          <h1 className="font-display text-[44px] sm:text-[70px] md:text-[120px] text-brand-orange uppercase leading-[0.85] mb-6 tracking-[-2px] md:tracking-[-4px]">
             Privacy &amp;<br/>Cookie Policy
           </h1>
           <p className="font-sans text-zinc-400 text-lg">
@@ -56,11 +56,11 @@ export function Privacy() {
             <p>
               Il Titolare del Trattamento dei dati personali è:
             </p>
-            <div className="bg-zinc-950 border border-zinc-700 p-4 font-mono text-sm space-y-1">
+            <div className="bg-zinc-950 border border-zinc-700 p-4 font-mono text-xs sm:text-sm space-y-1 break-words">
               <p><strong className="text-white">Francesco Emiliani</strong></p>
               <p>Residenza: Via Vespucci 12, Porto Potenza Picena (MC)</p>
               <p>C.F.: MLNFNC98L22H211Z</p>
-              <p>Email: <a href="mailto:f.emiliani@piazzettamadness.it" className="text-brand-orange hover:underline">f.emiliani@piazzettamadness.it</a></p>
+              <p>Email: <a href="mailto:f.emiliani@piazzettamadness.it" className="text-brand-orange hover:underline break-all">f.emiliani@piazzettamadness.it</a></p>
             </div>
             <p className="text-zinc-400 text-sm">
               Per esercitare i tuoi diritti o per qualsiasi domanda relativa al trattamento dei tuoi

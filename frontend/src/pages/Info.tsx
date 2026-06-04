@@ -8,10 +8,10 @@ export function Info() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <h1 className="font-display text-[80px] md:text-[120px] text-brand-orange uppercase leading-[0.8] mb-8 tracking-[-4px] text-center">
+        <h1 className="font-display text-[44px] sm:text-[80px] md:text-[120px] text-brand-orange uppercase leading-[0.8] mb-6 tracking-[-2px] md:tracking-[-4px] text-center">
           Info & Rules
         </h1>
-        <p className="text-xl font-sans text-zinc-400 mb-12 text-center">
+        <p className="text-base sm:text-xl font-sans text-zinc-400 mb-12 text-center">
           Le regole della strada. Leggi attentamente o non scendere in campo.
         </p>
 
@@ -21,7 +21,7 @@ export function Info() {
             <div className="absolute top-0 right-0 p-8 opacity-10">
               <BadgeInfo className="w-48 h-48" />
             </div>
-            <h2 className="font-display text-4xl mb-6 flex items-center gap-3 relative z-10 text-brand-orange border-t-4 border-brand-orange pt-4">
+            <h2 className="font-display text-2xl sm:text-4xl mb-6 flex items-center gap-3 relative z-10 text-brand-orange border-t-4 border-brand-orange pt-4">
               Formato Torneo
             </h2>
             <div className="font-sans text-zinc-300 space-y-4 relative z-10">
@@ -41,7 +41,7 @@ export function Info() {
             <div className="absolute top-0 right-0 p-8 opacity-10">
               <Target className="w-48 h-48" />
             </div>
-            <h2 className="font-display text-4xl mb-6 flex items-center gap-3 relative z-10 text-brand-orange border-t-4 border-brand-orange pt-4">
+            <h2 className="font-display text-2xl sm:text-4xl mb-6 flex items-center gap-3 relative z-10 text-brand-orange border-t-4 border-brand-orange pt-4">
               Requisiti Iscrizione
             </h2>
             <div className="font-sans text-zinc-300 space-y-4 relative z-10">
@@ -58,7 +58,7 @@ export function Info() {
             <div className="absolute top-0 right-0 p-8 opacity-10">
               <ShieldAlert className="w-48 h-48" />
             </div>
-            <h2 className="font-display text-4xl mb-6 flex items-center gap-3 relative z-10 text-brand-orange border-t-4 border-brand-orange pt-4">
+            <h2 className="font-display text-2xl sm:text-4xl mb-6 flex items-center gap-3 relative z-10 text-brand-orange border-t-4 border-brand-orange pt-4">
               Comportamento
             </h2>
             <div className="font-sans text-zinc-300 space-y-4 relative z-10">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, type TargetAndTransition } from 'motion/react';
 import { Flame } from 'lucide-react';
 
 export function Projection() {
@@ -156,7 +156,7 @@ function TeamScore({ side, teamName, score, fouls, animEvent }: { side: 1 | 2, t
   const points = isAnim ? animEvent.points : 0;
   
   // Create different animation properties based on the points scored
-  const getAnimProps = () => {
+  const getAnimProps = (): TargetAndTransition => {
     if (!isAnim) return { scale: 1, rotate: 0, color: side === 1 ? "#ea6324" : "#ffffff", textShadow: "none" };
     
     if (points === 1) {

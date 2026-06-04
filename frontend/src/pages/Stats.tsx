@@ -81,10 +81,10 @@ export function Stats() {
             </div>
             <div className="relative z-10 text-center">
               <p className="font-display text-brand-orange uppercase tracking-[0.3em] text-sm mb-3">Piazzetta Madness 2026</p>
-              <h1 className="font-display text-[80px] md:text-[120px] uppercase leading-[0.8] tracking-[-4px] text-white mb-8">
+              <h1 className="font-display text-[40px] sm:text-[65px] md:text-[120px] uppercase leading-[0.85] tracking-[-1px] md:tracking-[-4px] text-white mb-6">
                 Statistiche<br /><span className="text-brand-orange">Giocatori</span>
               </h1>
-              <p className="font-sans text-zinc-400 text-lg max-w-xl mx-auto">
+              <p className="font-sans text-zinc-400 text-base sm:text-lg max-w-xl mx-auto">
                 I numeri non mentono. Ogni canestro, ogni assist, ogni rimbalzo strappato.
               </p>
             </div>
@@ -94,20 +94,20 @@ export function Stats() {
         {/* — MVP TORNEO — */}
         {tournamentMvp && (
         <section className="mb-16">
-          <h2 className="font-display text-2xl uppercase tracking-widest text-zinc-500 mb-6 flex items-center gap-3">
+          <h2 className="font-display text-lg sm:text-2xl uppercase tracking-widest text-zinc-500 mb-6 flex items-center gap-3">
             <Trophy className="w-5 h-5 text-brand-yellow" /> MVP del Torneo
           </h2>
           <div className="border-[4px] border-brand-yellow bg-zinc-900 shadow-[8px_8px_0_var(--color-brand-yellow)] overflow-hidden">
             <div className="grid grid-cols-1 md:grid-cols-3">
-              <div className="bg-brand-yellow/10 flex flex-col items-center justify-center p-10 border-r-0 md:border-r-4 border-brand-yellow/30">
-                <Medal className="w-16 h-16 text-brand-yellow mb-3 opacity-80" />
-                <span className="font-display text-[80px] leading-none text-brand-yellow font-black">MVP</span>
+              <div className="bg-brand-yellow/10 flex flex-col items-center justify-center p-6 md:p-10 border-r-0 md:border-r-4 border-brand-yellow/30 border-b-4 md:border-b-0">
+                <Medal className="w-10 h-10 md:w-16 md:h-16 text-brand-yellow mb-2 md:mb-3 opacity-80" />
+                <span className="font-display text-[56px] md:text-[80px] leading-none text-brand-yellow font-black">MVP</span>
               </div>
-              <div className="col-span-2 p-8 md:p-10 flex flex-col justify-center">
+              <div className="col-span-2 p-6 md:p-10 flex flex-col justify-center">
                 <span className="font-display text-xs uppercase tracking-[0.3em] text-zinc-500 mb-2">Miglior giocatore del torneo</span>
-                <h3 className="font-display text-4xl md:text-6xl uppercase text-white leading-tight mb-3">{tournamentMvp.name}</h3>
-                <p className="font-sans font-bold text-brand-yellow text-lg mb-6">{tournamentMvp.team}</p>
-                <div className="grid grid-cols-4 gap-4">
+                <h3 className="font-display text-2xl sm:text-4xl md:text-6xl uppercase text-white leading-tight mb-2">{tournamentMvp.name}</h3>
+                <p className="font-sans font-bold text-brand-yellow text-base mb-4">{tournamentMvp.team}</p>
+                <div className="grid grid-cols-4 gap-2 sm:gap-4">
                   {[
                     { label: "PPG", val: tournamentMvp.pts },
                     { label: "APG", val: tournamentMvp.ast },
@@ -135,7 +135,7 @@ export function Stats() {
           viewport={{ once: true, margin: "-60px" }}
           transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
         >
-          <h2 className="font-display text-2xl uppercase tracking-widest text-zinc-500 mb-6 flex items-center gap-3">
+          <h2 className="font-display text-lg sm:text-2xl uppercase tracking-widest text-zinc-500 mb-6 flex items-center gap-3">
             <Star className="w-5 h-5 text-brand-orange" /> Leaders di Categoria
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -164,7 +164,7 @@ export function Stats() {
 
         {/* — MVP PER PARTITA — */}
         <section className="mb-16">
-          <h2 className="font-display text-2xl uppercase tracking-widest text-zinc-500 mb-6 flex items-center gap-3">
+          <h2 className="font-display text-lg sm:text-2xl uppercase tracking-widest text-zinc-500 mb-6 flex items-center gap-3">
             <Flame className="w-5 h-5 text-brand-orange" /> MVP per Partita
           </h2>
           <div className="border-[3px] border-zinc-800 bg-zinc-900 overflow-hidden">
@@ -190,7 +190,7 @@ export function Stats() {
 
         {/* — CLASSIFICHE INDIVIDUALI — */}
         <section className="mb-16">
-          <h2 className="font-display text-2xl uppercase tracking-widest text-zinc-500 mb-6 flex items-center gap-3">
+          <h2 className="font-display text-lg sm:text-2xl uppercase tracking-widest text-zinc-500 mb-6 flex items-center gap-3">
             <Trophy className="w-5 h-5 text-brand-blue" /> Classifiche Individuali
           </h2>
 
@@ -200,7 +200,7 @@ export function Stats() {
               <button
                 key={cat.key}
                 onClick={() => setActiveTab(cat.key)}
-                className={`flex items-center gap-2 px-5 py-2.5 font-display text-sm uppercase tracking-widest border-[2px] transition-all
+                className={`flex items-center gap-1.5 px-3 sm:px-5 py-2 font-display text-[10px] sm:text-sm uppercase tracking-widest border-[2px] transition-all
                   ${activeTab === cat.key
                     ? `${cat.border} ${cat.bg} ${cat.accent}`
                     : "border-zinc-700 text-zinc-500 hover:border-zinc-500 hover:text-zinc-300"
@@ -222,6 +222,14 @@ export function Stats() {
                 {activeCategory.unit}
               </span>
             </div>
+            <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+            >
             {leaderboard.map((player, i) => {
               const val = player[activeTab];
               const max = Math.max(...leaderboard.map(p => Math.abs(p[activeTab])));
@@ -232,8 +240,8 @@ export function Stats() {
                     {i + 1}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 mb-1.5">
-                      <Link to={`/statistiche/${player.slug}`} className={`font-sans font-bold text-sm uppercase hover:text-brand-orange transition-colors ${i === 0 ? "text-white" : "text-zinc-300"}`}>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-3 mb-1.5">
+                      <Link to={`/statistiche/${player.slug}`} className={`font-sans font-bold text-xs sm:text-sm uppercase hover:text-brand-orange transition-colors truncate ${i === 0 ? "text-white" : "text-zinc-300"}`}>
                         {player.name}
                       </Link>
                       <span className="font-sans text-xs text-zinc-600 truncate hidden sm:block">{player.team}</span>
@@ -251,12 +259,14 @@ export function Stats() {
                 </div>
               );
             })}
+            </motion.div>
+            </AnimatePresence>
           </div>
         </section>
 
         {/* — STATISTICHE DI SQUADRA (FIBA) — */}
         <section className="mb-16">
-          <h2 className="font-display text-2xl uppercase tracking-widest text-zinc-500 mb-6 flex items-center gap-3">
+          <h2 className="font-display text-lg sm:text-2xl uppercase tracking-widest text-zinc-500 mb-6 flex items-center gap-3">
             <BarChart2 className="w-5 h-5 text-brand-blue" /> Statistiche di Squadra
           </h2>
           <div className="overflow-x-auto">
@@ -299,7 +309,7 @@ export function Stats() {
 
         {/* — ROSTER PER SQUADRA — */}
         <section>
-          <h2 className="font-display text-2xl uppercase tracking-widest text-zinc-500 mb-6 flex items-center gap-3">
+          <h2 className="font-display text-lg sm:text-2xl uppercase tracking-widest text-zinc-500 mb-6 flex items-center gap-3">
             <Shield className="w-5 h-5 text-brand-yellow" /> Roster per Squadra
           </h2>
           <div className="space-y-3">
