@@ -4,19 +4,8 @@ import { X, ChevronLeft, ChevronRight } from "lucide-react";
 
 const API = import.meta.env.VITE_API_URL ?? "";
 
-const defaultPhotos = [
-  "https://images.unsplash.com/photo-1546519638-68e109498ffc?auto=format&fit=crop&q=80&w=1200",
-  "https://images.unsplash.com/photo-1515523110800-9415d13b84a8?auto=format&fit=crop&q=80&w=1200",
-  "https://images.unsplash.com/photo-1518481612222-68bbe828def1?auto=format&fit=crop&q=80&w=1200",
-  "https://images.unsplash.com/photo-1504450758481-7338eba7524a?auto=format&fit=crop&q=80&w=1200",
-  "https://images.unsplash.com/photo-1627627256672-027a05fffce0?auto=format&fit=crop&q=80&w=1200",
-  "https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fit=crop&q=80&w=1200",
-  "https://images.unsplash.com/photo-1526627702844-934336aa6b60?auto=format&fit=crop&q=80&w=1200",
-  "https://images.unsplash.com/photo-1560023907-5f339617ea2d?auto=format&fit=crop&q=80&w=1200",
-];
-
 export function Photos() {
-  const [photos, setPhotos] = useState<string[]>(defaultPhotos);
+  const [photos, setPhotos] = useState<string[]>([]);
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
 
   useEffect(() => {

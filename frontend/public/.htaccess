@@ -15,5 +15,8 @@ RewriteRule \.(js|mjs|css|png|jpg|jpeg|gif|ico|svg|webp|woff|woff2|ttf|eot|map|j
 # ── API: lascia gestire ad Apache + api/.htaccess ────────────
 RewriteRule ^api/ - [L]
 
+# ── img/: lascia gestire ad Apache (list.php + file statici) ─
+RewriteRule ^img/ - [L]
+
 # ── Tutto il resto → index.html (React Router) ───────────────
 RewriteRule ^ index.html [L]
