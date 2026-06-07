@@ -51,7 +51,7 @@ export function CookieBanner() {
           </p>
           <p className="font-sans text-sm text-zinc-300 leading-relaxed">
             Questo sito usa cookie tecnici necessari e, con il tuo consenso, cookie analitici
-            (Google Analytics) per misurare gli accessi. I tuoi dati sono trattati da{" "}
+            (Google Analytics) e di terze parti (Google Maps) per misurare gli accessi e mostrare mappe interattive. I tuoi dati sono trattati da{" "}
             <strong className="text-white">Francesco Emiliani</strong> nel rispetto del GDPR (Reg. UE 2016/679).{" "}
             <Link
               to="/privacy"

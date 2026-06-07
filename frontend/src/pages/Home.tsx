@@ -1,8 +1,88 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "motion/react";
 import { Calendar, MapPin, Trophy, Users, ArrowUpRight, Swords } from "lucide-react";
 
+const MAPS_URL = "https://maps.app.goo.gl/5kgGKRw5Hm3LJHbn9";
+
+const API = import.meta.env.VITE_API_URL ?? "";
+
+const IT_MONTHS_MAP: Record<string, number> = {
+  Gen:1,Feb:2,Mar:3,Apr:4,Mag:5,Giu:6,Lug:7,Ago:8,Set:9,Ott:10,Nov:11,Dic:12
+};
+
+// Parsa "10 Lug 20:45" e calcola target + visibilità:
+// - Prima del kickoff → mostra countdown a quest'anno
+// - Entro 30 giorni dal kickoff → nascondi (torneo in corso)
+// - Dopo 30 giorni → mostra countdown all'anno prossimo
+function getKickoffState(dateStr: string): { target: Date; show: boolean } | null {
+  const [day, mon, time] = dateStr.split(" ");
+  const month = IT_MONTHS_MAP[mon];
+  if (!month || !time) return null;
+  const [hour, minute] = time.split(":").map(Number);
+  const now = new Date();
+  const year = now.getFullYear();
+  const thisYear = new Date(year, month - 1, parseInt(day), hour, minute, 0);
+  const hideUntil = new Date(thisYear.getTime() + 30 * 86400000);
+  if (now < thisYear) return { target: thisYear, show: true };
+  if (now < hideUntil) return { target: thisYear, show: false };
+  return { target: new Date(year + 1, month - 1, parseInt(day), hour, minute, 0), show: true };
+}
+
+function useCountdown(target: Date) {
+  const calc = () => {
+    const diff = target.getTime() - Date.now();
+    if (diff <= 0) return { days: 0, hours: 0, minutes: 0, seconds: 0, over: true };
+    return {
+      days:    Math.floor(diff / 86400000),
+      hours:   Math.floor((diff % 86400000) / 3600000),
+      minutes: Math.floor((diff % 3600000)  / 60000),
+      seconds: Math.floor((diff % 60000)    / 1000),
+      over: false,
+    };
+  };
+  const [time, setTime] = useState(calc);
+  useEffect(() => {
+    const id = setInterval(() => setTime(calc()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  return time;
+}
+
+function CountdownUnit({ value, label, pulse = false }: { value: number; label: string; pulse?: boolean }) {
+  return (
+    <div className="flex flex-col items-center gap-3">
+      <div className={`bg-zinc-900 border-[3px] border-brand-orange px-5 sm:px-10 py-4 sm:py-7 min-w-[76px] sm:min-w-[120px] flex items-center justify-center shadow-[6px_6px_0_var(--color-brand-blue)] ${pulse ? "animate-pulse" : ""}`}>
+        <span className="font-display text-5xl sm:text-7xl md:text-8xl text-white tabular-nums leading-none tracking-[-2px]">
+          {String(value).padStart(2, "0")}
+        </span>
+      </div>
+      <span className="font-display text-[10px] sm:text-xs uppercase tracking-[0.3em] text-brand-orange">{label}</span>
+    </div>
+  );
+}
+
 export function Home() {
+  const [kickoffState, setKickoffState] = useState<{ target: Date; show: boolean } | null>(null);
+
+  useEffect(() => {
+    fetch(`${API}/api/partite`)
+      .then(r => r.ok ? r.json() : null)
+      .then((matches: { date: string }[] | null) => {
+        if (!matches?.length) return;
+        const first = matches.find(m => m.date);
+        if (first) setKickoffState(getKickoffState(first.date));
+      })
+      .catch(() => {});
+  }, []);
+
+  const fallbackTarget = (() => {
+    const now = new Date();
+    const y = now.getFullYear();
+    const t = new Date(y, 6, 10, 20, 45, 0); // 10 Lug — stessa data della prima partita
+    return t > now ? t : new Date(y + 1, 6, 10, 20, 45, 0);
+  })();
+  const countdown = useCountdown(kickoffState?.target ?? fallbackTarget);
   return (
     <div className="w-full">
       {/* Hero Section */}
@@ -96,18 +176,60 @@ export function Home() {
         </div>
       </div>
 
+      {/* Countdown */}
+      {(kickoffState === null || kickoffState.show) && !countdown.over && (
+        <section className="py-16 md:py-24 bg-brand-bg border-b-[4px] border-zinc-800">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p className="font-display text-xs uppercase tracking-[0.35em] text-zinc-500 mb-8">La Madness inizia tra</p>
+            <div className="flex items-start justify-center gap-2 sm:gap-4">
+              <CountdownUnit value={countdown.days}    label="Giorni"  />
+              <div className="w-px bg-zinc-800 self-stretch mt-2 mb-8 mx-1 sm:mx-2" />
+              <CountdownUnit value={countdown.hours}   label="Ore"     />
+              <div className="w-px bg-zinc-800 self-stretch mt-2 mb-8 mx-1 sm:mx-2" />
+              <CountdownUnit value={countdown.minutes} label="Minuti"  />
+              <div className="w-px bg-zinc-800 self-stretch mt-2 mb-8 mx-1 sm:mx-2" />
+              <CountdownUnit value={countdown.seconds} label="Secondi" pulse />
+            </div>
+            <p className="font-mono text-xs text-zinc-700 mt-8 tracking-widest">
+              ESTATE 2026 — PORTO POTENZA PICENA
+            </p>
+          </div>
+        </section>
+      )}
+
       {/* Info Quick Look - Bento Grid Layout */}
       <section className="py-32 bg-brand-bg relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
             
-            {/* Block 1: Large Focus */}
-            <div className="md:col-span-8 bg-zinc-900 border-[4px] border-brand-blue p-8 md:p-12 relative overflow-hidden group hover:bg-zinc-800 transition-colors">
-              <MapPin className="w-12 h-12 text-brand-blue mb-16 md:mb-24 group-hover:scale-110 group-hover:rotate-6 transition-transform" />
-              <div className="absolute top-4 right-8 font-display text-[150px] text-zinc-800/30 leading-none pointer-events-none group-hover:text-brand-blue/10 transition-colors">01</div>
-              <h3 className="font-display text-4xl md:text-5xl mb-4 text-white uppercase">The Court</h3>
-              <p className="font-sans text-zinc-400 text-lg md:text-xl max-w-md">Il tempio del basket di strada. Dove l'asfalto scotta e non ci sono regole scritte, solo rispetto.</p>
-            </div>
+            {/* Block 1: The Court */}
+            <a
+              href={MAPS_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="md:col-span-8 bg-zinc-900 border-[4px] border-brand-blue p-8 md:p-12 relative overflow-hidden group hover:bg-zinc-800 transition-colors flex flex-col justify-between gap-8"
+            >
+              <div className="relative">
+                <MapPin className="w-12 h-12 text-brand-blue mb-6 group-hover:scale-110 group-hover:rotate-6 transition-transform" />
+                <div className="absolute top-0 right-0 pointer-events-none opacity-10 group-hover:opacity-20 transition-opacity">
+                  <img src="/logo.png" alt="" className="w-32 h-32 object-contain" />
+                </div>
+                <h3 className="font-display text-4xl md:text-5xl mb-3 text-white uppercase">The Court</h3>
+                <p className="font-sans text-zinc-400 text-lg md:text-xl max-w-md">Il tempio del basket di strada. Dove l'asfalto scotta e non ci sono regole scritte, solo rispetto.</p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-6">
+                <div className="space-y-1">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-zinc-600">Indirizzo</p>
+                  <p className="font-mono text-sm text-zinc-300">Via Marche, Porto Potenza Picena (MC)</p>
+                  <p className="font-mono text-[11px] text-zinc-600 tracking-widest">43°21'23"N  13°41'49"E</p>
+                </div>
+                <div className="flex items-center gap-3 bg-brand-blue text-white px-5 py-3 font-display uppercase text-sm tracking-widest group-hover:bg-white group-hover:text-black transition-colors shrink-0 border-[2px] border-transparent group-hover:border-brand-blue shadow-[4px_4px_0_rgba(0,0,0,0.3)]">
+                  Apri su Google Maps
+                  <ArrowUpRight className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                </div>
+              </div>
+            </a>
 
             {/* Block 2: High Contrast Accent */}
             <div className="md:col-span-4 bg-brand-orange border-[4px] border-brand-orange p-8 md:p-12 flex flex-col justify-between group cursor-crosshair">
@@ -231,14 +353,13 @@ export function Home() {
           
           <div className="flex-1 w-full relative mt-12 lg:mt-0">
              <div className="aspect-[4/5] md:aspect-square bg-zinc-900 border-[8px] border-brand-orange relative group overflow-hidden shadow-[20px_20px_0_var(--color-brand-blue)] rotate-2 hover:rotate-0 transition-transform">
-              <div className="absolute -left-6 top-10 bg-brand-yellow text-brand-bg px-8 py-2 font-black text-xl -rotate-6 uppercase z-20 border-2 border-brand-bg">
+              <div className="absolute -left-6 top-4 bg-brand-yellow text-brand-bg px-8 py-2 font-black text-xl -rotate-6 uppercase z-20 border-2 border-brand-bg">
                 STREET CRED
               </div>
-              <img 
-                src="https://images.unsplash.com/photo-1518481612222-68bbe828def1?auto=format&fit=crop&q=80&w=800"
-                alt="Dunk"
+              <img
+                src="/assets/campetto.jpeg"
+                alt="Campetto Piazzetta Madness"
                 className="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700 scale-100 group-hover:scale-105"
-                referrerPolicy="no-referrer"
               />
               <span className="absolute inset-x-0 bottom-10 flex items-center justify-center text-brand-bg/50 font-black text-7xl md:text-8xl pointer-events-none uppercase tracking-widest z-20 mix-blend-difference">
                 MADNESS

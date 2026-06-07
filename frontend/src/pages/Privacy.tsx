@@ -140,6 +140,19 @@ export function Privacy() {
                 </p>
               </div>
 
+              <div className="border-l-4 border-brand-blue pl-4">
+                <h4 className="font-display text-white uppercase text-lg mb-2">Mappa interattiva (Google Maps)</h4>
+                <p>
+                  Solo previo tuo consenso, incorporiamo una mappa Google Maps per mostrare la
+                  posizione del campo di gioco. Il caricamento della mappa comporta l'invio del tuo
+                  indirizzo IP a Google LLC e l'impostazione di cookie tecnici da parte di Google.
+                  Se non presti consenso, la mappa non viene caricata.
+                </p>
+                <p className="mt-2 text-sm text-zinc-500">
+                  <strong>Base giuridica:</strong> consenso dell'interessato (art. 6, par. 1, lett. a GDPR).
+                </p>
+              </div>
+
               <div className="border-l-4 border-zinc-600 pl-4">
                 <h4 className="font-display text-white uppercase text-lg mb-2">Immagini e foto</h4>
                 <p>
@@ -191,10 +204,11 @@ export function Privacy() {
                 (hosting, server), designati come Responsabili del Trattamento ai sensi dell'art. 28 GDPR.
               </li>
               <li>
-                <strong className="text-white">Google LLC</strong> — esclusivamente se hai prestato consenso
-                all'uso di Google Analytics. Google agisce come Responsabile del Trattamento ai sensi
-                dell'art. 28 GDPR. I dati statistici aggregati possono essere elaborati su server situati
-                negli USA, nel rispetto delle garanzie previste dagli artt. 45-46 GDPR (Standard Contractual Clauses).
+                <strong className="text-white">Google LLC</strong> — esclusivamente se hai prestato consenso,
+                per Google Analytics (statistiche) e Google Maps (mappa interattiva). Google agisce come
+                Responsabile del Trattamento ai sensi dell'art. 28 GDPR. I dati possono essere elaborati
+                su server situati negli USA, nel rispetto delle garanzie previste dagli artt. 45-46 GDPR
+                (Standard Contractual Clauses).
               </li>
               <li>
                 Autorità competenti, esclusivamente nei casi previsti dalla legge.
@@ -244,7 +258,8 @@ export function Privacy() {
           <Section icon={Cookie} title="6. Cookie e tecnologie simili">
             <p>
               Questo sito utilizza <strong className="text-white">cookie tecnici necessari</strong> e,
-              solo previo consenso, <strong className="text-white">cookie analitici</strong> di Google Analytics.
+              solo previo consenso, <strong className="text-white">cookie analitici</strong> di Google Analytics
+              e cookie di terze parti di Google Maps per la mappa interattiva.
               Non utilizziamo cookie di profilazione o di marketing.
             </p>
 
@@ -276,7 +291,7 @@ export function Privacy() {
               </table>
             </div>
 
-            <h4 className="font-display text-white uppercase text-sm tracking-widest mt-4">Cookie analitici (solo con consenso)</h4>
+            <h4 className="font-display text-white uppercase text-sm tracking-widest mt-4">Cookie di terze parti (solo con consenso)</h4>
             <div className="overflow-hidden border border-zinc-700">
               <table className="w-full text-sm text-left">
                 <thead className="bg-zinc-800">
@@ -299,6 +314,12 @@ export function Privacy() {
                     <td className="p-3 text-zinc-400">Google Analytics</td>
                     <td className="p-3 text-zinc-400">Mantiene lo stato della sessione</td>
                     <td className="p-3 text-zinc-400">2 anni</td>
+                  </tr>
+                  <tr className="bg-zinc-950">
+                    <td className="p-3 font-mono text-brand-blue">NID, CONSENT</td>
+                    <td className="p-3 text-zinc-400">Google Maps</td>
+                    <td className="p-3 text-zinc-400">Funzionamento mappa interattiva e preferenze</td>
+                    <td className="p-3 text-zinc-400">6 mesi – 2 anni</td>
                   </tr>
                 </tbody>
               </table>

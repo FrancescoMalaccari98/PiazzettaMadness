@@ -31,20 +31,28 @@ export function Staff() {
   }, []);
 
   return (
-    <div className="pt-32 pb-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="pt-32 pb-20">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <div className="text-center mb-16">
-          <h1 className="font-display text-[44px] sm:text-[70px] md:text-[120px] text-brand-orange uppercase leading-[0.8] mb-6 tracking-[-2px] md:tracking-[-4px]">
-            Lo Staff
-          </h1>
-          <p className="text-base sm:text-xl font-sans text-zinc-400 max-w-3xl mx-auto">
-            Le persone dietro le quinte che rendono possibile il Piazzetta Madness.
-          </p>
+        <div className="relative overflow-hidden border-b-[4px] border-zinc-800 mb-16">
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
+            <span className="font-display font-black text-[18vw] uppercase text-white/[0.025] whitespace-nowrap tracking-tighter leading-none">
+              STAFF
+            </span>
+          </div>
+          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center pb-12">
+            <h1 className="font-display text-[44px] sm:text-[70px] md:text-[120px] text-brand-orange uppercase leading-[0.8] mb-6 tracking-[-2px] md:tracking-[-4px]">
+              Lo Staff
+            </h1>
+            <p className="text-base sm:text-xl font-sans text-zinc-400 max-w-3xl mx-auto">
+              Le persone dietro le quinte che rendono possibile il Piazzetta Madness.
+            </p>
+          </div>
         </div>
 
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {staffMembers.map((member, index) => (
             <motion.div
@@ -99,6 +107,7 @@ export function Staff() {
               Contattaci
             </a>
           </div>
+        </div>
         </div>
       </motion.div>
     </div>

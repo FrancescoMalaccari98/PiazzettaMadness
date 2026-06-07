@@ -535,19 +535,27 @@ export function Matches() {
     .sort(([a], [b]) => parseDayKey(a) - parseDayKey(b));
 
   return (
-    <div className="pt-32 pb-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="pt-32 pb-20">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
 
         {/* Header */}
-        <div className="text-center mb-16">
-          <h1 className="font-display text-[56px] sm:text-[80px] md:text-[120px] text-brand-orange uppercase leading-[0.8] mb-6 tracking-[-2px] md:tracking-[-4px]">
-            Match
-          </h1>
-          <p className="text-base sm:text-xl font-sans text-zinc-400 max-w-2xl mx-auto">
-            Dal girone all'italiana fino alla pazzesca finale dei playoff. Ripercorri ogni canestro.
-          </p>
+        <div className="relative overflow-hidden border-b-[4px] border-zinc-800 mb-16">
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
+            <span className="font-display font-black text-[18vw] uppercase text-white/[0.025] whitespace-nowrap tracking-tighter leading-none">
+              MATCH
+            </span>
+          </div>
+          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center pb-12">
+            <h1 className="font-display text-[56px] sm:text-[80px] md:text-[120px] text-brand-orange uppercase leading-[0.8] mb-6 tracking-[-2px] md:tracking-[-4px]">
+              Match
+            </h1>
+            <p className="text-base sm:text-xl font-sans text-zinc-400 max-w-2xl mx-auto">
+              Dal girone all'italiana fino alla pazzesca finale dei playoff. Ripercorri ogni canestro.
+            </p>
+          </div>
         </div>
 
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* — CALENDARIO — */}
         <div className="mb-24">
           <h2 className="font-display text-2xl sm:text-4xl md:text-5xl uppercase flex items-center gap-4 border-t-[6px] border-zinc-800 pt-6 pb-10 text-white">
@@ -740,6 +748,7 @@ export function Matches() {
               )}
             </div>
           </div>
+        </div>
         </div>
 
       </motion.div>
