@@ -105,7 +105,7 @@ export function Photos() {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="relative z-10 w-full max-w-3xl px-4 flex flex-col items-center select-none"
+              className="relative z-10 w-full max-w-4xl px-4 flex flex-col items-center select-none"
             >
               <button
                 onClick={() => setSelectedPhotoIndex(null)}
@@ -118,7 +118,7 @@ export function Photos() {
                 <img
                   src={photos[selectedPhotoIndex]}
                   alt={`Madness expanded ${selectedPhotoIndex + 1}`}
-                  className="max-h-[50vh] max-w-full object-contain"
+                  className="max-h-[65vh] max-w-full object-contain"
                   referrerPolicy="no-referrer"
                 />
 
