@@ -118,7 +118,7 @@ export function Photos() {
                 <img
                   src={photos[selectedPhotoIndex]}
                   alt={`Madness expanded ${selectedPhotoIndex + 1}`}
-                  className="max-h-[75vh] max-w-full object-contain"
+                  className="max-h-[60vh] max-w-full object-contain"
                   referrerPolicy="no-referrer"
                 />
 
