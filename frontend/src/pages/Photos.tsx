@@ -80,7 +80,7 @@ export function Photos() {
               <img
                 src={url}
                 alt={`Madness action moment ${i + 1}`}
-                className="w-full h-auto object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500 scale-100 group-hover:scale-105"
+                className="w-full h-auto object-cover transition-all duration-500 scale-100 group-hover:scale-105"
                 loading="lazy"
                 referrerPolicy="no-referrer"
               />
