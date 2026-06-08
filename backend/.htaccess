@@ -1,0 +1,48 @@
+# ============================================================
+# api/.htaccess
+# URL rewriting per il backend PHP su Aruba (Apache).
+# Deployare in public_html/api/.htaccess
+# ============================================================
+
+Options -Indexes
+Options -MultiViews
+
+# Abilita il motore di rewrite
+RewriteEngine On
+
+# Base: questa dir è montata su /api-web/
+RewriteBase /api-web/
+
+# Serve i file fisici esistenti (es. eventuali snapshot .json)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Tutto il resto → index.php, passando la query string
+RewriteRule ^(.*)$ index.php [QSA,L]
+
+# ── Sicurezza ───────────────────────────────────────────────
+
+# Blocca accesso diretto ai file di config e lib
+<FilesMatch "^(database|cors|auth|response|helpers|slug)\.php$">
+    Order deny,allow
+    Deny from all
+</FilesMatch>
+
+# Nasconde la firma del server
+ServerSignature Off
+
+# Niente accesso a .git, .env e simili
+<FilesMatch "(^\.git|\.env|\.htpasswd)">
+    Order deny,allow
+    Deny from all
+</FilesMatch>
+
+# Header di sicurezza aggiuntivi
+<IfModule mod_headers.c>
+    Header always set X-Frame-Options "DENY"
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# Charset di default
+AddDefaultCharset UTF-8

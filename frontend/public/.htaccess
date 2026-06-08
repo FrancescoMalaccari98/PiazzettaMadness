@@ -1,0 +1,24 @@
+# ============================================================
+# public/.htaccess  →  dist/.htaccess
+# Root del sito su Aruba: www.piazzettamadness.it/.htaccess
+# ============================================================
+
+Options -Indexes -MultiViews
+RewriteEngine On
+RewriteBase /
+
+# ── File statici: serve direttamente per estensione ──────────
+# Più affidabile di %{REQUEST_FILENAME} -f su hosting condiviso Aruba,
+# perché non dipende da come Apache risolve il percorso assoluto.
+RewriteRule \.(js|mjs|css|png|jpg|jpeg|gif|ico|svg|webp|woff|woff2|ttf|eot|map|json|txt|xml)$ - [L,NC]
+
+# ── API: lascia gestire ad Apache + rispettivi .htaccess ─────
+RewriteRule ^api/ - [L]
+RewriteRule ^api-web/ - [L]
+RewriteRule ^api-tabellone/ - [L]
+
+# ── img/: lascia gestire ad Apache (list.php + file statici) ─
+RewriteRule ^img/ - [L]
+
+# ── Tutto il resto → index.html (React Router) ───────────────
+RewriteRule ^ index.html [L]

@@ -58,7 +58,7 @@ function LiveScoreboard() {
   const [teamOptions, setTeamOptions] = useState<string[]>([]);
 
   useEffect(() => {
-    fetch(`${API}/api/squadre`)
+    fetch(`${API}/api-web/squadre`)
       .then(r => r.ok ? r.json() as Promise<TeamApi[]> : null)
       .then(data => {
         if (!data || data.length === 0) return;

@@ -396,8 +396,8 @@ export function Matches() {
   // Fetch squadre + partite in parallelo dal backend
   useEffect(() => {
     Promise.all([
-      fetch(`${API}/api/squadre`).then(r => r.ok ? r.json() as Promise<TeamApi[]> : null),
-      fetch(`${API}/api/partite`).then(r => r.ok ? r.json() as Promise<Match[]>   : null),
+      fetch(`${API}/api-web/squadre`).then(r => r.ok ? r.json() as Promise<TeamApi[]> : null),
+      fetch(`${API}/api-web/partite`).then(r => r.ok ? r.json() as Promise<Match[]>   : null),
     ])
     .then(([squadre, partite]) => {
       if (!squadre && !partite) return; // backend non disponibile
@@ -437,7 +437,7 @@ export function Matches() {
     if (match.status !== "COMPLETA") return;
     setLoadingDetail(true);
     try {
-      const res = await fetch(`${API}/api/partite/${match.id}`);
+      const res = await fetch(`${API}/api-web/partite/${match.id}`);
       if (res.ok) setMatchDetail(await res.json());
     } catch {
       // backend non ancora disponibile — mostra il summary base
