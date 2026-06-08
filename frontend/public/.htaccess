@@ -21,4 +21,4 @@ RewriteRule ^api-tabellone/ - [L]
 RewriteRule ^img/ - [L]
 
 # ── Tutto il resto → index.html (React Router) ───────────────
-RewriteRule ^ index.html [L]
+RewriteRule ^ index.php [L]
