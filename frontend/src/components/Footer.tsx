@@ -35,15 +35,6 @@ export function Footer() {
         </span>
       </div>
 
-      {/* Mascotte — destra, parzialmente tagliata, fluttua */}
-      <div className="absolute right-0 bottom-24 md:bottom-14 w-[90px] md:w-[300px] pointer-events-none select-none opacity-50 md:opacity-90">
-        <img
-          src="/assets/beer.png"
-          alt=""
-          className="w-full h-auto object-contain"
-          style={{ animation: 'mascotFloat 4s ease-in-out infinite' }}
-        />
-      </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-16">
         <div className="grid grid-cols-2 md:grid-cols-12 gap-6 md:gap-12">

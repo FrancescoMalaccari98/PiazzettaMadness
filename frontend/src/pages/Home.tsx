@@ -88,32 +88,19 @@ export function Home() {
       {/* Hero Section */}
       <section className="relative min-h-[70vh] md:min-h-[90vh] flex items-center justify-center overflow-hidden pt-20">
         <div className="absolute inset-0 z-0">
-          {/* &w=1920: Unsplash ritaglia a 1920px invece di mandare l'originale 5650px (da ~2.5MB a ~200KB).
-              fetchPriority="high": segnala al browser che questa è l'immagine più importante (LCP).
-              loading="eager": esplicito, evita che un eventuale default "lazy" blocchi l'LCP. */}
           <img
-            src="https://images.unsplash.com/photo-1546519638-68e109498ffc?auto=format&fit=crop&q=80&w=1920"
-            alt="Street Basketball Action"
-            className="w-full h-full object-cover object-center opacity-30 mix-blend-luminosity"
+            src="/assets/campetto.jpeg"
+            alt="Street Basketball Court"
+            className="w-full h-full object-cover object-center opacity-40 grayscale"
             fetchPriority="high"
             loading="eager"
-            referrerPolicy="no-referrer"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/60 to-transparent"></div>
           <div className="absolute inset-0 bg-brand-blue/10 mix-blend-overlay"></div>
         </div>
 
-        {/* Mascotte desktop — grande in basso a destra */}
-        <div className="absolute right-0 bottom-0 w-[400px] lg:w-[520px] z-10 pointer-events-none select-none hidden md:block">
-          <img
-            src="/assets/beer.png"
-            alt=""
-            className="w-full h-auto object-contain drop-shadow-[0_0_40px_rgba(234,99,36,0.25)]"
-            style={{ animation: 'mascotFloat 4s ease-in-out infinite' }}
-          />
-        </div>
 
-        <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-start text-left mt-6 md:mt-20 pb-8 md:pb-0">
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-start text-left pb-8 md:pb-0">
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -156,15 +143,6 @@ export function Home() {
               </Link>
             </div>
 
-            {/* Mascotte mobile — affiancata ai bottoni */}
-            <div className="md:hidden flex-shrink-0 w-[80px] sm:w-[110px] pointer-events-none select-none">
-              <img
-                src="/assets/beer.png"
-                alt=""
-                className="w-full h-auto object-contain"
-                style={{ animation: 'mascotFloat 4s ease-in-out infinite' }}
-              />
-            </div>
           </motion.div>
         </div>
       </section>
@@ -357,11 +335,11 @@ export function Home() {
                 STREET CRED
               </div>
               <img
-                src="/assets/campetto.jpeg"
-                alt="Campetto Piazzetta Madness"
-                className="w-full h-full object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700 scale-100 group-hover:scale-105"
+                src="/assets/beer.png"
+                alt="Mascotte Piazzetta Madness"
+                className="w-full h-full object-contain p-8 scale-100 group-hover:scale-110 transition-all duration-700"
               />
-              <span className="absolute inset-x-0 bottom-10 flex items-center justify-center text-brand-bg/50 font-black text-7xl md:text-8xl pointer-events-none uppercase tracking-widest z-20 mix-blend-difference">
+              <span className="absolute inset-x-0 bottom-10 flex items-center justify-center text-brand-bg/50 font-black text-4xl sm:text-5xl md:text-6xl pointer-events-none uppercase tracking-widest z-20 mix-blend-difference">
                 MADNESS
               </span>
             </div>

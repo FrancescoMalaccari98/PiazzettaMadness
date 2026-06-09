@@ -26,8 +26,16 @@ export function SplashScreen({ onDone }: { onDone: () => void }) {
         <motion.div
           exit={{ opacity: 0 }}
           transition={{ duration: 0.45 }}
-          className="fixed inset-0 z-[9999] bg-[#080808] overflow-hidden select-none flex items-center justify-center"
+          className="fixed inset-0 z-[9999] overflow-hidden select-none flex items-center justify-center"
         >
+          {/* ── SFONDO CAMPETTO ── */}
+          <img
+            src="/assets/campetto.jpeg"
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover grayscale"
+            style={{ filter: "grayscale(1) brightness(0.25)" }}
+            draggable={false}
+          />
 
           {/* ── 1. STRISCIA ARANCIONE CHE SPAZZA ── */}
           <motion.div
@@ -41,24 +49,41 @@ export function SplashScreen({ onDone }: { onDone: () => void }) {
             transition={{ duration: 0.32, ease: [0.4, 0, 0.2, 1] }}
           />
 
-          {/* ── 2. PERSONAGGIO — ghost rotante su tutta la pagina ── */}
+          {/* ── 2. FADE-IN SFONDO ── */}
           <motion.div
-            className="absolute inset-0 flex items-center justify-center pointer-events-none z-0"
+            className="absolute inset-0 pointer-events-none z-0"
             initial={{ opacity: 0 }}
             animate={{ opacity: phase >= 2 ? 1 : 0 }}
             transition={{ duration: 0.6 }}
           >
-            <motion.img
+          </motion.div>
+
+          {/* ── LOGO — top left come brand stamp ── */}
+          <motion.div
+            className="absolute top-5 sm:top-7 left-5 sm:left-8 z-20 pointer-events-none flex items-center gap-2 sm:gap-3"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: phase >= 1 ? 1 : 0, x: phase >= 1 ? 0 : -20 }}
+            transition={{ duration: 0.4 }}
+          >
+            <img src="/assets/logo.png" alt="Piazzetta Madness" className="w-9 sm:w-14 h-auto" draggable={false} />
+            <div className="hidden sm:flex flex-col leading-none">
+              <span className="font-display text-white text-[10px] sm:text-xs uppercase tracking-[0.2em]">Piazzetta</span>
+              <span className="font-display text-brand-orange text-[10px] sm:text-xs uppercase tracking-[0.2em]">Madness</span>
+            </div>
+          </motion.div>
+
+          {/* ── BEER — bottom right, bianco e nero ── */}
+          <motion.div
+            className="absolute right-0 bottom-0 z-10 pointer-events-none"
+            initial={{ opacity: 0, x: 40 }}
+            animate={{ opacity: phase >= 2 ? 1 : 0, x: phase >= 2 ? 0 : 40 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+          >
+            <img
               src="/assets/beer.png"
               alt=""
-              animate={{ rotate: 360 }}
-              transition={{ duration: 18, ease: "linear", repeat: Infinity }}
-              style={{
-                width: "min(150vw, 150vh)",
-                objectFit: "contain",
-                filter: "grayscale(1) brightness(0.6) contrast(1.4)",
-                opacity: 0.28,
-              }}
+              className="w-24 sm:w-48 md:w-72 h-auto object-contain"
+              style={{ filter: "grayscale(1) brightness(0.85)", animation: "mascotFloat 4s ease-in-out infinite" }}
               draggable={false}
             />
           </motion.div>
