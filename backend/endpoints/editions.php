@@ -33,7 +33,11 @@ function handle_editions_active(PDO $pdo): void {
             t.name AS tournament_name
         FROM editions e
         JOIN tournaments t ON t.id = e.tournament_id
+<<<<<<< HEAD
         WHERE e.status = 'Active'
+=======
+        WHERE e.status = 'active'
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
         ORDER BY e.year DESC
         LIMIT 1
     ";

@@ -10,8 +10,13 @@ Options -MultiViews
 # Abilita il motore di rewrite
 RewriteEngine On
 
+<<<<<<< HEAD
 # Base: questa dir è montata su /api-web/
 RewriteBase /api-web/
+=======
+# Base: questa dir è montata su /api/
+RewriteBase /api/
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
 
 # Serve i file fisici esistenti (es. eventuali snapshot .json)
 RewriteCond %{REQUEST_FILENAME} !-f

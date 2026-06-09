@@ -2,16 +2,34 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Lock, Plus, Minus, Play, Pause, RotateCcw, AlertTriangle } from 'lucide-react';
 
+<<<<<<< HEAD
 const API = import.meta.env.VITE_API_URL ?? "";
 
 // ── Tipo risposta /api/squadre ───────────────────────────────
 type TeamApi = { id: number; nome: string; girone: string };
+=======
+const TEAMS = [
+  "Saluta Andonio Spurs",
+  "Minnesode Timbermilf",
+  "Atlanta Robba",
+  "Miami Spritz",
+  "Boston Lopez",
+  "Denver McNuggets",
+  "Los Aiche Ride",
+  "Philadelphia 70Sexers"
+];
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
 
 export function Scoreboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
+<<<<<<< HEAD
+=======
+  // Autenticazione frontend-only: sufficiente per proteggere i controlli da utenti casuali.
+  // Quando il backend sarà pronto, sostituire con una vera chiamata API autenticata.
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (password === "madness26") {
@@ -28,17 +46,28 @@ export function Scoreboard() {
           <Lock className="w-16 h-16 text-brand-orange mb-6" />
           <h2 className="font-display text-4xl uppercase text-white mb-2">Area Staff</h2>
           <p className="font-sans text-zinc-400 mb-8 text-center">Inserisci la password per accedere al tabellone segnapunti.</p>
+<<<<<<< HEAD
 
           <form onSubmit={handleLogin} className="w-full flex flex-col gap-4">
             <input
               type="password"
+=======
+          
+          <form onSubmit={handleLogin} className="w-full flex flex-col gap-4">
+            <input 
+              type="password" 
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full bg-zinc-950 border border-zinc-700 text-white font-sans p-4 focus:outline-none focus:border-brand-orange text-center text-xl tracking-widest"
               placeholder="PASSWORD"
             />
             {error && <p className="text-red-500 text-sm font-sans text-center">{error}</p>}
+<<<<<<< HEAD
             <button
+=======
+            <button 
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
               type="submit"
               className="w-full bg-brand-orange text-brand-bg font-display uppercase text-2xl py-4 hover:bg-white transition-colors"
             >
@@ -54,6 +83,7 @@ export function Scoreboard() {
 }
 
 function LiveScoreboard() {
+<<<<<<< HEAD
   // ── Squadre dal DB ──────────────────────────────────────────
   const [teamOptions, setTeamOptions] = useState<string[]>([]);
 
@@ -75,21 +105,37 @@ function LiveScoreboard() {
   // ── Stato tabellone ─────────────────────────────────────────
   const [team1, setTeam1]   = useState("");
   const [team2, setTeam2]   = useState("");
+=======
+  const [team1, setTeam1] = useState(TEAMS[0]);
+  const [team2, setTeam2] = useState(TEAMS[1]);
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
   const [score1, setScore1] = useState(0);
   const [score2, setScore2] = useState(0);
   const [fouls1, setFouls1] = useState(0);
   const [fouls2, setFouls2] = useState(0);
+<<<<<<< HEAD
   const [quarter, setQuarter] = useState(1);
   const [time, setTime]     = useState(600);
   const [isRunning, setIsRunning] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
   // ── Restore da localStorage ──────────────────────────────────
+=======
+  
+  const [quarter, setQuarter] = useState(1);
+  const [time, setTime] = useState(600); // 10 minutes in seconds
+  const [isRunning, setIsRunning] = useState(false);
+
+  // Initialize from LocalStorage
+  const [isInitialized, setIsInitialized] = useState(false);
+
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
   useEffect(() => {
     const saved = localStorage.getItem('madness_scoreboard');
     if (saved) {
       try {
         const p = JSON.parse(saved);
+<<<<<<< HEAD
         if (p.team1) setTeam1(p.team1);
         if (p.team2) setTeam2(p.team2);
         setScore1(p.score1  ?? 0);
@@ -99,10 +145,22 @@ function LiveScoreboard() {
         setQuarter(p.quarter ?? 1);
         setTime(p.time !== undefined ? p.time : 600);
       } catch (_) {}
+=======
+        setTeam1(p.team1 || TEAMS[0]);
+        setTeam2(p.team2 || TEAMS[1]);
+        setScore1(p.score1 || 0);
+        setScore2(p.score2 || 0);
+        setFouls1(p.fouls1 || 0);
+        setFouls2(p.fouls2 || 0);
+        setQuarter(p.quarter || 1);
+        setTime(p.time !== undefined ? p.time : 600);
+      } catch(e) { }
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
     }
     setIsInitialized(true);
   }, []);
 
+<<<<<<< HEAD
   // ── Sync su localStorage + BroadcastChannel ─────────────────
   useEffect(() => {
     if (!isInitialized) return;
@@ -156,10 +214,86 @@ function LiveScoreboard() {
     }
     if (team === 1) setScore1(Math.max(0, score1 + amount));
     else            setScore2(Math.max(0, score2 + amount));
+=======
+  // Ogni cambio di stato viene scritto su localStorage E inviato via BroadcastChannel.
+  // localStorage è il dato persistente (sopravvive al refresh), BroadcastChannel è
+  // il canale veloce cross-tab per aggiornamenti in tempo reale alla schermata Projection.
+  useEffect(() => {
+    if (!isInitialized) return;
+
+    const state = { team1, team2, score1, score2, fouls1, fouls2, quarter, time };
+    localStorage.setItem('madness_scoreboard', JSON.stringify(state));
+
+    try {
+      const channel = new BroadcastChannel('scoreboard_sync');
+      channel.postMessage({ type: 'SYNC_STATE', payload: state });
+      channel.close();
+    } catch (e) { }
+  }, [team1, team2, score1, score2, fouls1, fouls2, quarter, time, isInitialized]);
+
+  // Listener for sync requests from other tabs
+  useEffect(() => {
+    if (!isInitialized) return;
+    
+    try {
+      const channel = new BroadcastChannel('scoreboard_sync');
+      channel.onmessage = (event) => {
+        if (event.data.type === 'REQUEST_SYNC') {
+          const state = { team1, team2, score1, score2, fouls1, fouls2, quarter, time };
+          channel.postMessage({ type: 'SYNC_STATE', payload: state });
+        }
+      };
+      return () => channel.close();
+    } catch (e) {}
+  }, [team1, team2, score1, score2, fouls1, fouls2, quarter, time, isInitialized]);
+
+
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isRunning && time > 0) {
+      interval = setInterval(() => {
+        setTime((prevTime) => prevTime - 1);
+      }, 1000);
+    } else if (time === 0) {
+      setIsRunning(false);
+    }
+    return () => clearInterval(interval);
+  }, [isRunning, time]);
+
+  const toggleTimer = () => setIsRunning(!isRunning);
+  
+  const resetTimer = () => {
+    setIsRunning(false);
+    setTime(600);
+  };
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const s = (seconds % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  };
+
+  const adjustScore = (team: 1 | 2, amount: number) => {
+    if (amount > 0) {
+      const eventData = { team, points: amount, ts: Date.now() };
+      localStorage.setItem('madness_score_event', JSON.stringify(eventData));
+      
+      try {
+        const channel = new BroadcastChannel('scoreboard_sync');
+        channel.postMessage({ type: 'SCORE_ANIM', payload: eventData });
+        channel.close();
+      } catch (e) {}
+    }
+    
+    if (team === 1) setScore1(Math.max(0, score1 + amount));
+    else setScore2(Math.max(0, score2 + amount));
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
   };
 
   const adjustFouls = (team: 1 | 2, amount: number) => {
     if (team === 1) setFouls1(Math.max(0, fouls1 + amount));
+<<<<<<< HEAD
     else            setFouls2(Math.max(0, fouls2 + amount));
   };
 
@@ -183,6 +317,9 @@ function LiveScoreboard() {
         {options.map(t => <option key={t} value={t}>{t}</option>)}
       </select>
     );
+=======
+    else setFouls2(Math.max(0, fouls2 + amount));
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
   };
 
   return (
@@ -192,6 +329,7 @@ function LiveScoreboard() {
           <AlertTriangle className="text-brand-orange shrink-0" /> Tabellone Live Control
         </h1>
         <div className="flex items-center gap-3 sm:gap-6 flex-wrap">
+<<<<<<< HEAD
           <button
             onClick={() => window.open('/projection', 'ScoreboardProjection', 'width=1280,height=720')}
             className="bg-zinc-800 text-white px-4 py-2 hover:bg-zinc-700 font-display uppercase tracking-widest text-sm flex items-center gap-2 border-[2px] border-zinc-600 hover:border-brand-blue transition-colors shadow-[4px_4px_0_var(--color-brand-blue)] hover:shadow-none hover:translate-x-1 hover:translate-y-1"
@@ -200,11 +338,22 @@ function LiveScoreboard() {
           </button>
           <div className="text-brand-orange font-mono uppercase tracking-widest text-sm animate-pulse flex items-center gap-2">
             <div className="w-3 h-3 bg-brand-orange rounded-full" /> Controlli Staff
+=======
+          <button 
+            onClick={() => window.open('/projection', 'ScoreboardProjection', 'width=1280,height=720')}
+            className="bg-zinc-800 text-white px-4 py-2 hover:bg-zinc-700 font-display uppercase tracking-widest text-sm flex items-center gap-2 border-[2px] border-zinc-600 hover:border-brand-blue transition-colors shadow-[4px_4px_0_var(--color-brand-blue)] hover:shadow-none hover:translate-x-1 hover:translate-y-1"
+          >
+            Apri Schermo Proiezione 
+          </button>
+          <div className="text-brand-orange font-mono uppercase tracking-widest text-sm animate-pulse flex items-center gap-2">
+            <div className="w-3 h-3 bg-brand-orange rounded-full"></div> Controlli Staff
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
           </div>
         </div>
       </div>
 
       <div className="flex-1 bg-zinc-950 border-[6px] border-zinc-800 p-4 md:p-8 flex flex-col lg:flex-row gap-8 shadow-[16px_16px_0_var(--color-brand-blue)]">
+<<<<<<< HEAD
 
         {/* TEAM 1 */}
         <div className="flex-1 flex flex-col gap-6">
@@ -222,6 +371,33 @@ function LiveScoreboard() {
             </div>
           </div>
 
+=======
+        
+        {/* TEAM 1 */}
+        <div className="flex-1 flex flex-col gap-6">
+          <select 
+            value={team1} 
+            onChange={(e) => setTeam1(e.target.value)}
+            className="w-full bg-zinc-900 border-2 border-zinc-700 text-white font-sans text-xl md:text-2xl p-4 uppercase font-bold focus:border-brand-blue"
+          >
+            {TEAMS.map(t => <option key={t} value={t}>{t}</option>)}
+          </select>
+          
+          <div className="bg-black border-4 border-zinc-800 p-4 sm:p-8 pb-20 flex flex-col items-center flex-1 justify-center rounded-sm relative">
+             <div className="text-[88px] sm:text-[120px] md:text-[180px] leading-none font-mono text-brand-orange font-black">
+               {score1}
+             </div>
+
+             {/* Score Controls */}
+             <div className="flex gap-1.5 sm:gap-2 absolute bottom-4 left-1/2 -translate-x-1/2">
+               <button onClick={() => adjustScore(1, -1)} className="bg-zinc-800 p-2.5 sm:p-3 hover:bg-zinc-700 active:scale-95"><Minus className="w-5 h-5 sm:w-6 sm:h-6 text-white" /></button>
+               <button onClick={() => adjustScore(1, 1)} className="bg-brand-blue text-brand-bg font-black px-4 sm:px-6 hover:bg-white hover:text-black active:scale-95 text-lg sm:text-xl">+1</button>
+               <button onClick={() => adjustScore(1, 2)} className="bg-brand-blue text-brand-bg font-black px-4 sm:px-6 hover:bg-white hover:text-black active:scale-95 text-lg sm:text-xl">+2</button>
+               <button onClick={() => adjustScore(1, 3)} className="bg-brand-blue text-brand-bg font-black px-4 sm:px-6 hover:bg-white hover:text-black active:scale-95 text-lg sm:text-xl">+3</button>
+             </div>
+          </div>
+          
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
           <div className="flex justify-between items-center bg-zinc-900 border-2 border-zinc-700 p-4">
             <span className="font-display uppercase text-zinc-400 text-2xl">Falli</span>
             <div className="flex items-center gap-4">
@@ -232,7 +408,11 @@ function LiveScoreboard() {
           </div>
         </div>
 
+<<<<<<< HEAD
         {/* MIDDLE: TEMPO & PERIODO */}
+=======
+        {/* MIDDLE: TIME & PERIOD */}
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
         <div className="w-full lg:w-1/4 flex flex-col gap-6 order-first lg:order-none">
           <div className="bg-zinc-900 border-4 border-zinc-700 p-6 flex flex-col items-center">
             <h3 className="font-display uppercase text-zinc-500 text-xl mb-4">Periodo</h3>
@@ -242,26 +422,43 @@ function LiveScoreboard() {
               <button onClick={() => setQuarter(Math.min(4, quarter + 1))} className="text-zinc-500 hover:text-white"><Plus /></button>
             </div>
           </div>
+<<<<<<< HEAD
 
+=======
+          
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
           <div className="bg-black border-4 border-zinc-800 p-6 flex flex-col items-center flex-1">
             <h3 className="font-display uppercase text-zinc-500 text-xl mb-4">Tempo</h3>
             <div className={`font-mono text-6xl md:text-7xl mb-8 ${time < 60 ? 'text-red-500' : 'text-brand-yellow'}`}>
               {formatTime(time)}
             </div>
+<<<<<<< HEAD
             <div className="flex gap-4 mb-4">
               <button
                 onClick={() => setIsRunning(r => !r)}
+=======
+            
+            <div className="flex gap-4 mb-4">
+              <button 
+                onClick={toggleTimer}
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
                 className={`p-4 rounded-full ${isRunning ? 'bg-zinc-800 text-zinc-400' : 'bg-green-600 text-white'} hover:scale-105 transition-transform`}
               >
                 {isRunning ? <Pause className="w-8 h-8" /> : <Play className="w-8 h-8 ml-1" />}
               </button>
+<<<<<<< HEAD
               <button
                 onClick={() => { setIsRunning(false); setTime(600); }}
+=======
+              <button 
+                onClick={resetTimer}
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
                 className="p-4 rounded-full bg-zinc-800 text-white hover:bg-zinc-700 hover:rotate-180 transition-all duration-300"
               >
                 <RotateCcw className="w-8 h-8" />
               </button>
             </div>
+<<<<<<< HEAD
             <div className="grid grid-cols-2 gap-2 w-full mt-4">
               <button onClick={() => setTime(t => t + 60)}          className="bg-zinc-900 border border-zinc-700 text-xs font-sans uppercase p-2 hover:bg-zinc-800">+1 Min</button>
               <button onClick={() => setTime(t => Math.max(0, t-60))} className="bg-zinc-900 border border-zinc-700 text-xs font-sans uppercase p-2 hover:bg-zinc-800">-1 Min</button>
@@ -272,6 +469,21 @@ function LiveScoreboard() {
 
           <button
             onClick={() => { setScore1(0); setScore2(0); setFouls1(0); setFouls2(0); setQuarter(1); setTime(600); setIsRunning(false); }}
+=======
+            
+            <div className="grid grid-cols-2 gap-2 w-full mt-4">
+              <button onClick={() => setTime(time + 60)} className="bg-zinc-900 border border-zinc-700 text-xs font-sans uppercase p-2 hover:bg-zinc-800">+1 Min</button>
+              <button onClick={() => setTime(Math.max(0, time - 60))} className="bg-zinc-900 border border-zinc-700 text-xs font-sans uppercase p-2 hover:bg-zinc-800">-1 Min</button>
+              <button onClick={() => setTime(600)} className="bg-zinc-900 border border-zinc-700 text-xs font-sans uppercase p-2 hover:bg-zinc-800">10:00</button>
+              <button onClick={() => setTime(14)} className="bg-zinc-900 border border-zinc-700 text-xs font-sans uppercase p-2 hover:bg-zinc-800 hover:text-red-500">14 sec</button>
+            </div>
+          </div>
+          
+          <button 
+            onClick={() => {
+              setScore1(0); setScore2(0); setFouls1(0); setFouls2(0); setQuarter(1); setTime(600); setIsRunning(false);
+            }}
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
             className="bg-brand-orange text-brand-bg font-display uppercase py-4 border-2 border-transparent hover:bg-brand-bg hover:text-brand-orange hover:border-brand-orange transition-colors"
           >
             Reset Match Completo
@@ -280,6 +492,7 @@ function LiveScoreboard() {
 
         {/* TEAM 2 */}
         <div className="flex-1 flex flex-col gap-6">
+<<<<<<< HEAD
           {renderTeamSelect(team2, setTeam2, 'border-zinc-700 focus:border-zinc-400')}
 
           <div className="bg-black border-4 border-zinc-800 p-4 sm:p-8 pb-20 flex flex-col items-center flex-1 justify-center rounded-sm relative">
@@ -294,6 +507,30 @@ function LiveScoreboard() {
             </div>
           </div>
 
+=======
+          <select 
+            value={team2} 
+            onChange={(e) => setTeam2(e.target.value)}
+            className="w-full bg-zinc-900 border-2 border-zinc-700 text-white font-sans text-xl md:text-2xl p-4 uppercase font-bold focus:border-brand-blue"
+          >
+            {TEAMS.map(t => <option key={t} value={t}>{t}</option>)}
+          </select>
+          
+          <div className="bg-black border-4 border-zinc-800 p-4 sm:p-8 pb-20 flex flex-col items-center flex-1 justify-center rounded-sm relative">
+             <div className="text-[88px] sm:text-[120px] md:text-[180px] leading-none font-mono text-white font-black">
+               {score2}
+             </div>
+
+             {/* Score Controls */}
+             <div className="flex gap-1.5 sm:gap-2 absolute bottom-4 left-1/2 -translate-x-1/2">
+               <button onClick={() => adjustScore(2, -1)} className="bg-zinc-800 p-2.5 sm:p-3 hover:bg-zinc-700 active:scale-95"><Minus className="w-5 h-5 sm:w-6 sm:h-6 text-white" /></button>
+               <button onClick={() => adjustScore(2, 1)} className="bg-zinc-300 text-black font-black px-4 sm:px-6 hover:bg-white hover:text-black active:scale-95 text-lg sm:text-xl">+1</button>
+               <button onClick={() => adjustScore(2, 2)} className="bg-zinc-300 text-black font-black px-4 sm:px-6 hover:bg-white hover:text-black active:scale-95 text-lg sm:text-xl">+2</button>
+               <button onClick={() => adjustScore(2, 3)} className="bg-zinc-300 text-black font-black px-4 sm:px-6 hover:bg-white hover:text-black active:scale-95 text-lg sm:text-xl">+3</button>
+             </div>
+          </div>
+          
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
           <div className="flex justify-between items-center bg-zinc-900 border-2 border-zinc-700 p-4">
             <span className="font-display uppercase text-zinc-400 text-2xl">Falli</span>
             <div className="flex items-center gap-4">

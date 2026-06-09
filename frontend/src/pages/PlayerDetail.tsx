@@ -27,8 +27,13 @@ export function PlayerDetail() {
     if (!slug) { setLoading(false); return; }
     // Fetch giocatore + lista completa per ranking in parallelo
     Promise.all([
+<<<<<<< HEAD
       fetch(`${API}/api-web/giocatori/${slug}`).then(r => r.ok ? r.json() as Promise<Player> : null),
       fetch(`${API}/api-web/giocatori`).then(r => r.ok ? r.json() as Promise<Player[]> : null),
+=======
+      fetch(`${API}/api/giocatori/${slug}`).then(r => r.ok ? r.json() as Promise<Player> : null),
+      fetch(`${API}/api/giocatori`).then(r => r.ok ? r.json() as Promise<Player[]> : null),
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
     ])
       .then(([playerData, allData]) => {
         if (playerData) setPlayer(playerData);

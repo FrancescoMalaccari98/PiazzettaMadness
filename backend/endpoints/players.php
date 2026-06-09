@@ -17,8 +17,13 @@ function fetch_players_with_stats(PDO $pdo, int $edition_id): array {
             p.last_name,
             t.id            AS team_id,
             t.name          AS team_name,
+<<<<<<< HEAD
             COALESCE(tr.jersey_number, MAX(mps.jersey_number)) AS jersey_number,
             MAX(tr.is_captain)  AS is_captain,
+=======
+            tr.jersey_number,
+            tr.is_captain,
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
             COUNT(DISTINCT mps.match_id)            AS games_played,
             COALESCE(SUM(mps.points),           0)  AS total_points,
             COALESCE(SUM(mps.assists),          0)  AS total_assists,
@@ -48,7 +53,11 @@ function fetch_players_with_stats(PDO $pdo, int $edition_id): array {
         WHERE mps.did_not_play = 0
         GROUP BY
             p.id, p.first_name, p.last_name,
+<<<<<<< HEAD
             t.id, t.name
+=======
+            t.id, t.name, tr.jersey_number, tr.is_captain
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
         ORDER BY total_points DESC, p.last_name, p.first_name
     ";
     $stmt = $pdo->prepare($sql);
@@ -65,6 +74,10 @@ function row_to_player(array $r): array {
         'team'       => $r['team_name'],
         'number'     => $r['jersey_number'] !== null ? (int)$r['jersey_number'] : null,
         'photo'      => null,
+<<<<<<< HEAD
+=======
+        // Medie per partita
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
         'pts'        => avg((int)$r['total_points'],    $gp),
         'ast'        => avg((int)$r['total_assists'],   $gp),
         'reb'        => avg((int)$r['total_reb'],       $gp),
@@ -77,9 +90,17 @@ function row_to_player(array $r): array {
         'fs'         => avg((int)$r['total_fs'],        $gp),
         'plusMinus'  => avg((int)$r['total_plus_minus'],$gp),
         'val'        => avg((int)$r['total_eval'],      $gp),
+<<<<<<< HEAD
         'p2pct'      => shooting_pct((int)$r['two_made'],   (int)$r['two_att']),
         'p3pct'      => shooting_pct((int)$r['three_made'], (int)$r['three_att']),
         'tlpct'      => shooting_pct((int)$r['ft_made'],    (int)$r['ft_att']),
+=======
+        // Percentuali di tiro
+        'p2pct'      => shooting_pct((int)$r['two_made'],   (int)$r['two_att']),
+        'p3pct'      => shooting_pct((int)$r['three_made'], (int)$r['three_att']),
+        'tlpct'      => shooting_pct((int)$r['ft_made'],    (int)$r['ft_att']),
+        // matchLog viene aggiunto solo per il dettaglio singolo
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
         'matchLog'   => [],
     ];
 }
@@ -112,6 +133,10 @@ function handle_giocatore_detail(PDO $pdo, string $slug): void {
 
     $rows = fetch_players_with_stats($pdo, $eid);
 
+<<<<<<< HEAD
+=======
+    // Trova per slug (nome + numero maglia)
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
     $target = null;
     foreach ($rows as $r) {
         if (player_slug($r['first_name'], $r['last_name'], $r['jersey_number'] ?? null) === $slug) {
@@ -125,6 +150,11 @@ function handle_giocatore_detail(PDO $pdo, string $slug): void {
     }
 
     $player = row_to_player($target);
+<<<<<<< HEAD
+=======
+
+    // matchLog: statistiche per partita
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
     $player['matchLog'] = fetch_match_log($pdo, (int)$target['player_id'], (int)$target['team_id'], $eid);
 
     send_json($player);
@@ -135,12 +165,21 @@ function fetch_match_log(PDO $pdo, int $player_id, int $team_id, int $edition_id
     $sql = "
         SELECT
             m.id            AS match_id,
+<<<<<<< HEAD
             m.scheduled_start_at AS scheduled_at,
             m.status,
             mt_h.score      AS final_home_score,
             mt_a.score      AS final_away_score,
             mt_h.team_id    AS home_team_id,
             mt_a.team_id    AS away_team_id,
+=======
+            m.scheduled_at,
+            m.status,
+            m.final_home_score,
+            m.final_away_score,
+            m.home_team_id,
+            m.away_team_id,
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
             ht.name         AS home_name,
             at.name         AS away_name,
             mps.points,
@@ -151,12 +190,19 @@ function fetch_match_log(PDO $pdo, int $player_id, int $team_id, int $edition_id
             mps.did_not_play
         FROM match_player_stats mps
         JOIN matches m  ON m.id = mps.match_id AND m.edition_id = ?
+<<<<<<< HEAD
         JOIN match_teams mt_h ON mt_h.match_id = m.id AND mt_h.side = 'Home'
         JOIN match_teams mt_a ON mt_a.match_id = m.id AND mt_a.side = 'Away'
         JOIN teams ht   ON ht.id = mt_h.team_id
         JOIN teams at   ON at.id = mt_a.team_id
         WHERE mps.player_id = ?
         ORDER BY m.scheduled_start_at, m.id
+=======
+        JOIN teams ht   ON ht.id = m.home_team_id
+        JOIN teams at   ON at.id = m.away_team_id
+        WHERE mps.player_id = ?
+        ORDER BY m.scheduled_at, m.id
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
     ";
     $stmt = $pdo->prepare($sql);
     $stmt->execute([$edition_id, $player_id]);
@@ -168,7 +214,11 @@ function fetch_match_log(PDO $pdo, int $player_id, int $team_id, int $edition_id
         $opponent = $is_home ? $r['away_name'] : $r['home_name'];
         $dnp      = (bool)$r['did_not_play'];
 
+<<<<<<< HEAD
         if ($r['status'] === 'Finished' && !$dnp) {
+=======
+        if ($r['status'] === 'finished' && !$dnp) {
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
             $my_score  = $is_home ? (int)$r['final_home_score'] : (int)$r['final_away_score'];
             $opp_score = $is_home ? (int)$r['final_away_score'] : (int)$r['final_home_score'];
             $result    = $my_score > $opp_score ? 'V' : 'P';
@@ -205,6 +255,7 @@ function handle_player_edition_stats(PDO $pdo, int $player_id): void {
         send_error('edition_id non valido o nessuna edizione attiva', 400);
     }
 
+<<<<<<< HEAD
     // Aggregazione diretta da match_player_stats (senza v_player_edition_stats)
     $sql = "
         SELECT
@@ -231,6 +282,21 @@ function handle_player_edition_stats(PDO $pdo, int $player_id): void {
     ";
     $stmt = $pdo->prepare($sql);
     $stmt->execute([$eid, $player_id]);
+=======
+    $sql = "
+        SELECT
+            pes.*,
+            p.first_name,
+            p.last_name,
+            t.name AS team_name
+        FROM v_player_edition_stats pes
+        JOIN players p ON p.id = pes.player_id
+        JOIN teams   t ON t.id = pes.team_id
+        WHERE pes.player_id = ? AND pes.edition_id = ?
+    ";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$player_id, $eid]);
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
     $row = $stmt->fetch();
 
     if (!$row) {
@@ -247,12 +313,20 @@ function handle_player_edition_stats(PDO $pdo, int $player_id): void {
         'team_name'        => $row['team_name'],
         'games_played'     => (int)$row['games_played'],
         'games_with_stats' => (int)$row['games_with_stats'],
+<<<<<<< HEAD
+=======
+        // Totali
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
         'points_total'     => (int)$row['points'],
         'assists_total'    => (int)$row['assists'],
         'reb_tot_total'    => (int)$row['reb_tot'],
         'steals_total'     => (int)$row['steals'],
         'blocks_total'     => (int)$row['blocks'],
         'evaluation_total' => (int)$row['evaluation'],
+<<<<<<< HEAD
+=======
+        // Medie
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
         'pts_avg'          => avg((int)$row['points'],     $gp),
         'ast_avg'          => avg((int)$row['assists'],    $gp),
         'reb_avg'          => avg((int)$row['reb_tot'],    $gp),

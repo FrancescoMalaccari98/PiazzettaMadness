@@ -6,6 +6,7 @@
 // GET /api/partite/{id}             → compat frontend (dettaglio + box score)
 // GET /api/matches?edition_id={id}  → nuova API lista partite
 // GET /api/matches/{id}             → nuova API dettaglio partita
+<<<<<<< HEAD
 //
 // Schema Sql1938817_1:
 //   - home/away: match_teams (side='Home'/'Away') invece di matches.home_team_id
@@ -13,6 +14,8 @@
 //   - data:      matches.scheduled_start_at invece di scheduled_at
 //   - round:     matches.round invece di round_label
 //   - status:    PascalCase ('Finished','Cancelled','Live','Paused','Scheduled','Ready')
+=======
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
 // ============================================================
 
 // ── Shared: recupera row partita con squadre ────────────────
@@ -24,6 +27,7 @@ function fetch_match_row(PDO $pdo, int $match_id): ?array {
             m.edition_id,
             m.group_id,
             m.phase,
+<<<<<<< HEAD
             m.round               AS round_label,
             m.scheduled_start_at  AS scheduled_at,
             m.status,
@@ -47,6 +51,29 @@ function fetch_match_row(PDO $pdo, int $match_id): ?array {
         JOIN match_teams mt_a ON mt_a.match_id = m.id AND mt_a.side = 'Away'
         JOIN teams ht ON ht.id = mt_h.team_id
         JOIN teams at ON at.id = mt_a.team_id
+=======
+            m.round_label,
+            m.scheduled_at,
+            m.status,
+            m.started_at,
+            m.finished_at,
+            m.final_home_score,
+            m.final_away_score,
+            m.period_count,
+            m.period_duration_seconds,
+            m.notes,
+            m.home_team_id,
+            m.away_team_id,
+            ht.name       AS home_name,
+            ht.short_name AS home_short,
+            at.name       AS away_name,
+            at.short_name AS away_short,
+            tg.code       AS group_code,
+            tg.name       AS group_name
+        FROM matches m
+        JOIN teams ht ON ht.id = m.home_team_id
+        JOIN teams at ON at.id = m.away_team_id
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
         LEFT JOIN tournament_groups tg ON tg.id = m.group_id
         WHERE m.id = ?
     ";
@@ -56,6 +83,7 @@ function fetch_match_row(PDO $pdo, int $match_id): ?array {
 }
 
 // Recupera i parziali per quarto di una partita.
+<<<<<<< HEAD
 // Fallback a [] se match_periods non esiste nello schema.
 function fetch_match_periods(PDO $pdo, int $match_id): array {
     try {
@@ -72,6 +100,17 @@ function fetch_match_periods(PDO $pdo, int $match_id): array {
     } catch (PDOException $e) {
         return [];
     }
+=======
+function fetch_match_periods(PDO $pdo, int $match_id): array {
+    $stmt = $pdo->prepare(
+        "SELECT period_number, period_type, home_score, away_score
+         FROM match_periods
+         WHERE match_id = ?
+         ORDER BY period_number"
+    );
+    $stmt->execute([$match_id]);
+    return $stmt->fetchAll();
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
 }
 
 // ── GET /api/partite (COMPAT) ───────────────────────────────
@@ -90,6 +129,7 @@ function handle_partite_compat(PDO $pdo): void {
     $sql = "
         SELECT
             m.id,
+<<<<<<< HEAD
             m.round              AS round_label,
             m.scheduled_start_at AS scheduled_at,
             m.status,
@@ -108,6 +148,24 @@ function handle_partite_compat(PDO $pdo): void {
         WHERE m.edition_id = ?
           AND m.status != 'Cancelled'
         ORDER BY m.scheduled_start_at, m.id
+=======
+            m.round_label,
+            m.scheduled_at,
+            m.status,
+            m.phase,
+            m.final_home_score,
+            m.final_away_score,
+            ht.name AS home_name,
+            at.name AS away_name,
+            tg.code AS group_code
+        FROM matches m
+        JOIN teams ht ON ht.id = m.home_team_id
+        JOIN teams at ON at.id = m.away_team_id
+        LEFT JOIN tournament_groups tg ON tg.id = m.group_id
+        WHERE m.edition_id = ?
+          AND m.status != 'cancelled'
+        ORDER BY m.scheduled_at, m.id
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
     ";
     $stmt = $pdo->prepare($sql);
     $stmt->execute([$eid]);
@@ -117,6 +175,7 @@ function handle_partite_compat(PDO $pdo): void {
     foreach ($rows as $r) {
         $status = map_match_status($r['status']);
 
+<<<<<<< HEAD
         // Per i playoff forza sempre il label dal phase (compatibilità filtro frontend).
         // Per i gironi usa il round del DB se contiene 'Girone', altrimenti fallback.
         $round = $r['round_label'];
@@ -131,6 +190,18 @@ function handle_partite_compat(PDO $pdo): void {
                 break;
             default:
                 if (!$round) $round = ucfirst($r['phase'] ?? '');
+=======
+        // Costruisce il label round: usa round_label dal DB oppure fallback dal phase
+        $round = $r['round_label'];
+        if (!$round) {
+            switch ($r['phase']) {
+                case 'group_stage':       $round = 'Girone ' . ($r['group_code'] ?? ''); break;
+                case 'semifinal':         $round = 'Semifinale'; break;
+                case 'third_place_final': $round = 'Finale 3°-4° Posto'; break;
+                case 'final':             $round = 'Finale'; break;
+                default:                  $round = ucfirst($r['phase']);
+            }
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
         }
 
         $isPending = ($status === 'IN PROGRAMMA');
@@ -178,6 +249,7 @@ function handle_partita_detail_compat(PDO $pdo, int $match_id): void {
         $quartiTrasferta[] = (int)$p['away_score'];
     }
 
+<<<<<<< HEAD
     $home_id = (int)$match['home_team_id'];
     $away_id = (int)$match['away_team_id'];
 
@@ -207,11 +279,20 @@ function handle_partita_detail_compat(PDO $pdo, int $match_id): void {
         JOIN players p ON p.id = mps.player_id
         WHERE mps.match_id = ?
         ORDER BY mps.team_id, CAST(mps.jersey_number AS UNSIGNED), p.last_name
+=======
+    // Box score giocatori (vista pubblica)
+    $sql_players = "
+        SELECT *
+        FROM v_match_player_stats_public
+        WHERE match_id = ?
+        ORDER BY team_id, CAST(jersey_number AS UNSIGNED), last_name
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
     ";
     $stmt = $pdo->prepare($sql_players);
     $stmt->execute([$match_id]);
     $all_players = $stmt->fetchAll();
 
+<<<<<<< HEAD
     // Stats di squadra (join diretto su match_team_stats, senza view)
     $sql_team = "
         SELECT
@@ -231,6 +312,10 @@ function handle_partita_detail_compat(PDO $pdo, int $match_id): void {
         FROM match_team_stats mts
         WHERE mts.match_id = ?
     ";
+=======
+    // Stats di squadra (vista pubblica)
+    $sql_team = "SELECT * FROM v_match_team_stats_public WHERE match_id = ?";
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
     $stmt = $pdo->prepare($sql_team);
     $stmt->execute([$match_id]);
     $all_team_stats = $stmt->fetchAll();
@@ -242,19 +327,35 @@ function handle_partita_detail_compat(PDO $pdo, int $match_id): void {
     }
 
     // Costruisce boxscore squadra casa / trasferta
+<<<<<<< HEAD
+=======
+    $home_id = (int)$match['home_team_id'];
+    $away_id = (int)$match['away_team_id'];
+
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
     $home_players = array_values(array_filter($all_players, fn($p) => (int)$p['team_id'] === $home_id));
     $away_players = array_values(array_filter($all_players, fn($p) => (int)$p['team_id'] === $away_id));
 
     $home_ts = $team_stats_map[$home_id] ?? [];
     $away_ts = $team_stats_map[$away_id] ?? [];
 
+<<<<<<< HEAD
     // Capitani da team_rosters
+=======
+    // Recupera i player_id dei capitani per entrambe le squadre (da team_rosters).
+    // La vista v_match_player_stats_public non include is_captain, quindi serve
+    // una query separata su team_rosters.
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
     $cap_stmt = $pdo->prepare(
         "SELECT player_id FROM team_rosters WHERE team_id IN (?, ?) AND is_captain = 1"
     );
     $cap_stmt->execute([$home_id, $away_id]);
     $captain_ids = array_flip(array_map('intval', array_column($cap_stmt->fetchAll(), 'player_id')));
 
+<<<<<<< HEAD
+=======
+    // Funzione per formattare un giocatore nel formato MatchDetail.PlayerStats
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
     $fmt_player = function(array $p) use ($captain_ids): array {
         return [
             'numero'      => (int)($p['jersey_number'] ?? 0),
@@ -285,12 +386,24 @@ function handle_partita_detail_compat(PDO $pdo, int $match_id): void {
         ];
     };
 
+<<<<<<< HEAD
     $fmt_team_stats = function(array $ts): array {
         // time_in_lead è già varchar "MM:SS" nel DB (non secondi)
         return [
             'puntiDaPallePerse'     => (int)($ts['points_off_turnovers'] ?? 0),
             'puntiInArea'           => (int)($ts['points_in_paint']      ?? 0),
             'puntiInAreaR'          => 0,
+=======
+    // Funzione per formattare le stat squadra nel formato statsCasa/statsTrasferta
+    $fmt_team_stats = function(array $ts): array {
+        $lead_sec = (int)($ts['time_in_lead_seconds'] ?? 0);
+        $lead_min = intdiv($lead_sec, 60);
+        $lead_s   = $lead_sec % 60;
+        return [
+            'puntiDaPallePerse'     => (int)($ts['points_off_turnovers'] ?? 0),
+            'puntiInArea'           => (int)($ts['points_in_paint']      ?? 0),
+            'puntiInAreaR'          => 0, // non nel DB
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
             'puntiInAreaT'          => 0,
             'puntiDaSecondiTiri'    => (int)($ts['second_chance_points'] ?? 0),
             'puntiContropiede'      => (int)($ts['fast_break_points']    ?? 0),
@@ -298,24 +411,47 @@ function handle_partita_detail_compat(PDO $pdo, int $match_id): void {
             'puntiPanchina'         => (int)($ts['bench_points']         ?? 0),
             'massimoVantaggio'      => (int)($ts['biggest_lead']         ?? 0),
             'massimoVantaggioScore' => $ts['biggest_run'] ?? '',
+<<<<<<< HEAD
             'massimoParziale'       => 0,
             'massimoParzialePeriodo'=> '',
             'pointsPerPossession'   => (float)($ts['points_per_possession'] ?? 0),
             'tempoInVantaggio'      => $ts['time_in_lead'] ?? '00:00',
+=======
+            'massimoParziale'       => 0, // non nel DB
+            'massimoParzialePeriodo'=> '',
+            'pointsPerPossession'   => (float)($ts['points_per_possession'] ?? 0),
+            'tempoInVantaggio'      => sprintf('%02d:%02d', $lead_min, $lead_s),
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
         ];
     };
 
     $total_home = (int)($match['final_home_score'] ?? 0);
     $total_away = (int)($match['final_away_score'] ?? 0);
 
+<<<<<<< HEAD
     $n_gara_stmt = $pdo->prepare(
         "SELECT COUNT(*) FROM matches WHERE edition_id = ? AND id <= ? AND status = 'Finished'"
+=======
+    // Numero gara progressivo dell'edizione
+    $n_gara_stmt = $pdo->prepare(
+        "SELECT COUNT(*) FROM matches WHERE edition_id = ? AND id <= ? AND status = 'finished'"
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
     );
     $n_gara_stmt->execute([(int)$match['edition_id'], $match_id]);
     $n_gara = (int)$n_gara_stmt->fetchColumn();
 
+<<<<<<< HEAD
     $lead_changes = (int)($home_ts['lead_changes'] ?? 0);
     $times_tied   = (int)($home_ts['times_tied']   ?? 0);
+=======
+    // cambiDiGuida e parita (da match_team_stats se disponibili)
+    $lead_changes = 0;
+    $times_tied   = 0;
+    if ($home_ts) {
+        $lead_changes = (int)($home_ts['lead_changes'] ?? 0);
+        $times_tied   = (int)($home_ts['times_tied']   ?? 0);
+    }
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
 
     send_json([
         'id'               => (string)$match_id,
@@ -347,6 +483,10 @@ function handle_partita_detail_compat(PDO $pdo, int $match_id): void {
 }
 
 // ── GET /api/matches (nuova API) ────────────────────────────
+<<<<<<< HEAD
+=======
+// Risposta più completa con ISO dates e dati strutturati
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
 
 function handle_matches_list(PDO $pdo): void {
     require_method('GET');
@@ -362,6 +502,7 @@ function handle_matches_list(PDO $pdo): void {
         SELECT
             m.id,
             m.phase,
+<<<<<<< HEAD
             m.round              AS round_label,
             m.scheduled_start_at AS scheduled_at,
             m.status,
@@ -384,6 +525,28 @@ function handle_matches_list(PDO $pdo): void {
         WHERE m.edition_id = ?
           AND m.status != 'Cancelled'
         ORDER BY m.scheduled_start_at, m.id
+=======
+            m.round_label,
+            m.scheduled_at,
+            m.status,
+            m.final_home_score,
+            m.final_away_score,
+            m.home_team_id,
+            m.away_team_id,
+            ht.name       AS home_name,
+            ht.short_name AS home_short,
+            at.name       AS away_name,
+            at.short_name AS away_short,
+            tg.code       AS group_code,
+            tg.name       AS group_name
+        FROM matches m
+        JOIN teams ht ON ht.id = m.home_team_id
+        JOIN teams at ON at.id = m.away_team_id
+        LEFT JOIN tournament_groups tg ON tg.id = m.group_id
+        WHERE m.edition_id = ?
+          AND m.status != 'cancelled'
+        ORDER BY m.scheduled_at, m.id
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
     ";
     $stmt = $pdo->prepare($sql);
     $stmt->execute([$eid]);

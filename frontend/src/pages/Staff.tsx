@@ -24,7 +24,11 @@ export function Staff() {
   const [staffMembers, setStaffMembers] = useState<StaffMember[]>(defaultStaff);
 
   useEffect(() => {
+<<<<<<< HEAD
     fetch(`${API}/api-web/staff`)
+=======
+    fetch(`${API}/api/staff`)
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
       .then(r => r.ok ? r.json() as Promise<StaffMember[]> : null)
       .then(data => { if (data) setStaffMembers(data); })
       .catch(() => {});

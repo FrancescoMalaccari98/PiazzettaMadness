@@ -1,6 +1,11 @@
+<<<<<<< HEAD
 import { lazy, Suspense, useState } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import { SplashScreen } from "./components/SplashScreen";
+=======
+import { lazy, Suspense } from "react";
+import { Routes, Route, useLocation } from "react-router-dom";
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
 // Navigation, Footer, ScrollToTop e CookieBanner sono sempre visibili: importazione diretta.
 import { Navigation } from "./components/Navigation";
 import { Footer } from "./components/Footer";
@@ -28,6 +33,7 @@ const Players = lazy(() => import("./pages/Players").then(m => ({ default: m.Pla
 export function App() {
   const location = useLocation();
   const isProjection = location.pathname === "/projection";
+<<<<<<< HEAD
   const [showSplash, setShowSplash] = useState(() => {
     if (sessionStorage.getItem("pm-splash-seen")) return false;
     sessionStorage.setItem("pm-splash-seen", "1");
@@ -37,6 +43,11 @@ export function App() {
   return (
     <div className="flex flex-col min-h-screen bg-brand-bg">
       {showSplash && <SplashScreen onDone={() => setShowSplash(false)} />}
+=======
+
+  return (
+    <div className="flex flex-col min-h-screen bg-brand-bg">
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
       {!isProjection && <ScrollToTop />}
       {!isProjection && <Navigation />}
       <main className="flex-1">

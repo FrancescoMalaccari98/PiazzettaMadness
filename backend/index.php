@@ -29,8 +29,13 @@ set_cors_headers();
 $uri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 $uri = rawurldecode($uri);
 
+<<<<<<< HEAD
 // Rimuovi il prefisso /api-web (il file è in /api-web/, il browser chiede /api-web/partite)
 $path = preg_replace('#^/api-web/?#', '', $uri);
+=======
+// Rimuovi il prefisso /api (il file è in /api/, il browser chiede /api/partite)
+$path = preg_replace('#^/api/?#', '', $uri);
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
 $path = trim($path, '/');
 
 // Separa in segmenti: "matches/5/live" → ['matches','5','live']
@@ -174,6 +179,14 @@ try {
             send_error('Parametri snapshot non validi: /api/snapshots/{match_id}/{kind}', 400);
         }
 
+<<<<<<< HEAD
+=======
+    // ── /foto ───────────────────────────────────────────────
+    } elseif ($seg0 === 'foto') {
+        require_once __DIR__ . '/endpoints/foto.php';
+        handle_foto();
+
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
     // ── / (health check) ────────────────────────────────────
     } elseif ($seg0 === '' || $seg0 === 'health') {
         send_json([

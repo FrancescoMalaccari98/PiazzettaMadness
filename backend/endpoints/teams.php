@@ -159,7 +159,11 @@ function handle_team_roster(PDO $pdo, int $team_id): void {
 }
 
 // ── GET /api/teams/{id}/edition-stats ──────────────────────
+<<<<<<< HEAD
 // Risposta: aggregati squadra per edizione (da match_team_stats)
+=======
+// Risposta: aggregati squadra per edizione (da v_team_edition_stats)
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
 
 function handle_team_edition_stats(PDO $pdo, int $team_id): void {
     require_method('GET');
@@ -171,6 +175,7 @@ function handle_team_edition_stats(PDO $pdo, int $team_id): void {
         send_error('edition_id non valido o nessuna edizione attiva', 400);
     }
 
+<<<<<<< HEAD
     // Aggregazione diretta da match_team_stats (senza v_team_edition_stats)
     $sql = "
         SELECT
@@ -200,6 +205,19 @@ function handle_team_edition_stats(PDO $pdo, int $team_id): void {
     ";
     $stmt = $pdo->prepare($sql);
     $stmt->execute([$eid, $team_id]);
+=======
+    $sql = "
+        SELECT
+            tes.*,
+            t.name      AS team_name,
+            t.short_name
+        FROM v_team_edition_stats tes
+        JOIN teams t ON t.id = tes.team_id
+        WHERE tes.team_id = ? AND tes.edition_id = ?
+    ";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$team_id, $eid]);
+>>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
     $row = $stmt->fetch();
 
     if (!$row) {
