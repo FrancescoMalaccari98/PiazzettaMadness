@@ -51,13 +51,13 @@ function useCountdown(target: Date) {
 
 function CountdownUnit({ value, label, pulse = false }: { value: number; label: string; pulse?: boolean }) {
   return (
-    <div className="flex flex-col items-center gap-3">
-      <div className={`bg-zinc-900 border-[3px] border-brand-orange px-5 sm:px-10 py-4 sm:py-7 min-w-[76px] sm:min-w-[120px] flex items-center justify-center shadow-[6px_6px_0_var(--color-brand-blue)] ${pulse ? "animate-pulse" : ""}`}>
-        <span className="font-display text-5xl sm:text-7xl md:text-8xl text-white tabular-nums leading-none tracking-[-2px]">
+    <div className="flex flex-col items-center gap-1 sm:gap-3">
+      <div className={`bg-zinc-900 border-[2px] sm:border-[3px] border-brand-orange px-3 sm:px-8 md:px-10 py-2.5 sm:py-5 md:py-7 flex items-center justify-center shadow-[3px_3px_0_var(--color-brand-blue)] sm:shadow-[6px_6px_0_var(--color-brand-blue)] ${pulse ? "animate-pulse" : ""}`}>
+        <span className="font-display text-[28px] sm:text-6xl md:text-8xl text-white tabular-nums leading-none tracking-[-1px] sm:tracking-[-2px]">
           {String(value).padStart(2, "0")}
         </span>
       </div>
-      <span className="font-display text-[10px] sm:text-xs uppercase tracking-[0.3em] text-brand-orange">{label}</span>
+      <span className="font-display text-[8px] sm:text-[10px] uppercase tracking-[0.2em] sm:tracking-[0.3em] text-brand-orange">{label}</span>
     </div>
   );
 }
@@ -181,13 +181,13 @@ export function Home() {
         <section className="py-16 md:py-24 bg-brand-bg border-b-[4px] border-zinc-800">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <p className="font-display text-xs uppercase tracking-[0.35em] text-zinc-500 mb-8">La Madness inizia tra</p>
-            <div className="flex items-start justify-center gap-2 sm:gap-4">
+            <div className="flex items-start justify-center gap-1 sm:gap-4">
               <CountdownUnit value={countdown.days}    label="Giorni"  />
-              <div className="w-px bg-zinc-800 self-stretch mt-2 mb-8 mx-1 sm:mx-2" />
+              <div className="w-px bg-zinc-800 self-stretch mt-1 mb-6 sm:mt-2 sm:mb-8 mx-0.5 sm:mx-2" />
               <CountdownUnit value={countdown.hours}   label="Ore"     />
-              <div className="w-px bg-zinc-800 self-stretch mt-2 mb-8 mx-1 sm:mx-2" />
+              <div className="w-px bg-zinc-800 self-stretch mt-1 mb-6 sm:mt-2 sm:mb-8 mx-0.5 sm:mx-2" />
               <CountdownUnit value={countdown.minutes} label="Minuti"  />
-              <div className="w-px bg-zinc-800 self-stretch mt-2 mb-8 mx-1 sm:mx-2" />
+              <div className="w-px bg-zinc-800 self-stretch mt-1 mb-6 sm:mt-2 sm:mb-8 mx-0.5 sm:mx-2" />
               <CountdownUnit value={countdown.seconds} label="Secondi" pulse />
             </div>
             <p className="font-mono text-xs text-zinc-700 mt-8 tracking-widest">
