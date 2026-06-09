@@ -1,4 +1,4 @@
-// src/lib/api.ts
+﻿// src/lib/api.ts
 // Helper centralizzato per le chiamate al backend PHP.
 // Importa e usa le funzioni tipizzate invece di fetch() diretto nelle pagine.
 
@@ -102,7 +102,6 @@ export interface ApiSnapshot {
 export const api = {
   // Edizione attiva
   getActiveEdition: () =>
-<<<<<<< HEAD
     apiFetch<ApiEdition>("/api-web/editions/active"),
 
   // Squadre
@@ -156,59 +155,4 @@ export const api = {
   // Snapshot
   getSnapshot: (matchId: number, kind: "live" | "stats") =>
     apiFetch<ApiSnapshot>(`/api-web/snapshots/${matchId}/${kind}`),
-=======
-    apiFetch<ApiEdition>("/api/editions/active"),
-
-  // Squadre
-  getSquadre: () =>
-    apiFetch<{ id: number; nome: string; girone: string }[]>("/api/squadre"),
-
-  getTeams: (editionId?: number) =>
-    apiFetch<ApiTeam[]>(`/api/teams${editionId ? `?edition_id=${editionId}` : ""}`),
-
-  getTeamRoster: (teamId: number) =>
-    apiFetch<{ team: ApiTeam; players: ApiRosterPlayer[] }>(`/api/teams/${teamId}/roster`),
-
-  // Partite
-  getPartite: () =>
-    apiFetch<unknown[]>("/api/partite"),
-
-  getPartita: (id: string | number) =>
-    apiFetch<unknown>(`/api/partite/${id}`),
-
-  getMatches: (editionId?: number) =>
-    apiFetch<unknown[]>(`/api/matches${editionId ? `?edition_id=${editionId}` : ""}`),
-
-  getMatch: (id: number) =>
-    apiFetch<unknown>(`/api/matches/${id}`),
-
-  // Live
-  getMatchLive: (matchId: number) =>
-    apiFetch<ApiLiveState>(`/api/matches/${matchId}/live`),
-
-  // Statistiche
-  getStatistiche: () =>
-    apiFetch<unknown>("/api/statistiche"),
-
-  getMatchStats: (matchId: number) =>
-    apiFetch<unknown>(`/api/matches/${matchId}/stats`),
-
-  // Giocatori
-  getGiocatori: () =>
-    apiFetch<unknown[]>("/api/giocatori"),
-
-  getGiocatore: (slug: string) =>
-    apiFetch<unknown>(`/api/giocatori/${slug}`),
-
-  getPlayerEditionStats: (playerId: number, editionId?: number) =>
-    apiFetch<unknown>(`/api/players/${playerId}/edition-stats${editionId ? `?edition_id=${editionId}` : ""}`),
-
-  // Classifica
-  getStandings: (editionId?: number) =>
-    apiFetch<ApiStandingRow[]>(`/api/standings${editionId ? `?edition_id=${editionId}` : ""}`),
-
-  // Snapshot
-  getSnapshot: (matchId: number, kind: "live" | "stats") =>
-    apiFetch<ApiSnapshot>(`/api/snapshots/${matchId}/${kind}`),
->>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
 };

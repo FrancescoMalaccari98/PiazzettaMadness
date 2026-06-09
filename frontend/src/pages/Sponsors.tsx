@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { ExternalLink, Instagram } from "lucide-react";
 
@@ -78,11 +78,7 @@ export function Sponsors() {
   const [sponsors, setSponsors] = useState<Sponsor[]>(defaultSponsors);
 
   useEffect(() => {
-<<<<<<< HEAD
     fetch(`${API}/api-web/sponsor`)
-=======
-    fetch(`${API}/api/sponsor`)
->>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
       .then(r => r.ok ? r.json() as Promise<Sponsor[]> : null)
       .then(data => { if (data) setSponsors(data); })
       .catch(() => {});

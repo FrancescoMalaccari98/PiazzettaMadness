@@ -181,7 +181,6 @@ export function Home() {
         <section className="py-16 md:py-24 bg-brand-bg border-b-[4px] border-zinc-800">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <p className="font-display text-xs uppercase tracking-[0.35em] text-zinc-500 mb-8">La Madness inizia tra</p>
-<<<<<<< HEAD
             <div className="flex items-start justify-center gap-1 sm:gap-4">
               <CountdownUnit value={countdown.days}    label="Giorni"  />
               <div className="w-px bg-zinc-800 self-stretch mt-1 mb-6 sm:mt-2 sm:mb-8 mx-0.5 sm:mx-2" />
@@ -189,15 +188,6 @@ export function Home() {
               <div className="w-px bg-zinc-800 self-stretch mt-1 mb-6 sm:mt-2 sm:mb-8 mx-0.5 sm:mx-2" />
               <CountdownUnit value={countdown.minutes} label="Minuti"  />
               <div className="w-px bg-zinc-800 self-stretch mt-1 mb-6 sm:mt-2 sm:mb-8 mx-0.5 sm:mx-2" />
-=======
-            <div className="flex items-start justify-center gap-2 sm:gap-4">
-              <CountdownUnit value={countdown.days}    label="Giorni"  />
-              <div className="w-px bg-zinc-800 self-stretch mt-2 mb-8 mx-1 sm:mx-2" />
-              <CountdownUnit value={countdown.hours}   label="Ore"     />
-              <div className="w-px bg-zinc-800 self-stretch mt-2 mb-8 mx-1 sm:mx-2" />
-              <CountdownUnit value={countdown.minutes} label="Minuti"  />
-              <div className="w-px bg-zinc-800 self-stretch mt-2 mb-8 mx-1 sm:mx-2" />
->>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
               <CountdownUnit value={countdown.seconds} label="Secondi" pulse />
             </div>
             <p className="font-mono text-xs text-zinc-700 mt-8 tracking-widest">

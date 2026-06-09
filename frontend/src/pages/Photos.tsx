@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -9,11 +9,7 @@ export function Photos() {
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
 
   useEffect(() => {
-<<<<<<< HEAD
     fetch(`${API}/img/list.php`)
-=======
-    fetch(`${API}/api/foto`)
->>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
       .then(r => r.ok ? r.json() as Promise<string[]> : null)
       .then(data => { if (data) setPhotos(data); })
       .catch(() => {});
@@ -84,11 +80,7 @@ export function Photos() {
               <img
                 src={url}
                 alt={`Madness action moment ${i + 1}`}
-<<<<<<< HEAD
                 className="w-full h-auto object-cover transition-all duration-500 scale-100 group-hover:scale-105"
-=======
-                className="w-full h-auto object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500 scale-100 group-hover:scale-105"
->>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
                 loading="lazy"
                 referrerPolicy="no-referrer"
               />
@@ -113,11 +105,7 @@ export function Photos() {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-<<<<<<< HEAD
               className="relative z-10 w-full max-w-4xl px-4 flex flex-col items-center select-none"
-=======
-              className="relative z-10 w-full max-w-5xl px-4 flex flex-col items-center select-none"
->>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
             >
               <button
                 onClick={() => setSelectedPhotoIndex(null)}
@@ -126,19 +114,11 @@ export function Photos() {
                 <X size={36} />
               </button>
 
-<<<<<<< HEAD
               <div className="relative flex items-center justify-center border-[4px] border-brand-blue shadow-[16px_16px_0_var(--color-brand-orange)] bg-zinc-950">
                 <img
                   src={photos[selectedPhotoIndex]}
                   alt={`Madness expanded ${selectedPhotoIndex + 1}`}
                   className="max-h-[65vh] max-w-full object-contain"
-=======
-              <div className="relative w-full aspect-video md:aspect-[16/9] flex items-center justify-center border-[4px] border-brand-blue shadow-[16px_16px_0_var(--color-brand-orange)] bg-zinc-950">
-                <img
-                  src={photos[selectedPhotoIndex]}
-                  alt={`Madness expanded ${selectedPhotoIndex + 1}`}
-                  className="max-h-full max-w-full object-contain"
->>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
                   referrerPolicy="no-referrer"
                 />
 

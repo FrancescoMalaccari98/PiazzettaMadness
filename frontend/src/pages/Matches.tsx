@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+﻿import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Trophy, Flame, X, Swords, Calendar, ChevronRight } from "lucide-react";
 
@@ -171,11 +171,8 @@ type Group = {
   matches: Match[];
 };
 
-<<<<<<< HEAD
 // defaultGroups: struttura vuota — tutti i dati reali arrivano dall'API.
 // teams e matches vengono popolati da /api/squadre e /api/partite.
-=======
->>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
 const defaultGroups: Group[] = [
   {
     key: "A",
@@ -184,20 +181,8 @@ const defaultGroups: Group[] = [
     borderClass: "border-brand-blue",
     bgClass: "bg-brand-blue/10",
     shadowClass: "shadow-[6px_6px_0_var(--color-brand-blue)]",
-<<<<<<< HEAD
     teams: [],
     matches: [],
-=======
-    teams: ["Saluta Andonio Spurs", "Boston Lopez", "Miami Spritz", "Golden State Worriers"],
-    matches: [
-      { id: "ga1", round: "Girone A — G1", date: "05 Ago 18:00", status: "COMPLETA", team1: { name: "Saluta Andonio Spurs", score: 71 }, team2: { name: "Boston Lopez", score: 60 }, details: { mvp: "Marco Rossi (22 pts)", summary: "Partenza solida per gli Spurs, Boston rimane in gara fino al terzo quarto prima del break decisivo." } },
-      { id: "ga2", round: "Girone A — G1", date: "05 Ago 19:30", status: "COMPLETA", team1: { name: "Miami Spritz", score: 78 }, team2: { name: "Golden State Worriers", score: 65 }, details: { mvp: "Carlo Neri (19 pts)", summary: "Miami prende subito il controllo, Worriers mai realmente in partita." } },
-      { id: "ga3", round: "Girone A — G2", date: "07 Ago 18:00", status: "COMPLETA", team1: { name: "Saluta Andonio Spurs", score: 85 }, team2: { name: "Miami Spritz", score: 78 }, details: { mvp: "Luca Bianchi (18 pts, 10 reb)", summary: "Gli Spurs si confermano al top del girone con una prova di forza." } },
-      { id: "ga4", round: "Girone A — G2", date: "07 Ago 20:00", status: "COMPLETA", team1: { name: "Boston Lopez", score: 70 }, team2: { name: "Golden State Worriers", score: 68 }, details: { mvp: "Filippo Conti (17 pts)", summary: "Boston vince di misura in un match tiratissimo deciso negli ultimi 30 secondi." } },
-      { id: "ga5", round: "Girone A — G3", date: "10 Ago 18:00", status: "IN PROGRAMMA", team1: { name: "Saluta Andonio Spurs", score: 0 }, team2: { name: "Golden State Worriers", score: 0 }, details: { mvp: "TBD", summary: "Match in programma." } },
-      { id: "ga6", round: "Girone A — G3", date: "10 Ago 19:30", status: "IN PROGRAMMA", team1: { name: "Boston Lopez", score: 0 }, team2: { name: "Miami Spritz", score: 0 }, details: { mvp: "TBD", summary: "Match in programma." } },
-    ],
->>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
   },
   {
     key: "B",
@@ -206,20 +191,8 @@ const defaultGroups: Group[] = [
     borderClass: "border-brand-orange",
     bgClass: "bg-brand-orange/10",
     shadowClass: "shadow-[6px_6px_0_var(--color-brand-orange)]",
-<<<<<<< HEAD
     teams: [],
     matches: [],
-=======
-    teams: ["Minnesode Timbermilf", "Denver McNuggets", "Atlanta Robba", "Chicago Poolls"],
-    matches: [
-      { id: "gb1", round: "Girone B — G1", date: "05 Ago 18:30", status: "COMPLETA", team1: { name: "Minnesode Timbermilf", score: 85 }, team2: { name: "Denver McNuggets", score: 55 }, details: { mvp: "Simone Neri (15 pts, 12 ast)", summary: "Dominio totale di Minnesode in transizione, McNuggets travolti dai contropiedi." } },
-      { id: "gb2", round: "Girone B — G1", date: "05 Ago 20:00", status: "COMPLETA", team1: { name: "Atlanta Robba", score: 81 }, team2: { name: "Chicago Poolls", score: 60 }, details: { mvp: "Leo Verdi (24 pts)", summary: "Atlanta Robba parte forte, Chicago non riesce mai a rientrare nel match." } },
-      { id: "gb3", round: "Girone B — G2", date: "07 Ago 18:30", status: "COMPLETA", team1: { name: "Minnesode Timbermilf", score: 78 }, team2: { name: "Atlanta Robba", score: 81 }, details: { mvp: "Leo Verdi (21 pts, game winner)", summary: "Sfida per il primo posto del girone. Verdi chiude i conti con un lay-up a 3 secondi dalla sirena." } },
-      { id: "gb4", round: "Girone B — G2", date: "07 Ago 20:30", status: "COMPLETA", team1: { name: "Denver McNuggets", score: 65 }, team2: { name: "Chicago Poolls", score: 72 }, details: { mvp: "Davide Mori (16 pts)", summary: "Chicago si aggiudica uno scontro salvezza con una difesa solida nel finale." } },
-      { id: "gb5", round: "Girone B — G3", date: "10 Ago 18:30", status: "IN PROGRAMMA", team1: { name: "Minnesode Timbermilf", score: 0 }, team2: { name: "Chicago Poolls", score: 0 }, details: { mvp: "TBD", summary: "Match in programma." } },
-      { id: "gb6", round: "Girone B — G3", date: "10 Ago 20:00", status: "IN PROGRAMMA", team1: { name: "Denver McNuggets", score: 0 }, team2: { name: "Atlanta Robba", score: 0 }, details: { mvp: "TBD", summary: "Match in programma." } },
-    ],
->>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
   },
 ];
 
@@ -240,12 +213,9 @@ function computeStandings(teams: string[], matches: Match[]) {
 
   for (const m of matches) {
     if (m.status !== "COMPLETA") continue;
-<<<<<<< HEAD
     // Inizializza entry se il team non era nella lista iniziale (es. team di altro girone)
     if (!s[m.team1.name]) s[m.team1.name] = { g: 0, v: 0, p: 0, pt: 0, pf: 0, ps: 0 };
     if (!s[m.team2.name]) s[m.team2.name] = { g: 0, v: 0, p: 0, pt: 0, pf: 0, ps: 0 };
-=======
->>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
     s[m.team1.name].g++;  s[m.team2.name].g++;
     s[m.team1.name].pf += m.team1.score; s[m.team1.name].ps += m.team2.score;
     s[m.team2.name].pf += m.team2.score; s[m.team2.name].ps += m.team1.score;
@@ -256,10 +226,6 @@ function computeStandings(teams: string[], matches: Match[]) {
       s[m.team2.name].v++;  s[m.team2.name].pt += 2;
       s[m.team1.name].p++;  s[m.team1.name].pt += 1;
     }
-<<<<<<< HEAD
-=======
-    // punteggi identici ignorati (non deve succedere nel basket)
->>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
   }
 
   return teams
@@ -430,13 +396,8 @@ export function Matches() {
   // Fetch squadre + partite in parallelo dal backend
   useEffect(() => {
     Promise.all([
-<<<<<<< HEAD
       fetch(`${API}/api-web/squadre`).then(r => r.ok ? r.json() as Promise<TeamApi[]> : null),
       fetch(`${API}/api-web/partite`).then(r => r.ok ? r.json() as Promise<Match[]>   : null),
-=======
-      fetch(`${API}/api/squadre`).then(r => r.ok ? r.json() as Promise<TeamApi[]> : null),
-      fetch(`${API}/api/partite`).then(r => r.ok ? r.json() as Promise<Match[]>   : null),
->>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
     ])
     .then(([squadre, partite]) => {
       if (!squadre && !partite) return; // backend non disponibile
@@ -476,11 +437,7 @@ export function Matches() {
     if (match.status !== "COMPLETA") return;
     setLoadingDetail(true);
     try {
-<<<<<<< HEAD
       const res = await fetch(`${API}/api-web/partite/${match.id}`);
-=======
-      const res = await fetch(`${API}/api/partite/${match.id}`);
->>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
       if (res.ok) setMatchDetail(await res.json());
     } catch {
       // backend non ancora disponibile — mostra il summary base

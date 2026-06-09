@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { motion, useInView } from "motion/react";
 import { allPlayers as defaultPlayers, type Player } from "../data/stats";
@@ -10,11 +10,7 @@ export function Players() {
   const [activeTeam, setActiveTeam] = useState<string>("all");
 
   useEffect(() => {
-<<<<<<< HEAD
     fetch(`${API}/api-web/giocatori`)
-=======
-    fetch(`${API}/api/giocatori`)
->>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
       .then(r => r.ok ? r.json() as Promise<Player[]> : null)
       .then(data => { if (data) setPlayers(data); })
       .catch(() => {});
