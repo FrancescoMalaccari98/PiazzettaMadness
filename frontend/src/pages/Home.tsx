@@ -51,7 +51,6 @@ function useCountdown(target: Date) {
 
 function CountdownUnit({ value, label, pulse = false }: { value: number; label: string; pulse?: boolean }) {
   return (
-<<<<<<< HEAD
     <div className="flex flex-col items-center gap-1 sm:gap-3">
       <div className={`bg-zinc-900 border-[2px] sm:border-[3px] border-brand-orange px-3 sm:px-8 md:px-10 py-2.5 sm:py-5 md:py-7 flex items-center justify-center shadow-[3px_3px_0_var(--color-brand-blue)] sm:shadow-[6px_6px_0_var(--color-brand-blue)] ${pulse ? "animate-pulse" : ""}`}>
         <span className="font-display text-[28px] sm:text-6xl md:text-8xl text-white tabular-nums leading-none tracking-[-1px] sm:tracking-[-2px]">
@@ -59,15 +58,6 @@ function CountdownUnit({ value, label, pulse = false }: { value: number; label: 
         </span>
       </div>
       <span className="font-display text-[8px] sm:text-[10px] uppercase tracking-[0.2em] sm:tracking-[0.3em] text-brand-orange">{label}</span>
-=======
-    <div className="flex flex-col items-center gap-3">
-      <div className={`bg-zinc-900 border-[3px] border-brand-orange px-5 sm:px-10 py-4 sm:py-7 min-w-[76px] sm:min-w-[120px] flex items-center justify-center shadow-[6px_6px_0_var(--color-brand-blue)] ${pulse ? "animate-pulse" : ""}`}>
-        <span className="font-display text-5xl sm:text-7xl md:text-8xl text-white tabular-nums leading-none tracking-[-2px]">
-          {String(value).padStart(2, "0")}
-        </span>
-      </div>
-      <span className="font-display text-[10px] sm:text-xs uppercase tracking-[0.3em] text-brand-orange">{label}</span>
->>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
     </div>
   );
 }
@@ -76,11 +66,7 @@ export function Home() {
   const [kickoffState, setKickoffState] = useState<{ target: Date; show: boolean } | null>(null);
 
   useEffect(() => {
-<<<<<<< HEAD
     fetch(`${API}/api-web/partite`)
-=======
-    fetch(`${API}/api/partite`)
->>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
       .then(r => r.ok ? r.json() : null)
       .then((matches: { date: string }[] | null) => {
         if (!matches?.length) return;
