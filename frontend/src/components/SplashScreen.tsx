@@ -72,22 +72,6 @@ export function SplashScreen({ onDone }: { onDone: () => void }) {
             </div>
           </motion.div>
 
-          {/* ── BEER — bottom right, bianco e nero ── */}
-          <motion.div
-            className="absolute right-0 bottom-0 z-10 pointer-events-none"
-            initial={{ opacity: 0, x: 40 }}
-            animate={{ opacity: phase >= 2 ? 1 : 0, x: phase >= 2 ? 0 : 40 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-          >
-            <img
-              src="/assets/beer.png"
-              alt=""
-              className="w-24 sm:w-48 md:w-72 h-auto object-contain"
-              style={{ filter: "grayscale(1) brightness(0.85)", animation: "mascotFloat 4s ease-in-out infinite" }}
-              draggable={false}
-            />
-          </motion.div>
-
           {/* ── Contenuto testo ── */}
           <div className="relative z-10 flex flex-col items-center text-center w-full px-3 sm:px-6">
 

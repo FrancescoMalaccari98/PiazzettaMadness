@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "../lib/utils";
 
-// SVG inline: lucide-react e motion fuori dal critical path (vedi commento originale)
 const navLinks: { name: string; path: string; live?: boolean }[] = [
   { name: "Home", path: "/" },
   { name: "Info", path: "/info" },
@@ -42,17 +41,14 @@ export function Navigation() {
   const lastScrollY = useRef(0);
   const location = useLocation();
 
-  // Chiude il menu mobile al cambio di route
   useEffect(() => {
     setIsOpen(false);
   }, [location.pathname]);
 
-  // Nasconde la navbar sullo scroll verso il basso, la mostra verso l'alto
   useEffect(() => {
     const handleScroll = () => {
       const currentY = window.scrollY;
       setScrolled(currentY > 30);
-
       if (currentY < 50 || currentY < lastScrollY.current) {
         setVisible(true);
       } else if (currentY > lastScrollY.current && currentY > 120) {
@@ -61,7 +57,6 @@ export function Navigation() {
       }
       lastScrollY.current = currentY;
     };
-
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -69,16 +64,23 @@ export function Navigation() {
   return (
     <nav
       className={cn(
-        "fixed top-0 left-0 right-0 w-full z-50 transition-all duration-300 ease-in-out",
-        scrolled
-          ? "bg-zinc-950/95 backdrop-blur-md border-b-2 border-brand-orange/40 shadow-[0_4px_24px_rgba(0,0,0,0.5)]"
-          : "bg-gradient-to-b from-zinc-950/70 to-transparent",
+        "fixed top-0 left-0 right-0 w-full z-50 transition-transform duration-300 ease-in-out",
         visible ? "translate-y-0" : "-translate-y-full"
       )}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* ── Layer sfondo: opacity transition (composited) ── */}
+      <div
+        className="absolute inset-0 bg-gradient-to-b from-zinc-950/70 to-transparent transition-opacity duration-300 pointer-events-none"
+        style={{ opacity: scrolled ? 0 : 1 }}
+      />
+      <div
+        className="absolute inset-0 bg-zinc-950/95 backdrop-blur-md border-b-2 border-brand-orange/40 shadow-[0_4px_24px_rgba(0,0,0,0.5)] transition-opacity duration-300 pointer-events-none"
+        style={{ opacity: scrolled ? 1 : 0 }}
+      />
+
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className={cn(
-          "flex items-center justify-between transition-all duration-300",
+          "flex items-center justify-between transition-[height] duration-300",
           scrolled ? "h-14" : "h-20"
         )}>
 
@@ -88,19 +90,24 @@ export function Navigation() {
             className="flex-shrink-0 flex items-center gap-3 group"
             onClick={() => setIsOpen(false)}
           >
-            <img
-              src="/assets/logo.png"
-              alt="Piazzetta Madness Logo"
-              className={cn(
-                "w-auto transition-all duration-300",
-                scrolled ? "h-9" : "h-14"
-              )}
-              style={{ animation: 'logoPulse 8s linear infinite' }}
-            />
-            <div className={cn(
-              "font-display uppercase leading-[0.85] border-l-[3px] border-brand-orange pl-3 text-white transition-all duration-300",
-              scrolled ? "text-lg" : "text-2xl"
-            )}>
+            {/* wrapper gestisce il resize scroll (scale composited), img gestisce la rotazione */}
+            <div
+              className="origin-left transition-transform duration-300"
+              style={{ transform: scrolled ? 'scale(0.643)' : 'scale(1)' }}
+            >
+              <img
+                src="/assets/logo.png"
+                alt="Piazzetta Madness Logo"
+                width={56}
+                height={56}
+                className="w-auto h-14"
+                style={{ animation: 'logoSpin 8s linear infinite' }}
+              />
+            </div>
+            <div
+              className="font-display uppercase leading-[0.85] border-l-[3px] border-brand-orange pl-3 text-white text-2xl origin-left transition-transform duration-300"
+              style={{ transform: scrolled ? 'scale(0.75)' : 'scale(1)' }}
+            >
               PIAZZETTA<br />MADNESS
             </div>
           </Link>
@@ -126,11 +133,9 @@ export function Navigation() {
                 )}
                 {link.name}
                 <span className={cn(
-                  "absolute bottom-0 left-0 h-[2px] bg-brand-orange transition-all duration-300",
-                  location.pathname === link.path
-                    ? "w-full"
-                    : "w-0 group-hover:w-full"
-                )} />
+                  "absolute bottom-0 left-0 h-[2px] bg-brand-orange transition-transform duration-300 origin-left",
+                  location.pathname === link.path ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
+                )} style={{ width: '100%' }} />
               </Link>
             ))}
 
@@ -157,12 +162,12 @@ export function Navigation() {
         </div>
       </div>
 
-      {/* Mobile menu — CSS transition, no motion */}
+      {/* Mobile menu */}
       <div
         aria-hidden={!isOpen}
         className={cn(
-          "md:hidden absolute w-full bg-zinc-950/98 backdrop-blur-md border-b-2 border-brand-orange/50",
-          "transition-all duration-200 overflow-hidden",
+          "relative md:hidden w-full bg-zinc-950/98 backdrop-blur-md border-b-2 border-brand-orange/50",
+          "transition-[opacity,transform] duration-200 overflow-hidden",
           isOpen ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-3 pointer-events-none"
         )}
       >
@@ -173,7 +178,7 @@ export function Navigation() {
               to={link.path}
               onClick={() => setIsOpen(false)}
               className={cn(
-                "flex items-center gap-3 px-4 py-3 font-display text-lg tracking-wider uppercase transition-all border-l-4",
+                "flex items-center gap-3 px-4 py-3 font-display text-lg tracking-wider uppercase transition-colors border-l-4",
                 location.pathname === link.path
                   ? "text-brand-orange border-brand-orange bg-brand-orange/5"
                   : "text-zinc-300 border-transparent hover:text-white hover:border-zinc-600 hover:bg-zinc-800/40"

@@ -154,7 +154,7 @@ export function Privacy() {
               </div>
 
               <div className="border-l-4 border-zinc-600 pl-4">
-                <h4 className="font-display text-white uppercase text-lg mb-2">Immagini e foto</h4>
+                <h4 className="font-display text-white uppercase text-lg mb-2">Immagini e foto — Partecipanti</h4>
                 <p>
                   Le fotografie scattate durante il torneo che ritraggono i partecipanti possono essere
                   pubblicate sui canali social e sul sito dell'evento. Il consenso alla pubblicazione
@@ -162,8 +162,33 @@ export function Privacy() {
                   dell'inizio del torneo. Per i minorenni è richiesta la firma del genitore o tutore.
                 </p>
                 <p className="mt-2 text-sm text-zinc-500">
-                  <strong>Base giuridica:</strong> consenso esplicito dell'interessato (art. 6, par. 1, lett. a
-                  e art. 9, par. 2, lett. a GDPR).
+                  <strong>Base giuridica:</strong> consenso esplicito dell'interessato (art. 6, par. 1, lett. a GDPR).
+                </p>
+              </div>
+
+              <div className="border-l-4 border-zinc-600 pl-4">
+                <h4 className="font-display text-white uppercase text-lg mb-2">Immagini e foto — Pubblico e spettatori</h4>
+                <p>
+                  Il torneo si svolge in uno spazio pubblico aperto (piazzetta). Durante le riprese
+                  fotografiche e video a fini documentali dell'evento, è possibile che vengano
+                  inquadrate persone presenti come spettatori o di passaggio, in modo non intenzionale
+                  e non come soggetti principali dello scatto.
+                </p>
+                <p className="mt-2">
+                  Tali immagini possono essere pubblicate sui canali social e sul sito dell'evento
+                  esclusivamente per finalità di cronaca e documentazione del torneo, senza scopo
+                  commerciale e senza che le persone riprese siano identificate o poste in primo piano.
+                </p>
+                <p className="mt-2 text-sm text-zinc-500">
+                  <strong>Base giuridica:</strong> legittimo interesse del Titolare (art. 6, par. 1, lett. f GDPR)
+                  e finalità di cronaca ai sensi dell'art. 137 del D.Lgs. 196/2003 (Codice Privacy),
+                  in conformità con le indicazioni del Garante per la protezione dei dati personali
+                  relative agli eventi sportivi amatoriali pubblici.
+                  Qualora tu ritenga di essere stato ripreso in modo lesivo della tua riservatezza,
+                  puoi richiedere la rimozione dell'immagine scrivendo a{" "}
+                  <a href="mailto:f.emiliani@piazzettamadness.it" className="text-brand-orange hover:underline">
+                    f.emiliani@piazzettamadness.it
+                  </a>.
                 </p>
               </div>
             </div>

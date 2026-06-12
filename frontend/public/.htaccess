@@ -4,13 +4,30 @@
 # ============================================================
 
 Options -Indexes -MultiViews
+
+# ── Cache headers ────────────────────────────────────────────
+<IfModule mod_headers.c>
+  # Assets con hash nel nome: cache 1 anno (immutable)
+  <FilesMatch "\.(js|css|woff2|woff|ttf|eot)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+  # Immagini e font: cache 1 mese
+  <FilesMatch "\.(png|jpg|jpeg|gif|svg|webp|ico)$">
+    Header set Cache-Control "public, max-age=2592000"
+  </FilesMatch>
+  # HTML: no cache (sempre aggiornato)
+  <FilesMatch "\.html$">
+    Header set Cache-Control "no-cache, must-revalidate"
+  </FilesMatch>
+</IfModule>
+
 RewriteEngine On
 RewriteBase /
 
 # ── File statici: serve direttamente per estensione ──────────
 # Più affidabile di %{REQUEST_FILENAME} -f su hosting condiviso Aruba,
 # perché non dipende da come Apache risolve il percorso assoluto.
-RewriteRule \.(js|mjs|css|png|jpg|jpeg|gif|ico|svg|webp|woff|woff2|ttf|eot|map|json|txt|xml)$ - [L,NC]
+RewriteRule \.(html|js|mjs|css|png|jpg|jpeg|gif|ico|svg|webp|woff|woff2|ttf|eot|map|json|txt|xml)$ - [L,NC]
 
 # ── API: lascia gestire ad Apache + rispettivi .htaccess ─────
 RewriteRule ^api/ - [L]
