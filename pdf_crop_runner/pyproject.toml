@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pdf-crop-runner"
+version = "0.2.0"
+description = "Lightweight PDF layout crop preparer for BasketPdfStats."
+requires-python = ">=3.10"
+dependencies = [
+  "Pillow>=10",
+  "PyMuPDF>=1.24"
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["pdf_crop_runner*"]

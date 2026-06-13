@@ -1,0 +1,63 @@
+# .NET
+bin/
+obj/
+.vs/
+TestResults/
+*.user
+*.suo
+
+# VS Code local
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+
+# Python
+.venv/
+.venv*/
+venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# Runtime generated files
+runtime/Input/*
+runtime/Working/*
+runtime/OutputJson/*
+runtime/Elaborati/*
+runtime/Errori/*
+runtime/Logs/*
+runtime/Dataset/*
+runtime/Debug/*
+
+# Keep runtime folders
+!runtime/Input/.gitkeep
+!runtime/Working/.gitkeep
+!runtime/OutputJson/.gitkeep
+!runtime/Elaborati/.gitkeep
+!runtime/Errori/.gitkeep
+!runtime/Logs/.gitkeep
+!runtime/Dataset/.gitkeep
+!runtime/Debug/.gitkeep
+
+# Samples must remain versionable
+!samples/
+!samples/pdf/
+
+# Planning prompts
+Prompt_pianificazione.txt
+
+.venv-paddle/
+.venv/
+venv/
+__pycache__/
+*.pyc
+bin/
+obj/
+.vs/

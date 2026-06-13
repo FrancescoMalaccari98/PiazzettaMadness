@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\BasketPdfStats.Core\BasketPdfStats.Core.csproj" />
+    <ProjectReference Include="..\BasketPdfStats.Infrastructure\BasketPdfStats.Infrastructure.csproj" />
+    <ProjectReference Include="..\BasketPdfStats.Ocr.Mock\BasketPdfStats.Ocr.Mock.csproj" />
+    <ProjectReference Include="..\BasketPdfStats.Ocr.TesseractPython\BasketPdfStats.Ocr.TesseractPython.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+  </PropertyGroup>
+
+</Project>

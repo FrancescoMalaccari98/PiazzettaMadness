@@ -1,0 +1,203 @@
+{
+  "schemaVersion": "1.0",
+  "strategy": "fixed-structure-with-ocr-geometry-calibration",
+  "description": "Rules for aligning the fixed FIBA crop template with OCR geometry. These rules calibrate known zones; they do not discover the document layout from scratch.",
+  "sourceContracts": {
+    "zoneTemplate": "layout-map.default.json",
+    "playerTableColumns": "player-table-columns.json",
+    "humanTableBoundaryGuide": "table-boundary-rules.md"
+  },
+  "pageAssumptions": {
+    "pageCount": 1,
+    "formatStable": true,
+    "orientationStable": true,
+    "marginsMostlyStable": true,
+    "strictContentArea": null,
+    "maxOffsetNormalized": 0.15,
+    "maxScaleDeviation": 0.30,
+    "referenceImagesAreRuntimeInputs": false,
+    "calibrationBasis": [
+      "fixed normalized zone template",
+      "known FIBA textual structure",
+      "TesseractFullPage OCR word-box geometry"
+    ]
+  },
+  "zoneRules": {
+    "header.finalScore": {
+      "templateZoneId": "header.finalScore",
+      "priority": "high",
+      "lineFormat": "Home Team <home score> - <away score> Away Team",
+      "assumptions": {
+        "singleLine": true,
+        "teamNamesWrap": false,
+        "scoreCenteredBetweenTeamNames": true
+      },
+      "anchors": [
+        "home-team-name tokens",
+        "home-score number token",
+        "dash between scores",
+        "away-score number token",
+        "away-team-name tokens"
+      ],
+      "cropRule": "Include only or mostly the final-score line.",
+      "exclude": [
+        "period scores",
+        "interval scores",
+        "bracketed partials"
+      ],
+      "onUnreliableGeometry": "mark-unusable-with-warning"
+    },
+    "home.playerTable": {
+      "templateZoneId": "home.playerTable",
+      "priority": "high",
+      "side": "Home",
+      "tableOrder": 1,
+      "boundaryRule": "player-table",
+      "cropRule": "Include the known column-header row, all visible player rows, Squadra/Allenatore, and Totali."
+    },
+    "away.playerTable": {
+      "templateZoneId": "away.playerTable",
+      "priority": "high",
+      "side": "Away",
+      "tableOrder": 2,
+      "boundaryRule": "player-table",
+      "cropRule": "Include the known column-header row, all visible player rows, Squadra/Allenatore, and Totali."
+    },
+    "home.teamTotals": {
+      "templateZoneId": "home.teamTotals",
+      "priority": "high",
+      "side": "Home",
+      "boundaryRule": "team-totals-row",
+      "cropRule": "Include only the Totali row."
+    },
+    "away.teamTotals": {
+      "templateZoneId": "away.teamTotals",
+      "priority": "high",
+      "side": "Away",
+      "boundaryRule": "team-totals-row",
+      "cropRule": "Include only the Totali row."
+    },
+    "header.periodScores": {
+      "templateZoneId": "header.periodScores",
+      "priority": "normal",
+      "cropRule": "Include period partial scores only.",
+      "exclude": [
+        "final score",
+        "interval scores"
+      ]
+    },
+    "macro.periodIntervalScores": {
+      "templateZoneId": "macro.periodIntervalScores",
+      "priority": "low",
+      "optional": true,
+      "deprecatedCandidate": true,
+      "cropRule": "Retain for compatibility while its future value is evaluated."
+    },
+    "game.periodIntervalScores": {
+      "templateZoneId": "game.periodIntervalScores",
+      "priority": "low",
+      "optional": true,
+      "deprecatedCandidate": true,
+      "cropRule": "Retain for compatibility while its future value is evaluated."
+    },
+    "comparativeStats.scoringBreakdown": {
+      "templateZoneId": "comparativeStats.scoringBreakdown",
+      "priority": "normal",
+      "cropRule": "Keep the scoring-breakdown comparative table."
+    },
+    "comparativeStats.gameFlow": {
+      "templateZoneId": "comparativeStats.gameFlow",
+      "priority": "normal",
+      "cropRule": "Keep the game-flow comparative table."
+    }
+  },
+  "tableRules": {
+    "order": [
+      "Home",
+      "Away"
+    ],
+    "homeAwayShareSameColumnLayout": true,
+    "headerIncludedInPlayerTable": true,
+    "playerRows": {
+      "count": "variable",
+      "allowedExamples": [
+        7,
+        8,
+        9
+      ],
+      "mustNotDetermineCropBottom": true
+    },
+    "topAnchor": {
+      "role": "known-column-header-row",
+      "requiredLabels": [
+        "N.",
+        "Nome",
+        "Min.",
+        "Tiri dal campo",
+        "2 Punti",
+        "3 Punti",
+        "Tiri Liberi",
+        "Rimbalzi",
+        "AS",
+        "PP",
+        "PR",
+        "SD",
+        "FF",
+        "FS",
+        "+/-",
+        "Val.",
+        "PTI"
+      ]
+    },
+    "bottomAnchors": [
+      {
+        "printedLabel": "Squadra/Allenatore",
+        "role": "teamBench",
+        "alwaysBefore": "Totali",
+        "mustNotBecomePlayer": true
+      },
+      {
+        "printedLabel": "Totali",
+        "role": "teamTotals",
+        "alwaysLastStructuralRow": true
+      }
+    ],
+    "fallbacks": {
+      "teamBenchMissingButTotalsFound": {
+        "action": "continue-with-warning",
+        "warningCode": "layout.table.teamBenchAnchorMissing"
+      },
+      "totalsMissing": {
+        "action": "close-shortly-after-last-reliable-row-with-warning",
+        "warningCode": "layout.table.totalsAnchorMissing",
+        "mustRecordDetectedBottomEvidence": true
+      },
+      "headerMissingButTotalsFound": {
+        "action": "use-wider-template-based-crop-with-warning",
+        "warningCode": "layout.table.headerAnchorMissing",
+        "mustRecordTemplateFallback": true
+      },
+      "insufficientReliableEvidence": {
+        "action": "mark-crop-unusable",
+        "warningCode": "layout.table.insufficientCalibrationEvidence"
+      }
+    }
+  },
+  "columnCalibration": {
+    "source": "player-table-columns.json",
+    "columnCount": 23,
+    "mode": "derive-from-header-ocr-geometry",
+    "homeAwayShareSameLayout": true,
+    "noVerticalSeparatorsExpected": true,
+    "fixedColumnPositionsAreFinal": false,
+    "templatePositionsMayBeUsedAsHints": true,
+    "purpose": "Future support for TesseractTableRows. This does not enable row or cell OCR."
+  },
+  "failurePolicy": {
+    "mode": "per-crop-warning",
+    "individualCropFailureAllowed": true,
+    "doNotMarkBadCropAsCalibrated": true,
+    "consumerRule": "TesseractLayoutCrops may consume only generated crop entries explicitly marked usable.",
+    "reportRule": "Every fallback, warning, unusable crop, and missing or ambiguous anchor must be recorded in layout-calibration-report.json."
+  }
+}

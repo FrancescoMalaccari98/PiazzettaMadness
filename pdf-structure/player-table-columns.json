@@ -1,0 +1,311 @@
+{
+  "version": "1.0",
+  "tableId": "fiba-player-table",
+  "description": "Machine-readable structure of the fixed FIBA player table.",
+  "rowModel": {
+    "playerRows": {
+      "count": "variable",
+      "allowedExamples": [
+        7,
+        8,
+        9
+      ],
+      "boundaryRule": "Rows before Squadra/Allenatore.",
+      "dnpPlayersCountAsPlayerRows": true
+    },
+    "teamBenchRow": {
+      "printedLabel": "Squadra/Allenatore",
+      "role": "teamBench",
+      "alwaysBefore": "Totali",
+      "mustNotBecomePlayer": true
+    },
+    "teamTotalsRow": {
+      "printedLabel": "Totali",
+      "role": "teamTotals",
+      "alwaysLastStructuralRow": true
+    },
+    "cropBoundaryRule": {
+      "topAnchor": "Known column header row.",
+      "bottomAnchor": "Totali row.",
+      "rule": "Do not use a fixed player row count."
+    }
+  },
+  "columns": [
+    {
+      "index": 0,
+      "header": "N.",
+      "fieldId": "jerseyNumber",
+      "type": "jerseyNumber",
+      "statKey": null,
+      "example": "0"
+    },
+    {
+      "index": 1,
+      "header": "Nome",
+      "fieldId": "playerName",
+      "type": "playerName",
+      "statKey": null,
+      "example": "Francesco EMILIANI (C)"
+    },
+    {
+      "index": 2,
+      "header": "Min.",
+      "fieldId": "minutes",
+      "type": "timeOrDnp",
+      "statKey": "minutes",
+      "example": "08:39",
+      "acceptedValues": [
+        "mm:ss",
+        "N.E."
+      ]
+    },
+    {
+      "index": 3,
+      "group": "Tiri dal campo",
+      "header": "R/T",
+      "fieldId": "fieldGoals.ratio",
+      "type": "madeAttempted",
+      "statKeys": [
+        "fieldGoals.made",
+        "fieldGoals.attempted"
+      ],
+      "example": "1/2"
+    },
+    {
+      "index": 4,
+      "group": "Tiri dal campo",
+      "header": "%",
+      "fieldId": "fieldGoals.percentage",
+      "type": "percentage",
+      "statKey": "fieldGoals.percentage",
+      "example": "50,0"
+    },
+    {
+      "index": 5,
+      "group": "2 Punti",
+      "header": "R/T",
+      "fieldId": "twoPoints.ratio",
+      "type": "madeAttempted",
+      "statKeys": [
+        "twoPoints.made",
+        "twoPoints.attempted"
+      ],
+      "example": "0/1"
+    },
+    {
+      "index": 6,
+      "group": "2 Punti",
+      "header": "%",
+      "fieldId": "twoPoints.percentage",
+      "type": "percentage",
+      "statKey": "twoPoints.percentage",
+      "example": "0,0"
+    },
+    {
+      "index": 7,
+      "group": "3 Punti",
+      "header": "R/T",
+      "fieldId": "threePoints.ratio",
+      "type": "madeAttempted",
+      "statKeys": [
+        "threePoints.made",
+        "threePoints.attempted"
+      ],
+      "example": "1/1"
+    },
+    {
+      "index": 8,
+      "group": "3 Punti",
+      "header": "%",
+      "fieldId": "threePoints.percentage",
+      "type": "percentage",
+      "statKey": "threePoints.percentage",
+      "example": "100,0"
+    },
+    {
+      "index": 9,
+      "group": "Tiri Liberi",
+      "header": "R/T",
+      "fieldId": "freeThrows.ratio",
+      "type": "madeAttempted",
+      "statKeys": [
+        "freeThrows.made",
+        "freeThrows.attempted"
+      ],
+      "example": "1/2"
+    },
+    {
+      "index": 10,
+      "group": "Tiri Liberi",
+      "header": "%",
+      "fieldId": "freeThrows.percentage",
+      "type": "percentage",
+      "statKey": "freeThrows.percentage",
+      "example": "50,0"
+    },
+    {
+      "index": 11,
+      "group": "Rimbalzi",
+      "header": "RO",
+      "fieldId": "rebounds.offensive",
+      "type": "integer",
+      "statKey": "rebounds.offensive",
+      "example": "0"
+    },
+    {
+      "index": 12,
+      "group": "Rimbalzi",
+      "header": "RD",
+      "fieldId": "rebounds.defensive",
+      "type": "integer",
+      "statKey": "rebounds.defensive",
+      "example": "1"
+    },
+    {
+      "index": 13,
+      "group": "Rimbalzi",
+      "header": "RT",
+      "fieldId": "rebounds.total",
+      "type": "integer",
+      "statKey": "rebounds.total",
+      "example": "1",
+      "notes": "RT under Rimbalzi means total rebounds, not made/attempted."
+    },
+    {
+      "index": 14,
+      "header": "AS",
+      "fieldId": "assists",
+      "type": "integer",
+      "statKey": "assists",
+      "example": "1"
+    },
+    {
+      "index": 15,
+      "header": "PP",
+      "fieldId": "turnovers",
+      "type": "integer",
+      "statKey": "turnovers",
+      "example": "0"
+    },
+    {
+      "index": 16,
+      "header": "PR",
+      "fieldId": "steals",
+      "type": "integer",
+      "statKey": "steals",
+      "example": "0"
+    },
+    {
+      "index": 17,
+      "header": "SD",
+      "fieldId": "blocks",
+      "type": "integer",
+      "statKey": "blocks",
+      "example": "0"
+    },
+    {
+      "index": 18,
+      "group": "Falli",
+      "header": "FF",
+      "fieldId": "fouls.committed",
+      "type": "integer",
+      "statKey": "fouls.committed",
+      "example": "1"
+    },
+    {
+      "index": 19,
+      "group": "Falli",
+      "header": "FS",
+      "fieldId": "fouls.drawn",
+      "type": "integer",
+      "statKey": "fouls.drawn",
+      "example": "1"
+    },
+    {
+      "index": 20,
+      "header": "+/-",
+      "fieldId": "plusMinus",
+      "type": "signedInteger",
+      "statKey": "plusMinus",
+      "example": "1"
+    },
+    {
+      "index": 21,
+      "header": "Val.",
+      "fieldId": "evaluation",
+      "type": "integer",
+      "statKey": "evaluation",
+      "example": "4"
+    },
+    {
+      "index": 22,
+      "header": "PTI",
+      "fieldId": "points",
+      "type": "integer",
+      "statKey": "points",
+      "example": "4",
+      "acceptedHeaders": [
+        "PTI",
+        "PTl",
+        "PT1",
+        "Ptl"
+      ]
+    }
+  ],
+  "typeDefinitions": {
+    "jerseyNumber": {
+      "description": "Player jersey number.",
+      "examples": [
+        "0",
+        "4",
+        "12"
+      ]
+    },
+    "playerName": {
+      "description": "Player display name as printed in the PDF.",
+      "examples": [
+        "Francesco EMILIANI (C)"
+      ]
+    },
+    "timeOrDnp": {
+      "description": "Minutes played or did-not-play marker.",
+      "examples": [
+        "08:39",
+        "22:13",
+        "N.E."
+      ]
+    },
+    "madeAttempted": {
+      "description": "Made/attempted ratio.",
+      "examples": [
+        "1/2",
+        "0/1",
+        "10/34"
+      ]
+    },
+    "percentage": {
+      "description": "Percentage with comma or dot in OCR text. Final JSON stores decimal number with dot.",
+      "examples": [
+        "50,0",
+        "100,0",
+        "33.3"
+      ]
+    },
+    "integer": {
+      "description": "Non-negative integer counter.",
+      "examples": [
+        "0",
+        "1",
+        "12"
+      ]
+    },
+    "signedInteger": {
+      "description": "Signed or unsigned integer.",
+      "examples": [
+        "1",
+        "+1",
+        "-4"
+      ]
+    }
+  }
+}

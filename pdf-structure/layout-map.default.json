@@ -1,0 +1,226 @@
+{
+  "schemaVersion": "2.0",
+  "name": "fiba-live-stats-default",
+  "documentType": "fiba-live-stats-image-pdf",
+  "description": "Operational crop-only map. All coordinates are verified normalized page-relative values from 0 to 1.",
+  "coordinateUnit": "normalized",
+  "page": {
+    "width": 2479,
+    "height": 3508,
+    "coordinateUnit": "normalized",
+    "coordinateSystem": "top-left-origin"
+  },
+  "renderDefaults": {
+    "dpi": 144,
+    "quality": "medium-high",
+    "notes": "Render should preserve text detail for future OCR."
+  },
+  "zones": [
+    {
+      "zoneId": "macro.header",
+      "fileName": "001-macro.header.png",
+      "tier": "macro",
+      "cropType": "macroHeader",
+      "expectedContentType": "header",
+      "pageNumber": 1,
+      "x": 0.020124,
+      "y": 0.048143,
+      "width": 0.9613,
+      "height": 0.178817
+    },
+    {
+      "zoneId": "macro.periodIntervalScores",
+      "fileName": "002-macro.periodIntervalScores.png",
+      "tier": "macro",
+      "cropType": "macroPeriodIntervalScores",
+      "expectedContentType": "periodIntervalScores",
+      "pageNumber": 1,
+      "x": 0.055728,
+      "y": 0.231087,
+      "width": 0.391641,
+      "height": 0.045392
+    },
+    {
+      "zoneId": "macro.mainTables",
+      "fileName": "003-macro.mainTables.png",
+      "tier": "macro",
+      "cropType": "macroMainTables",
+      "expectedContentType": "playerTables",
+      "pageNumber": 1,
+      "x": 0.020124,
+      "y": 0.272352,
+      "width": 0.958204,
+      "height": 0.486933
+    },
+    {
+      "zoneId": "macro.bottomComparative",
+      "fileName": "004-macro.bottomComparative.png",
+      "tier": "macro",
+      "cropType": "macroBottomComparative",
+      "expectedContentType": "comparativeTable",
+      "pageNumber": 1,
+      "x": 0.047988,
+      "y": 0.757909,
+      "width": 0.914861,
+      "height": 0.127923
+    },
+    {
+      "zoneId": "header.full",
+      "fileName": "101-header.full.png",
+      "tier": "semantic",
+      "cropType": "headerFull",
+      "expectedContentType": "header",
+      "pageNumber": 1,
+      "x": 0.04644,
+      "y": 0.071527,
+      "width": 0.913313,
+      "height": 0.127923
+    },
+    {
+      "zoneId": "header.finalScore",
+      "fileName": "102-header.finalScore.png",
+      "tier": "semantic",
+      "cropType": "headerFinalScore",
+      "expectedContentType": "finalScore",
+      "pageNumber": 1,
+      "x": 0.303406,
+      "y": 0.10729,
+      "width": 0.464396,
+      "height": 0.068776,
+      "expectedFieldIds": [
+        "game.homeTeam",
+        "result.home.points",
+        "result.away.points",
+        "game.awayTeam"
+      ],
+      "expectedStatKeys": [
+        "points"
+      ]
+    },
+    {
+      "zoneId": "header.officials",
+      "fileName": "103-header.officials.png",
+      "tier": "semantic",
+      "cropType": "headerOfficials",
+      "expectedContentType": "officials",
+      "pageNumber": 1,
+      "x": 0.656347,
+      "y": 0.181568,
+      "width": 0.30031,
+      "height": 0.020633
+    },
+    {
+      "zoneId": "header.periodScores",
+      "fileName": "104-header.periodScores.png",
+      "tier": "semantic",
+      "cropType": "headerPeriodScores",
+      "expectedContentType": "periodScores",
+      "pageNumber": 1,
+      "x": 0.304954,
+      "y": 0.225585,
+      "width": 0.142415,
+      "height": 0.050894,
+      "expectedFieldIds": [
+        "result.period.Q1.home",
+        "result.period.Q1.away",
+        "result.period.Q2.home",
+        "result.period.Q2.away"
+      ],
+      "expectedStatKeys": [
+        "period.points"
+      ]
+    },
+    {
+      "zoneId": "game.periodIntervalScores",
+      "fileName": "105-game.periodIntervalScores.png",
+      "tier": "semantic",
+      "cropType": "gamePeriodIntervalScores",
+      "expectedContentType": "periodIntervalScores",
+      "pageNumber": 1,
+      "x": 0.055728,
+      "y": 0.231087,
+      "width": 0.391641,
+      "height": 0.045392
+    },
+    {
+      "zoneId": "home.playerTable",
+      "fileName": "201-home.playerTable.png",
+      "tier": "semantic",
+      "cropType": "playerTable",
+      "side": "Home",
+      "expectedContentType": "playerTable",
+      "pageNumber": 1,
+      "x": 0.03096,
+      "y": 0.280605,
+      "width": 0.933437,
+      "height": 0.235213
+    },
+    {
+      "zoneId": "home.teamTotals",
+      "fileName": "202-home.teamTotals.png",
+      "tier": "semantic",
+      "cropType": "teamTotals",
+      "side": "Home",
+      "expectedContentType": "teamTotals",
+      "semanticRole": "teamTotalsRow",
+      "pageNumber": 1,
+      "x": 0.04644,
+      "y": 0.489684,
+      "width": 0.911765,
+      "height": 0.024759
+    },
+    {
+      "zoneId": "away.playerTable",
+      "fileName": "301-away.playerTable.png",
+      "tier": "semantic",
+      "cropType": "playerTable",
+      "side": "Away",
+      "expectedContentType": "playerTable",
+      "pageNumber": 1,
+      "x": 0.03096,
+      "y": 0.526823,
+      "width": 0.933437,
+      "height": 0.228336
+    },
+    {
+      "zoneId": "away.teamTotals",
+      "fileName": "302-away.teamTotals.png",
+      "tier": "semantic",
+      "cropType": "teamTotals",
+      "side": "Away",
+      "expectedContentType": "teamTotals",
+      "semanticRole": "teamTotalsRow",
+      "pageNumber": 1,
+      "x": 0.04644,
+      "y": 0.731774,
+      "width": 0.911765,
+      "height": 0.024759
+    },
+    {
+      "zoneId": "comparativeStats.scoringBreakdown",
+      "fileName": "401-comparativeStats.scoringBreakdown.png",
+      "tier": "semantic",
+      "cropType": "comparativeScoringBreakdown",
+      "expectedContentType": "comparativeTable",
+      "semanticRole": "scoringBreakdown",
+      "pageNumber": 1,
+      "x": 0.047988,
+      "y": 0.759285,
+      "width": 0.44582,
+      "height": 0.122421
+    },
+    {
+      "zoneId": "comparativeStats.gameFlow",
+      "fileName": "402-comparativeStats.gameFlow.png",
+      "tier": "semantic",
+      "cropType": "comparativeGameFlow",
+      "expectedContentType": "comparativeTable",
+      "semanticRole": "gameFlow",
+      "pageNumber": 1,
+      "x": 0.509288,
+      "y": 0.759285,
+      "width": 0.442724,
+      "height": 0.122421
+    }
+  ]
+}
