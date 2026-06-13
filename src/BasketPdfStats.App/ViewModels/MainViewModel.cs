@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Runtime.CompilerServices;
 using BasketPdfStats.App.Services;
+using BasketPdfStats.Core.Database;
 using BasketPdfStats.Core.Models;
 using BasketPdfStats.Core.Pipeline;
 using BasketPdfStats.Core.Presentation;
@@ -15,25 +16,32 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private readonly IFilePicker _filePicker;
     private readonly ProcessingResultPresentationService _resultPresentation;
     private readonly AlreadyProcessedPdfSelectionService? _alreadyProcessedPdfSelection;
+    private readonly IOcrImportService? _importService;
     private string? _selectedPdfPath;
     private string _warningText = string.Empty;
     private string _outputJsonPath = string.Empty;
     private string _statusText = "Pronto";
     private string _resultWindowStatusText = string.Empty;
+    private string _importStatusText = string.Empty;
+    private string _matchIdText = string.Empty;
     private bool _isBusy;
+    private ProcessingResult? _lastResult;
 
     public MainViewModel(
         IPdfProcessingPipeline pipeline,
         IFilePicker filePicker,
         IProcessingResultPresenter? resultPresenter = null,
-        AlreadyProcessedPdfSelectionService? alreadyProcessedPdfSelection = null)
+        AlreadyProcessedPdfSelectionService? alreadyProcessedPdfSelection = null,
+        IOcrImportService? importService = null)
     {
         _pipeline = pipeline;
         _filePicker = filePicker;
         _resultPresentation = new ProcessingResultPresentationService(resultPresenter);
         _alreadyProcessedPdfSelection = alreadyProcessedPdfSelection;
+        _importService = importService;
         SelectPdfCommand = new AsyncRelayCommand(SelectPdfAsync);
         ProcessPdfCommand = new AsyncRelayCommand(ProcessSelectedPdfAsync, () => !string.IsNullOrWhiteSpace(SelectedPdfPath));
+        ImportToDbCommand = new AsyncRelayCommand(ImportToDbAsync, CanImport);
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -41,6 +49,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public ObservableCollection<ProcessedFileRowViewModel> ProcessedFiles { get; } = [];
     public AsyncRelayCommand SelectPdfCommand { get; }
     public AsyncRelayCommand ProcessPdfCommand { get; }
+    public AsyncRelayCommand ImportToDbCommand { get; }
 
     public string? SelectedPdfPath
     {
@@ -82,6 +91,22 @@ public sealed class MainViewModel : INotifyPropertyChanged
     {
         get => _resultWindowStatusText;
         set => SetField(ref _resultWindowStatusText, value);
+    }
+
+    public string MatchIdText
+    {
+        get => _matchIdText;
+        set
+        {
+            if (SetField(ref _matchIdText, value))
+                ImportToDbCommand.RaiseCanExecuteChanged();
+        }
+    }
+
+    public string ImportStatusText
+    {
+        get => _importStatusText;
+        set => SetField(ref _importStatusText, value);
     }
 
     private Task SelectPdfAsync()
@@ -163,10 +188,46 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     private void AddResult(ProcessingResult result)
     {
+        _lastResult = result;
         ProcessedFiles.Insert(0, new ProcessedFileRowViewModel(result.ProcessedFile));
         OutputJsonPath = result.ProcessedFile.OutputJsonPath ?? string.Empty;
         WarningText = BuildWarnings(result);
+        ImportStatusText = string.Empty;
+        ImportToDbCommand.RaiseCanExecuteChanged();
         _resultPresentation.TryPresent(result, AppendResultViewerStatus);
+    }
+
+    private bool CanImport() =>
+        _importService is not null &&
+        _lastResult is not null &&
+        int.TryParse(_matchIdText, out var id) && id > 0;
+
+    private async Task ImportToDbAsync()
+    {
+        if (!CanImport() || _lastResult is null || _importService is null) return;
+        if (!int.TryParse(_matchIdText, out var matchId) || matchId <= 0)
+        {
+            ImportStatusText = "Match ID non valido.";
+            return;
+        }
+
+        await RunBusyAsync(async () =>
+        {
+            ImportStatusText = $"Import in corso per match_id={matchId}...";
+            var importResult = await _importService.ImportAsync(matchId, _lastResult);
+
+            if (importResult.Success)
+            {
+                var warnings = importResult.Warnings.Count > 0
+                    ? $" | Warning: {string.Join("; ", importResult.Warnings)}"
+                    : string.Empty;
+                ImportStatusText = $"Importati {importResult.ImportedPlayers} giocatori{warnings}";
+            }
+            else
+            {
+                ImportStatusText = $"Errore: {importResult.ErrorMessage}";
+            }
+        });
     }
 
     private void AppendResultViewerStatus(string message)

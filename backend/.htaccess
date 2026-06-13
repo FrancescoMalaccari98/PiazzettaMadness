@@ -1,0 +1,9 @@
+Options -Indexes -MultiViews
+RewriteEngine On
+RewriteBase /api-ocr/
+
+# Passa Authorization header a PHP (necessario su Aruba FastCGI)
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^ index.php [L]

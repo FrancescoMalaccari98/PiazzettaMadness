@@ -4,6 +4,7 @@ using BasketPdfStats.App.ViewModels;
 using BasketPdfStats.Core.Ocr;
 using BasketPdfStats.Core.Pipeline;
 using BasketPdfStats.Infrastructure.Configuration;
+using BasketPdfStats.Infrastructure.Database;
 using BasketPdfStats.Infrastructure.FileSystem;
 using BasketPdfStats.Infrastructure.Pipeline;
 using BasketPdfStats.Infrastructure.Preparation;
@@ -32,11 +33,15 @@ public partial class MainWindow : System.Windows.Window
         var alreadyProcessedPdfSelection = new AlreadyProcessedPdfSelectionService(
             new AlreadyProcessedPdfDetector(settings.Runtime),
             new WpfAlreadyProcessedPdfDecisionService());
+        var importService = string.IsNullOrWhiteSpace(settings.OcrApi.BaseUrl)
+            ? null
+            : new OcrImportService(settings.OcrApi);
         DataContext = new MainViewModel(
             pipeline,
             new WpfFilePicker(),
             new WinFormsProcessingResultPresenter(),
-            alreadyProcessedPdfSelection);
+            alreadyProcessedPdfSelection,
+            importService);
     }
 
     private static IReadOnlyList<IOcrEngine> CreateEngines(AppSettings settings, string projectRoot)

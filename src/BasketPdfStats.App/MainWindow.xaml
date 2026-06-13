@@ -10,6 +10,7 @@
             <RowDefinition Height="*" />
             <RowDefinition Height="150" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <DockPanel Grid.Row="0" LastChildFill="True">
@@ -58,6 +59,25 @@
             </GroupBox>
         </Grid>
 
-        <ProgressBar Grid.Row="4" Height="8" Margin="0,12,0,0" IsIndeterminate="{Binding IsBusy}" />
+        <!-- Import nel DB -->
+        <Border Grid.Row="4" BorderBrush="#D0D7DE" BorderThickness="1" Margin="0,12,0,0" Padding="10" CornerRadius="4">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="90" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Match ID" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0" />
+                <TextBox Grid.Column="1" Text="{Binding MatchIdText, UpdateSourceTrigger=PropertyChanged}"
+                         VerticalAlignment="Center" Padding="4,2" />
+                <Button Grid.Column="2" Content="Importa nel DB" Width="130" Margin="8,0,0,0"
+                        Command="{Binding ImportToDbCommand}" />
+                <TextBlock Grid.Column="3" Text="{Binding ImportStatusText}" VerticalAlignment="Center"
+                           Margin="12,0,0,0" TextWrapping="Wrap" Foreground="#57606A" FontSize="11" />
+            </Grid>
+        </Border>
+
+        <ProgressBar Grid.Row="5" Height="8" Margin="0,8,0,0" IsIndeterminate="{Binding IsBusy}" />
     </Grid>
 </Window>

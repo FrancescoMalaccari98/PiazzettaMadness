@@ -53,6 +53,9 @@ runtime/Debug/*
 # Planning prompts
 Prompt_pianificazione.txt
 
+# Credenziali server — NON committare
+backend/config/database.php
+
 .venv-paddle/
 .venv/
 venv/
