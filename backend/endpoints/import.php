@@ -9,6 +9,7 @@ declare(strict_types=1);
 // Flow:
 //   1. Parse and validate the request body
 //   2. READ match_teams  → resolve home_team_id / away_team_id
+//   2b. Validate OCR team names against selected DB match teams
 //   3. READ team_rosters → build (team_id, jersey) → player_id map
 //   4. Map OCR players to DB player IDs; collect unresolved warnings
 //   5. Group stats by entityId (Player scope and Team scope)
@@ -25,7 +26,7 @@ declare(strict_types=1);
 //   - Create table `ocr_import_log` for full audit trail per import attempt
 // ============================================================
 
-function handle_import(PDO $pdo, int $match_id): never
+function handle_import(PDO $pdo, int $match_id)
 {
     // ── 1. Parse request body ────────────────────────────────
     $body = file_get_contents('php://input');
@@ -45,20 +46,43 @@ function handle_import(PDO $pdo, int $match_id): never
     }
 
     // ── 2. Resolve home_team_id / away_team_id ───────────────
-    $stmt = $pdo->prepare('SELECT team_id, side FROM match_teams WHERE match_id = ?');
+    $stmt = $pdo->prepare(
+        'SELECT mt.team_id, mt.side, t.name, t.short_name
+         FROM match_teams mt
+         INNER JOIN teams t ON t.id = mt.team_id
+         WHERE mt.match_id = ?'
+    );
     $stmt->execute([$match_id]);
     $sides = $stmt->fetchAll();
 
     $home_team_id = null;
     $away_team_id = null;
+    $match_teams = [];
 
     foreach ($sides as $row) {
-        if ($row['side'] === 'Home') $home_team_id = (int)$row['team_id'];
-        if ($row['side'] === 'Away') $away_team_id = (int)$row['team_id'];
+        $side = (string)$row['side'];
+        $team = [
+            'team_id' => (int)$row['team_id'],
+            'name' => (string)$row['name'],
+            'short_name' => $row['short_name'],
+        ];
+        $match_teams[$side] = $team;
+
+        if ($side === 'Home') $home_team_id = $team['team_id'];
+        if ($side === 'Away') $away_team_id = $team['team_id'];
     }
 
     if (!$home_team_id || !$away_team_id) {
         send_error("match_id=$match_id not found or has no teams in match_teams", 404);
+    }
+
+    // ── 2b. Stop accidental imports into the wrong match ─────
+    $team_mismatch = detect_team_mismatch($data, $match_teams);
+    if ($team_mismatch !== null && !allow_team_mismatch_requested()) {
+        send_json([
+            'error' => 'Team mismatch: PDF teams do not match the selected match. Re-run import only after explicit confirmation.',
+            'teamMismatch' => $team_mismatch,
+        ], 409);
     }
 
     // ── 3. Build roster map: [team_id][jersey_number] => player_id ──
@@ -87,11 +111,13 @@ function handle_import(PDO $pdo, int $match_id): never
         $side      = $p['side']     ?? '';
 
         // Map OCR side label to DB team_id
-        $team_id = match($side) {
-            'Home'  => $home_team_id,
-            'Away'  => $away_team_id,
-            default => null,
-        };
+        if ($side === 'Home') {
+            $team_id = $home_team_id;
+        } elseif ($side === 'Away') {
+            $team_id = $away_team_id;
+        } else {
+            $team_id = null;
+        }
 
         if (!$team_id) {
             $warnings[] = "entityId=$entity_id: unknown side '$side' — skipped";
@@ -344,4 +370,120 @@ function handle_import(PDO $pdo, int $match_id): never
         'imported_players' => $imported_players,
         'warnings'         => $warnings,
     ]);
+}
+
+function allow_team_mismatch_requested()
+{
+    $value = strtolower(trim((string)($_SERVER['HTTP_X_ALLOW_TEAM_MISMATCH'] ?? '')));
+    return in_array($value, ['1', 'true', 'yes'], true);
+}
+
+function detect_team_mismatch(array $data, array $match_teams)
+{
+    $pdf_teams = teams_by_side($data['teams'] ?? []);
+    $mismatches = [];
+
+    foreach (['Home', 'Away'] as $side) {
+        $pdf_team = $pdf_teams[$side] ?? null;
+        $db_team = $match_teams[$side] ?? null;
+
+        if ($db_team === null) {
+            continue;
+        }
+
+        if (!team_matches($pdf_team, $db_team)) {
+            $mismatches[$side] = [
+                'pdf' => display_pdf_team($pdf_team),
+                'match' => display_db_team($db_team),
+            ];
+        }
+    }
+
+    return empty($mismatches) ? null : $mismatches;
+}
+
+function teams_by_side($teams)
+{
+    $by_side = [];
+    if (!is_array($teams)) {
+        return $by_side;
+    }
+
+    foreach ($teams as $team) {
+        if (!is_array($team)) {
+            continue;
+        }
+
+        $side = (string)($team['side'] ?? '');
+        if ($side === 'Home' || $side === 'Away') {
+            $by_side[$side] = $team;
+        }
+    }
+
+    return $by_side;
+}
+
+function team_matches($pdf_team, array $db_team)
+{
+    if (!is_array($pdf_team)) {
+        return false;
+    }
+
+    $pdf_names = [
+        normalize_team_name($pdf_team['name'] ?? ''),
+        normalize_team_name($pdf_team['abbreviation'] ?? ''),
+    ];
+    $db_names = [
+        normalize_team_name($db_team['name'] ?? ''),
+        normalize_team_name($db_team['short_name'] ?? ''),
+    ];
+
+    foreach ($pdf_names as $pdf_name) {
+        if ($pdf_name === '') {
+            continue;
+        }
+
+        foreach ($db_names as $db_name) {
+            if ($db_name !== '' && $pdf_name === $db_name) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+function normalize_team_name($value)
+{
+    $text = strtolower(trim((string)$value));
+    $text = strtr($text, [
+        'à' => 'a', 'á' => 'a', 'â' => 'a', 'ä' => 'a',
+        'è' => 'e', 'é' => 'e', 'ê' => 'e', 'ë' => 'e',
+        'ì' => 'i', 'í' => 'i', 'î' => 'i', 'ï' => 'i',
+        'ò' => 'o', 'ó' => 'o', 'ô' => 'o', 'ö' => 'o',
+        'ù' => 'u', 'ú' => 'u', 'û' => 'u', 'ü' => 'u',
+    ]);
+    return preg_replace('/[^a-z0-9]+/', '', $text);
+}
+
+function display_pdf_team($team)
+{
+    if (!is_array($team)) {
+        return 'not read';
+    }
+
+    $name = trim((string)($team['name'] ?? ''));
+    $abbreviation = trim((string)($team['abbreviation'] ?? ''));
+    if ($name === '') {
+        return 'not read';
+    }
+
+    return $abbreviation === '' ? $name : $name . ' (' . $abbreviation . ')';
+}
+
+function display_db_team(array $team)
+{
+    $name = trim((string)($team['name'] ?? ''));
+    $short_name = trim((string)($team['short_name'] ?? ''));
+    return $short_name === '' ? $name : $name . ' (' . $short_name . ')';
 }

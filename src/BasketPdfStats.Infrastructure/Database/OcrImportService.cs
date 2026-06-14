@@ -12,10 +12,12 @@ public sealed class OcrImportService : IOcrImportService
 {
     private readonly HttpClient _http;
     private readonly string _baseUrl;
+    private readonly string _matchLookupDate;
 
     public OcrImportService(OcrApiOptions options)
     {
         _baseUrl = options.BaseUrl.TrimEnd('/');
+        _matchLookupDate = options.MatchLookupDate.Trim();
         _http = new HttpClient();
         if (!string.IsNullOrWhiteSpace(options.Token))
         {
@@ -25,13 +27,69 @@ public sealed class OcrImportService : IOcrImportService
         _http.Timeout = TimeSpan.FromSeconds(60);
     }
 
-    public async Task<OcrImportResult> ImportAsync(int matchId, ProcessingResult result, CancellationToken cancellationToken = default)
+    public async Task<OcrMatchLookupResult> GetTodayMatchesAsync(CancellationToken cancellationToken = default)
+    {
+        var url = $"{_baseUrl}/matches/today";
+        if (!string.IsNullOrWhiteSpace(_matchLookupDate))
+        {
+            url = $"{url}?date={Uri.EscapeDataString(_matchLookupDate)}";
+        }
+
+        try
+        {
+            using var response = await _http.GetAsync(url, cancellationToken);
+            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorMsg = TryParseError(body) ?? $"HTTP {(int)response.StatusCode}";
+                return new OcrMatchLookupResult { Success = false, ErrorMessage = errorMsg };
+            }
+
+            var parsed = JsonSerializer.Deserialize<OcrMatchLookupResult>(body, JsonDefaults.Options);
+            if (parsed is null)
+            {
+                return new OcrMatchLookupResult { Success = false, ErrorMessage = "Risposta non parsabile" };
+            }
+
+            parsed.Matches ??= [];
+            if (!parsed.Success)
+            {
+                parsed.ErrorMessage ??= "Lookup partite fallito lato server";
+            }
+
+            return parsed;
+        }
+        catch (TaskCanceledException)
+        {
+            return new OcrMatchLookupResult { Success = false, ErrorMessage = "Timeout della richiesta" };
+        }
+        catch (Exception ex)
+        {
+            return new OcrMatchLookupResult { Success = false, ErrorMessage = ex.Message };
+        }
+    }
+
+    public async Task<OcrImportResult> ImportAsync(
+        int matchId,
+        ProcessingResult result,
+        bool allowTeamMismatch = false,
+        CancellationToken cancellationToken = default)
     {
         var url = $"{_baseUrl}/import/{matchId}";
 
         try
         {
-            var response = await _http.PostAsJsonAsync(url, result, JsonDefaults.Options, cancellationToken);
+            using var request = new HttpRequestMessage(HttpMethod.Post, url)
+            {
+                Content = JsonContent.Create(result, options: JsonDefaults.Options)
+            };
+            if (allowTeamMismatch)
+            {
+                request.Headers.TryAddWithoutValidation("X-Allow-Team-Mismatch", "1");
+            }
+
+            var response = await _http.SendAsync(request, cancellationToken);
             var body = await response.Content.ReadAsStringAsync(cancellationToken);
 
             if (!response.IsSuccessStatusCode)

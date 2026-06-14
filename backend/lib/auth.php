@@ -18,7 +18,7 @@ function require_ocr_auth(): void
     $header = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
     $token  = '';
 
-    if (str_starts_with($header, 'Bearer ')) {
+    if (strncmp($header, 'Bearer ', 7) === 0) {
         $token = trim(substr($header, 7));
     }
 

@@ -36,12 +36,22 @@ public partial class MainWindow : System.Windows.Window
         var importService = string.IsNullOrWhiteSpace(settings.OcrApi.BaseUrl)
             ? null
             : new OcrImportService(settings.OcrApi);
-        DataContext = new MainViewModel(
+        var viewModel = new MainViewModel(
             pipeline,
             new WpfFilePicker(),
             new WinFormsProcessingResultPresenter(),
             alreadyProcessedPdfSelection,
-            importService);
+            importService,
+            new WpfTeamMismatchConfirmationService());
+        DataContext = viewModel;
+
+        Loaded += (_, _) =>
+        {
+            if (viewModel.LoadMatchesCommand.CanExecute(null))
+            {
+                viewModel.LoadMatchesCommand.Execute(null);
+            }
+        };
     }
 
     private static IReadOnlyList<IOcrEngine> CreateEngines(AppSettings settings, string projectRoot)

@@ -27,6 +27,8 @@ public sealed class TesseractPythonOptions
     public string RawOutputFolder { get; set; } = "Dataset/OcrRaw/TesseractFullPage";
     public string DebugOutputFolder { get; set; } = "Dataset/TesseractFullPageDebug";
     public string LayoutDebugOutputFolder { get; set; } = "runtime/Dataset/LayoutDebug";
+    public string TesseractExecutableFolder { get; set; } = "tools\\tesseract";
+    public string TessdataPrefix { get; set; } = "tools\\tesseract\\tessdata";
 
     [JsonIgnore]
     public string RuntimeRoot { get; set; } = ".";

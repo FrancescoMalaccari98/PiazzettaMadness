@@ -62,19 +62,33 @@
         <!-- Import nel DB -->
         <Border Grid.Row="4" BorderBrush="#D0D7DE" BorderThickness="1" Margin="0,12,0,0" Padding="10" CornerRadius="4">
             <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="90" />
                     <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" MinWidth="260" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <TextBlock Text="Match ID" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0" />
                 <TextBox Grid.Column="1" Text="{Binding MatchIdText, UpdateSourceTrigger=PropertyChanged}"
                          VerticalAlignment="Center" Padding="4,2" />
-                <Button Grid.Column="2" Content="Importa nel DB" Width="130" Margin="8,0,0,0"
+                <TextBlock Grid.Column="2" Text="Match Teams" FontWeight="SemiBold" VerticalAlignment="Center" Margin="14,0,8,0" />
+                <ComboBox Grid.Column="3" ItemsSource="{Binding MatchOptions}"
+                          SelectedItem="{Binding SelectedMatchOption, Mode=TwoWay}"
+                          DisplayMemberPath="DisplayName"
+                          VerticalAlignment="Center" Padding="4,2"
+                          IsEnabled="{Binding HasImportService}" />
+                <Button Grid.Column="4" Content="Aggiorna" Width="82" Margin="8,0,0,0"
+                        Command="{Binding LoadMatchesCommand}" />
+                <Button Grid.Column="5" Content="Importa nel DB" Width="130" Margin="8,0,0,0"
                         Command="{Binding ImportToDbCommand}" />
-                <TextBlock Grid.Column="3" Text="{Binding ImportStatusText}" VerticalAlignment="Center"
-                           Margin="12,0,0,0" TextWrapping="Wrap" Foreground="#57606A" FontSize="11" />
+                <TextBlock Grid.Row="1" Grid.ColumnSpan="6" Text="{Binding ImportStatusText}" VerticalAlignment="Center"
+                           Margin="0,8,0,0" TextWrapping="Wrap" Foreground="#57606A" FontSize="11" />
             </Grid>
         </Border>
 

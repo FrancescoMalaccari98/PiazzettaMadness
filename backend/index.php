@@ -35,6 +35,23 @@ try {
         send_json(['status' => 'ok', 'service' => 'PiazzettaMadness OCR Import API']);
     }
 
+    // GET /api-ocr/matches/today  — list match options for the current game day
+    if ($seg0 === 'matches' && $seg1 === 'today') {
+        if ($method !== 'GET') {
+            send_error('Method not allowed. Use GET /api-ocr/matches/today', 405);
+        }
+
+        require_ocr_auth();
+
+        $matches_endpoint = __DIR__ . '/endpoints/matches.php';
+        if (!is_file($matches_endpoint)) {
+            send_error('Match lookup endpoint file not found on server', 500);
+        }
+
+        require_once $matches_endpoint;
+        handle_today_matches(get_pdo());
+    }
+
     // POST /api-ocr/import/{match_id}  — import a ProcessingResult into the DB
     if ($seg0 === 'import') {
         if ($method !== 'POST') {

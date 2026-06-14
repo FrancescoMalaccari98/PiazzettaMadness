@@ -5,7 +5,7 @@ declare(strict_types=1);
  * Converts a "MM:SS" string to total seconds.
  * Returns null if the input is empty, null, or not in the expected format.
  */
-function parse_minutes(mixed $mm_ss): ?int
+function parse_minutes($mm_ss): ?int
 {
     if ($mm_ss === null || $mm_ss === '') {
         return null;
@@ -24,7 +24,7 @@ function parse_minutes(mixed $mm_ss): ?int
  * Casts a value to int, returning null for empty / non-numeric input.
  * Prevents writing zero instead of NULL for missing stats.
  */
-function int_or_null(mixed $value): ?int
+function int_or_null($value): ?int
 {
     if ($value === null || $value === '') {
         return null;
@@ -41,7 +41,7 @@ function int_or_null(mixed $value): ?int
  * Returns a trimmed string or null for empty / null input.
  * Used for varchar columns such as biggest_run and time_in_lead.
  */
-function str_or_null(mixed $value): ?string
+function str_or_null($value): ?string
 {
     if ($value === null || $value === '') {
         return null;

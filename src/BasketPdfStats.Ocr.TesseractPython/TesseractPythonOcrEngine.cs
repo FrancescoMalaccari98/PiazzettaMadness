@@ -233,13 +233,35 @@ public sealed class TesseractPythonOcrEngine : IOcrEngine
         return args.ToString();
     }
 
-    private static IReadOnlyDictionary<string, string?> BuildEnvironment(string projectDirectory)
+    private IReadOnlyDictionary<string, string?> BuildEnvironment(string projectDirectory)
     {
+        var environment = new Dictionary<string, string?>();
         var existing = Environment.GetEnvironmentVariable("PYTHONPATH");
         var pythonPath = string.IsNullOrWhiteSpace(existing)
             ? projectDirectory
             : projectDirectory + Path.PathSeparator + existing;
-        return new Dictionary<string, string?> { ["PYTHONPATH"] = pythonPath };
+        environment["PYTHONPATH"] = pythonPath;
+
+        AddTesseractEnvironment(environment);
+        return environment;
+    }
+
+    private void AddTesseractEnvironment(Dictionary<string, string?> environment)
+    {
+        var tesseractFolder = _options.ResolvePath(_options.TesseractExecutableFolder);
+        if (Directory.Exists(tesseractFolder))
+        {
+            var existingPath = Environment.GetEnvironmentVariable("PATH");
+            environment["PATH"] = string.IsNullOrWhiteSpace(existingPath)
+                ? tesseractFolder
+                : tesseractFolder + Path.PathSeparator + existingPath;
+        }
+
+        var tessdata = _options.ResolvePath(_options.TessdataPrefix);
+        if (Directory.Exists(tessdata))
+        {
+            environment["TESSDATA_PREFIX"] = tessdata;
+        }
     }
 
     private static ProcessingResult EngineOnlyResult(OcrRunStatus status, long durationMs, string? error)

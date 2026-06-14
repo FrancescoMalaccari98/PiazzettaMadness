@@ -27,6 +27,7 @@ __pycache__/
 *.egg-info/
 
 # Runtime generated files
+artifacts/
 runtime/Input/*
 runtime/Working/*
 runtime/OutputJson/*

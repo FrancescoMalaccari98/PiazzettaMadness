@@ -15,6 +15,7 @@ public sealed class OcrApiOptions
 {
     public string BaseUrl { get; set; } = string.Empty;
     public string Token { get; set; } = string.Empty;
+    public string MatchLookupDate { get; set; } = string.Empty;
 }
 
 public sealed class OcrOptions

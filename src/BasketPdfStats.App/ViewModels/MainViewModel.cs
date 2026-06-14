@@ -1,7 +1,9 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Text;
 using BasketPdfStats.App.Services;
 using BasketPdfStats.Core.Database;
 using BasketPdfStats.Core.Models;
@@ -17,6 +19,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private readonly ProcessingResultPresentationService _resultPresentation;
     private readonly AlreadyProcessedPdfSelectionService? _alreadyProcessedPdfSelection;
     private readonly IOcrImportService? _importService;
+    private readonly ITeamMismatchConfirmationService? _teamMismatchConfirmation;
     private string? _selectedPdfPath;
     private string _warningText = string.Empty;
     private string _outputJsonPath = string.Empty;
@@ -24,6 +27,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private string _resultWindowStatusText = string.Empty;
     private string _importStatusText = string.Empty;
     private string _matchIdText = string.Empty;
+    private OcrMatchOption? _selectedMatchOption;
     private bool _isBusy;
     private ProcessingResult? _lastResult;
 
@@ -32,24 +36,31 @@ public sealed class MainViewModel : INotifyPropertyChanged
         IFilePicker filePicker,
         IProcessingResultPresenter? resultPresenter = null,
         AlreadyProcessedPdfSelectionService? alreadyProcessedPdfSelection = null,
-        IOcrImportService? importService = null)
+        IOcrImportService? importService = null,
+        ITeamMismatchConfirmationService? teamMismatchConfirmation = null)
     {
         _pipeline = pipeline;
         _filePicker = filePicker;
         _resultPresentation = new ProcessingResultPresentationService(resultPresenter);
         _alreadyProcessedPdfSelection = alreadyProcessedPdfSelection;
         _importService = importService;
+        _teamMismatchConfirmation = teamMismatchConfirmation;
         SelectPdfCommand = new AsyncRelayCommand(SelectPdfAsync);
         ProcessPdfCommand = new AsyncRelayCommand(ProcessSelectedPdfAsync, () => !string.IsNullOrWhiteSpace(SelectedPdfPath));
+        LoadMatchesCommand = new AsyncRelayCommand(LoadTodayMatchesAsync, () => HasImportService);
         ImportToDbCommand = new AsyncRelayCommand(ImportToDbAsync, CanImport);
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public ObservableCollection<ProcessedFileRowViewModel> ProcessedFiles { get; } = [];
+    public ObservableCollection<OcrMatchOption> MatchOptions { get; } = [];
     public AsyncRelayCommand SelectPdfCommand { get; }
     public AsyncRelayCommand ProcessPdfCommand { get; }
+    public AsyncRelayCommand LoadMatchesCommand { get; }
     public AsyncRelayCommand ImportToDbCommand { get; }
+
+    public bool HasImportService => _importService is not null;
 
     public string? SelectedPdfPath
     {
@@ -100,6 +111,18 @@ public sealed class MainViewModel : INotifyPropertyChanged
         {
             if (SetField(ref _matchIdText, value))
                 ImportToDbCommand.RaiseCanExecuteChanged();
+        }
+    }
+
+    public OcrMatchOption? SelectedMatchOption
+    {
+        get => _selectedMatchOption;
+        set
+        {
+            if (SetField(ref _selectedMatchOption, value) && value is not null)
+            {
+                MatchIdText = value.MatchId.ToString(CultureInfo.InvariantCulture);
+            }
         }
     }
 
@@ -156,7 +179,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     private bool TryBuildSelection(out OcrRunSelection selection)
     {
-        selection = new OcrRunSelection { UseTesseract = true };
+        selection = new OcrRunSelection { UseTesseract = true, UsePaddle = true };
         if (selection.TryValidate(out var error))
         {
             return true;
@@ -197,6 +220,62 @@ public sealed class MainViewModel : INotifyPropertyChanged
         _resultPresentation.TryPresent(result, AppendResultViewerStatus);
     }
 
+    private async Task LoadTodayMatchesAsync()
+    {
+        if (_importService is null)
+        {
+            ImportStatusText = "Import DB disattivato.";
+            return;
+        }
+
+        try
+        {
+            IsBusy = true;
+            ImportStatusText = "Carico partite di oggi...";
+            var previousSelectedMatchId = SelectedMatchOption?.MatchId;
+            var lookup = await _importService.GetTodayMatchesAsync();
+
+            MatchOptions.Clear();
+            SelectedMatchOption = null;
+            if (previousSelectedMatchId is int previousId &&
+                string.Equals(_matchIdText, previousId.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal))
+            {
+                MatchIdText = string.Empty;
+            }
+
+            if (!lookup.Success)
+            {
+                ImportStatusText = $"Errore partite: {lookup.ErrorMessage}";
+                return;
+            }
+
+            foreach (var match in lookup.Matches)
+            {
+                MatchOptions.Add(match);
+            }
+
+            if (MatchOptions.Count == 1)
+            {
+                SelectedMatchOption = MatchOptions[0];
+            }
+
+            var gameDay = string.IsNullOrWhiteSpace(lookup.GameDay)
+                ? string.Empty
+                : $" ({lookup.GameDay})";
+            ImportStatusText = MatchOptions.Count == 0
+                ? $"Nessuna partita trovata{gameDay}."
+                : $"Partite caricate: {MatchOptions.Count}{gameDay}.";
+        }
+        catch (Exception ex)
+        {
+            ImportStatusText = $"Errore partite: {ex.Message}";
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
     private bool CanImport() =>
         _importService is not null &&
         _lastResult is not null &&
@@ -213,8 +292,21 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
         await RunBusyAsync(async () =>
         {
-            ImportStatusText = $"Import in corso per match_id={matchId}...";
-            var importResult = await _importService.ImportAsync(matchId, _lastResult);
+            var matchOption = FindMatchOption(matchId);
+            var selectedMatchLabel = matchOption is not null
+                ? matchOption.DisplayName
+                : $"match_id={matchId}";
+            var teamGuard = CheckTeamMismatchBeforeImport(matchOption, matchId);
+            if (!teamGuard.ShouldImport)
+            {
+                return;
+            }
+
+            ImportStatusText = $"Import in corso per {selectedMatchLabel}...";
+            var importResult = await _importService.ImportAsync(
+                matchId,
+                _lastResult,
+                teamGuard.AllowTeamMismatch);
 
             if (importResult.Success)
             {
@@ -228,6 +320,142 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 ImportStatusText = $"Errore: {importResult.ErrorMessage}";
             }
         });
+    }
+
+    private OcrMatchOption? FindMatchOption(int matchId) =>
+        SelectedMatchOption?.MatchId == matchId
+            ? SelectedMatchOption
+            : MatchOptions.FirstOrDefault(match => match.MatchId == matchId);
+
+    private TeamImportGuard CheckTeamMismatchBeforeImport(OcrMatchOption? matchOption, int matchId)
+    {
+        if (_lastResult is null)
+        {
+            return TeamImportGuard.Allow();
+        }
+
+        if (matchOption is null)
+        {
+            if (MatchOptions.Count > 0)
+            {
+                ImportStatusText = $"Import annullato: seleziona una partita da Match Teams per match_id={matchId}.";
+                return TeamImportGuard.Block();
+            }
+
+            return TeamImportGuard.Allow();
+        }
+
+        var homeTeam = FindTeamBySide(_lastResult, "Home");
+        var awayTeam = FindTeamBySide(_lastResult, "Away");
+        var homeMatches = TeamMatches(homeTeam, matchOption.HomeTeam);
+        var awayMatches = TeamMatches(awayTeam, matchOption.AwayTeam);
+
+        if (homeMatches && awayMatches)
+        {
+            return TeamImportGuard.Allow();
+        }
+
+        var warning = new TeamMismatchWarning(
+            PdfHomeTeam: FormatTeamName(homeTeam),
+            PdfAwayTeam: FormatTeamName(awayTeam),
+            MatchHomeTeam: FormatMatchTeamName(matchOption.HomeTeam),
+            MatchAwayTeam: FormatMatchTeamName(matchOption.AwayTeam));
+
+        if (_teamMismatchConfirmation is null)
+        {
+            ImportStatusText =
+                $"Import bloccato: squadre non corrispondenti. PDF: {warning.PdfHomeTeam} vs {warning.PdfAwayTeam}. " +
+                $"Match Teams: {warning.MatchHomeTeam} vs {warning.MatchAwayTeam}.";
+            return TeamImportGuard.Block();
+        }
+
+        if (_teamMismatchConfirmation.ShouldContinue(warning))
+        {
+            ImportStatusText = "Import confermato con squadre non corrispondenti.";
+            return TeamImportGuard.AllowConfirmedMismatch();
+        }
+
+        ImportStatusText = "Import annullato: squadre non corrispondenti.";
+        return TeamImportGuard.Block();
+    }
+
+    private readonly record struct TeamImportGuard(bool ShouldImport, bool AllowTeamMismatch)
+    {
+        public static TeamImportGuard Allow() => new(ShouldImport: true, AllowTeamMismatch: false);
+        public static TeamImportGuard AllowConfirmedMismatch() => new(ShouldImport: true, AllowTeamMismatch: true);
+        public static TeamImportGuard Block() => new(ShouldImport: false, AllowTeamMismatch: false);
+    }
+
+    private static TeamStats? FindTeamBySide(ProcessingResult result, string side) =>
+        result.Teams.FirstOrDefault(team => string.Equals(team.Side, side, StringComparison.OrdinalIgnoreCase));
+
+    private static bool TeamMatches(TeamStats? pdfTeam, OcrMatchTeam selectedTeam)
+    {
+        var pdfNames = new[]
+            {
+                pdfTeam?.Name,
+                pdfTeam?.Abbreviation
+            }
+            .Select(NormalizeTeamName)
+            .Where(name => !string.IsNullOrWhiteSpace(name))
+            .ToArray();
+        var selectedNames = new[]
+            {
+                selectedTeam.Name,
+                selectedTeam.ShortName
+            }
+            .Select(NormalizeTeamName)
+            .Where(name => !string.IsNullOrWhiteSpace(name))
+            .ToArray();
+
+        return pdfNames.Length > 0 &&
+            selectedNames.Length > 0 &&
+            pdfNames.Any(pdfName => selectedNames.Contains(pdfName, StringComparer.Ordinal));
+    }
+
+    private static string NormalizeTeamName(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        var decomposed = value.Normalize(NormalizationForm.FormD);
+        var normalized = new StringBuilder(decomposed.Length);
+        foreach (var character in decomposed)
+        {
+            if (CharUnicodeInfo.GetUnicodeCategory(character) == UnicodeCategory.NonSpacingMark)
+            {
+                continue;
+            }
+
+            if (char.IsLetterOrDigit(character))
+            {
+                normalized.Append(char.ToLowerInvariant(character));
+            }
+        }
+
+        return normalized.ToString();
+    }
+
+    private static string FormatTeamName(TeamStats? team)
+    {
+        if (team is null)
+        {
+            return "non letta";
+        }
+
+        var name = string.IsNullOrWhiteSpace(team.Name) ? "non letta" : team.Name!;
+        return string.IsNullOrWhiteSpace(team.Abbreviation)
+            ? name
+            : $"{name} ({team.Abbreviation})";
+    }
+
+    private static string FormatMatchTeamName(OcrMatchTeam team)
+    {
+        return string.IsNullOrWhiteSpace(team.ShortName)
+            ? team.Name
+            : $"{team.Name} ({team.ShortName})";
     }
 
     private void AppendResultViewerStatus(string message)
@@ -246,9 +474,18 @@ public sealed class MainViewModel : INotifyPropertyChanged
             lines.Add(result.ProcessedFile.ErrorMessage);
         }
 
+        lines.AddRange(result.OcrRuns
+            .Where(x => !string.IsNullOrWhiteSpace(x.Error))
+            .Select(x => $"{x.Engine}: {x.Status} - {TruncateWarning(x.Error!)}"));
         lines.AddRange(result.Validation.Warnings.Select(x => $"{x.Severity}: {x.Message}"));
         lines.AddRange(result.Stats.SelectMany(x => x.Warnings).Select(x => $"{x.Severity}: {x.Message}"));
         return string.Join(Environment.NewLine, lines);
+    }
+
+    private static string TruncateWarning(string value)
+    {
+        const int maxLength = 600;
+        return value.Length <= maxLength ? value : value.Substring(0, maxLength) + "...";
     }
 
     private bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)

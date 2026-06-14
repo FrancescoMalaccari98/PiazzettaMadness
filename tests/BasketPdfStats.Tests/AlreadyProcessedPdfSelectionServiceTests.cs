@@ -49,6 +49,7 @@ public sealed class AlreadyProcessedPdfSelectionServiceTests
 
         Assert.Contains("new AlreadyProcessedPdfDetector(settings.Runtime)", source);
         Assert.Contains("new WpfAlreadyProcessedPdfDecisionService()", source);
+        Assert.Contains("new WpfTeamMismatchConfirmationService()", source);
     }
 
     [Fact]
@@ -59,6 +60,11 @@ public sealed class AlreadyProcessedPdfSelectionServiceTests
         Assert.Contains("if (!await ShouldProcessAsync(SelectedPdfPath))", source);
         Assert.Contains("await _pipeline.ProcessPdfAsync(SelectedPdfPath, selection)", source);
         Assert.Contains("UseTesseract = true", source);
+        Assert.Contains("UsePaddle = true", source);
+        Assert.Contains("CheckTeamMismatchBeforeImport(matchOption, matchId)", source);
+        Assert.Contains("Import bloccato: squadre non corrispondenti.", source);
+        Assert.Contains("_importService.ImportAsync(", source);
+        Assert.Contains("teamGuard.AllowTeamMismatch", source);
         Assert.DoesNotContain("ProcessInputFolder", source);
         Assert.DoesNotContain("Directory.EnumerateFiles", source);
     }

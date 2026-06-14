@@ -23,6 +23,8 @@ from .evidence_mapper import map_crop_ocr_to_evidence
 from .evidence_record import SOURCE_PADDLE_CROP
 from .evidence_record import write as write_evidence
 
+_FIELD_BEARING_ZONES = {"header.finalScore", "home.teamTotals", "away.teamTotals"}
+
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Run PaddleOCR on reusable layout crops.")
@@ -109,6 +111,8 @@ def main(argv: list[str] | None = None) -> int:
         if zone.get("usable") is False:
             continue
         zone_id = str(zone.get("zoneId") or "")
+        if zone_id not in _FIELD_BEARING_ZONES:
+            continue
         image_path = Path(str(zone.get("imagePath") or ""))
         zone_warnings: list[str] = []
         zone_errors: list[str] = []
