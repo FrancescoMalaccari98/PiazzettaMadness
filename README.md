@@ -23,3 +23,5 @@ dotnet build PiazzettaMadness.sln -c Release
 ## Note Git
 
 Il repository e pensato per l'app desktop. I file generati, le build, i database locali, le configurazioni locali e la cartella `server/` sono esclusi da Git.
+
+Nota: il branch remoto esistente nasceva come repository dedicato a dashboard e sito; questo branch contiene ora il progetto desktop dell'app.
