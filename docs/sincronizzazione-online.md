@@ -57,24 +57,29 @@ Le operazioni che coinvolgono piu tabelle usano endpoint transazionali:
 - `action=delete_match`: elimina una partita solo se non esistono statistiche collegate;
 - `action=save_forfeit`: salva il risultato a tavolino, la partita e i punteggi delle squadre;
 - `action=delete_forfeit`: elimina il risultato e ripristina coerentemente partita e punteggi;
-- `action=replace_standings`: sostituisce la classifica in una singola transazione.
+- `action=replace_standings`: sostituisce la classifica in una singola transazione;
 - `action=initialize_match_players`: al primo avvio live congela in `match_players` tutti i giocatori attivi dei roster Home e Away.
+- `action=sync_live`: sincronizza una partita live con squadre, giocatori, stato tabellone ed eventi.
 
 Un errore in una delle scritture annulla l'intera operazione sul server.
 
 La selezione manuale dei convocati non esiste piu. Se `match_players` contiene gia righe per la partita, l'inizializzazione le restituisce senza modificarle; in caso contrario richiede almeno un giocatore attivo per ciascuna squadra.
 
-## Tabelle rimosse
+## Schema Di Riferimento
 
-La migrazione `server/migrations/2026-06-08-remove-unused-tables.sql` elimina strutture non utilizzate dall'app:
+La struttura reale del database online e mantenuta in:
 
-- `free_throw_sequences`;
-- `match_fouls`;
-- `match_periods`;
-- `match_timeouts`;
-- `online_sync_log`.
+```text
+server/migrations/db_struttura.sql
+```
 
-Le tabelle statistiche esterne `match_player_stats` e `match_team_stats` restano invariate.
+Il seed dati di test/ripristino e mantenuto in:
+
+```text
+server/migrations/piazzetta_test_edition_seed.sql
+```
+
+Il seed pulisce le tabelle interessate e reinserisce record con ID espliciti. Non va usato su un database di produzione con dati da conservare.
 
 ## Riconciliazione cache
 

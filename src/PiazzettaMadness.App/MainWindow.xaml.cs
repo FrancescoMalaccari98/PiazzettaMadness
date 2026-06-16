@@ -1377,8 +1377,13 @@ public partial class MainWindow : Window
 
         if (ShowSponsorsRadio.IsChecked == true)
         {
-            await _broadcaster.ShowSponsorsAsync(GetActiveSponsorSlides());
-            ScoreboardDisplayStatusText.Text = "Contenuto attuale: Carosello sponsor su tutti i tabelloni";
+            if (!TryGetSponsorIntervalMs(out var sponsorIntervalMs))
+            {
+                return;
+            }
+
+            await _broadcaster.ShowSponsorsAsync(GetActiveSponsorSlides(), sponsorIntervalMs);
+            ScoreboardDisplayStatusText.Text = $"Contenuto attuale: Carosello sponsor su tutti i tabelloni ({sponsorIntervalMs / 1000}s)";
             return;
         }
 
@@ -1394,8 +1399,28 @@ public partial class MainWindow : Window
             .OrderBy(x => x.SortOrder)
             .ThenBy(x => x.Name)
             .ToList()
-            .Select(x => new SponsorSlide(x.Name, x.Description, x.ImagePath))
+            .Select(x => new SponsorSlide(x.Name, x.Description, ImageAssetStore.ResolvePath(x.ImagePath)))
             .ToList();
+    }
+
+    private bool TryGetSponsorIntervalMs(out int intervalMs)
+    {
+        intervalMs = 7000;
+        var rawValue = SponsorIntervalSecondsBox.Text.Trim();
+        if (!int.TryParse(rawValue, out var seconds) || seconds < 1 || seconds > 60)
+        {
+            MessageBox.Show(
+                "Inserisci un intervallo sponsor valido tra 1 e 60 secondi.",
+                "Carosello sponsor",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            SponsorIntervalSecondsBox.Focus();
+            SponsorIntervalSecondsBox.SelectAll();
+            return false;
+        }
+
+        intervalMs = seconds * 1000;
+        return true;
     }
 
     private async void AddTeam_Click(object sender, RoutedEventArgs e)

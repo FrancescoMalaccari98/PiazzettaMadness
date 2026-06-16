@@ -1,5 +1,5 @@
 -- Piazzetta Madness - query di sola lettura per il sito web
--- Schema: docs/online-mysql-schema.sql
+-- Schema: server/migrations/db_struttura.sql
 -- Per limitare i risultati a una singola edizione, aggiungere:
 --   AND m.edition_id = :edition_id
 

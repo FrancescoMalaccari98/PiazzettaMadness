@@ -1,24 +1,59 @@
-# Stato progetto - Piazzetta Madness
+# Stato Progetto
 
-Aggiornato al 2026-06-15.
+Aggiornato al 2026-06-16.
 
 ## Obiettivo
 
-Applicazione desktop Windows per gestire un torneo di basket locale:
+Applicazione desktop Windows per gestire il torneo Piazzetta Madness:
 
-- gestione dati torneo tramite CRUD locale;
-- console operatore per partita live;
-- uno o piu tabelloni pubblici su finestre separate;
-- futura sincronizzazione verso database online per sito pubblico/live score.
+- anagrafiche torneo, squadre, giocatori, gironi, calendario e sponsor;
+- console operatore per partite live;
+- tabelloni pubblici in finestre separate;
+- carosello sponsor;
+- statistiche giocatori durante la partita;
+- 3 Point Contest;
+- sincronizzazione con database online tramite API PHP.
 
-## Stack scelto
+## Stack
 
-- App desktop WPF in C#/.NET 8.
-- Database locale SQLite tramite Entity Framework Core.
-- Tabellone pubblico renderizzato con HTML/CSS/JavaScript dentro WebView2.
-- Comunicazione app-tabelloni tramite `ScoreboardBroadcaster`, con stato JSON inviato alle WebView.
+- .NET 8 / WPF.
+- WebView2 per i tabelloni HTML/CSS/JavaScript.
+- SQLite locale per cache/sessione live.
+- MySQL online come sorgente principale delle anagrafiche e dei dati condivisi.
+- API PHP in `server/api`.
 
-## Database e CRUD
+## Avvio E Configurazione
+
+L'app richiede `online-api.local.json`.
+
+Se il file manca, l'app mostra errore e blocca l'interfaccia. Questo evita di lavorare per errore con dati online non configurati.
+
+File esempio:
+
+```text
+online-api.example.json
+```
+
+Il file locale non va caricato su Git.
+
+## Database E File Locali
+
+Percorso dati runtime:
+
+```text
+%LOCALAPPDATA%\PiazzettaMadness
+```
+
+File/cartelle principali:
+
+```text
+piazzetta-madness-live.db
+assets/
+```
+
+`assets/` contiene immagini importate da app per sponsor, squadre e giocatori. I percorsi salvati sono relativi alla cartella dati locale, cosi la cartella puo essere copiata su un altro PC.
+
+## CRUD
 
 Sono presenti CRUD per:
 
@@ -31,149 +66,120 @@ Sono presenti CRUD per:
 - gironi;
 - squadre nei gironi;
 - partite;
-- convocati partita;
-- eventi 3 punti;
-- partecipanti 3 punti;
-- round 3 punti;
+- eventi competizione;
+- partecipanti 3 Point Contest;
+- prove 3 Point Contest;
 - risultati a tavolino;
 - classifiche;
 - sponsor.
 
-Pattern CRUD scelto:
+Pattern UI:
 
 - tabella non editabile;
 - pulsanti `Nuovo`, `Modifica`, `Elimina`;
 - doppio click per modifica;
-- form modale per inserimento/modifica;
-- eliminazione bloccata quando esistono collegamenti con altre tabelle;
-- niente popup di conferma salvataggio quando una modifica va a buon fine.
+- form modale;
+- eliminazione bloccata quando ci sono dati collegati.
 
-## Partita live
+## Partita Live
 
-Sono implementati:
+Modalita:
 
-- modalita `Partita DB` e `Libera`;
-- selezione partita da database oppure uso senza salvataggio;
-- stati partita chiari: prepara, inizia, pausa, riprendi, chiudi;
-- inizio partita non avvia automaticamente il cronometro;
-- chiusura partita controllata, con blocco in caso di parita;
-- periodo selezionabile direttamente;
+- `Partita DB`;
+- `Libera`;
+- `3 Point Contest`.
+
+Funzioni principali:
+
+- prepara, inizia, pausa, riprendi, chiudi;
+- cronometro partita;
+- 24 secondi con reset 24 e reset 14;
+- tasti rapidi: spazio per tempo partita, 0 per 24 secondi, 1 reset 14, 2 reset 24;
+- 2 tempi regolamentari;
+- overtime;
 - punteggi squadra;
 - falli squadra;
-- punti e falli per singolo giocatore;
-- cronometro partita con tasto unico start/pausa;
-- cronometro 24 secondi con tasto unico start/pausa e reset;
-- reset tempo partita con conferma e reset dei 24 secondi;
-- reset 24 secondi senza conferma, mantenendo la corsa se era gia attivo.
+- punti/falli per singolo giocatore;
+- animazioni opzionali sul tabellone;
+- azioni grafiche `+3`, tiro libero, dunk, block;
+- reset partita e reset cronometri.
 
-## Tabellone pubblico
+## Display Tabelloni
 
-Sono implementati:
+La tab `Display tabelloni` applica sempre il contenuto a tutti i tabelloni aperti.
 
-- apertura di piu finestre tabellone;
-- F11 per passare a fullscreen;
-- Esc per uscire dal fullscreen;
-- chiusura manuale quando la finestra e in modalita normale;
-- visualizzazione tabellone partita;
-- visualizzazione sponsor in stile carosello;
-- tracking dei tabelloni aperti con id/nome;
-- gestione contenuto pubblico da tab dedicata `Display tabelloni`.
+Modalita disponibili:
 
-Nella tab `Display tabelloni`:
+- partita e punteggi;
+- carosello sponsor;
+- statistiche giocatori;
+- 3 Point Contest.
 
-- il contenuto scelto viene applicato sempre a tutti i tabelloni attivi;
-- si sceglie tra partita, sponsor, statistiche giocatori e 3 Point Contest;
-- statistiche giocatori e barra sponsor usano la partita in corso quando disponibile.
+Per il carosello sponsor e disponibile l'intervallo configurabile in secondi.
+
+La barra partita nella schermata sponsor viene mostrata solo se esiste una partita in corso o in pausa.
+
+Le statistiche giocatori possono essere mostrate solo durante una partita ufficiale in corso o in pausa.
+
+## Tabellone Pubblico
+
+File reali usati dall'app:
+
+```text
+src/PiazzettaMadness.App/Scoreboard/index.html
+src/PiazzettaMadness.App/Scoreboard/styles.css
+src/PiazzettaMadness.App/Scoreboard/app.js
+```
+
+Le pagine in `html/` sono reference/demo grafiche.
+
+Il tabellone riceve messaggi JSON dal `ScoreboardBroadcaster`.
 
 ## 3 Point Contest
 
-La modalita `3 Point Contest` e disponibile nella console live.
+Flusso:
 
-Flusso dati scelto:
+- creare evento, partecipanti e prove dal CRUD;
+- selezionare modalita `3 Point Contest`;
+- selezionare evento, tiratore e prova;
+- registrare punteggio per postazione con `+1`, `+2`, `-1`;
+- usare timer da 60 secondi;
+- mostrare grafica dedicata sul tabellone.
 
-- nel CRUD si creano evento, partecipanti e prove;
-- una prova corrisponde a un tentativo da 60 secondi di un partecipante;
-- ogni prova ha numero e fase: `Qualification`, `Final` oppure `TieBreak`;
-- nel live si seleziona una prova esistente e si registrano i risultati;
-- non vengono create prove automaticamente dalla schermata live;
-- sono registrati i punteggi totali delle cinque postazioni, non i singoli palloni;
-- il totale del partecipante viene ricalcolato dai risultati delle prove.
+Non vengono registrati i singoli palloni, solo il punteggio totale delle 5 postazioni.
 
-Controlli operatore:
+Durante una prova attiva o in pausa non si possono cambiare evento, tiratore o prova.
 
-- timer da 60 secondi con avvio, pausa, ripresa e conclusione;
-- selezione postazione da 1 a 5;
-- correzioni `+1`, `+2` e `-1`;
-- reset completo della prova;
-- durante una prova in corso o in pausa sono bloccati evento, tiratore, prova, cambio modalita e scheda Database;
-- la selezione partita viene nascosta nella modalita contest;
-- il CRUD `3 Point Prove` e `3 Point Partecipanti` si aggiorna immediatamente dopo modifiche o reset live;
-- database locale e database online vengono aggiornati dalla gestione live.
+## Database Online
 
-Tabellone pubblico 3 Point Contest:
+Schema reale:
 
-- grafica derivata da `html/gara-tre-punti.html`;
-- mappa del campo con postazione attiva evidenziata;
-- nome evento, squadra, giocatore, timer, stato e punteggi dinamici;
-- colore squadra applicato al pannello giocatore e all'ombra del campo;
-- fascia inferiore animata;
-- non vengono mostrati palloni segnati/sbagliati perche il dato non viene registrato.
-
-## Sponsor
-
-CRUD sponsor implementato con:
-
-- nome;
-- descrizione;
-- immagine;
-- attivo/disattivo;
-- ordinamento.
-
-Gli sponsor attivi vengono mostrati nel carosello dei tabelloni pubblici.
-
-## File principali
-
-- `src/PiazzettaMadness.App/MainWindow.xaml`
-- `src/PiazzettaMadness.App/MainWindow.xaml.cs`
-- `src/PiazzettaMadness.App/ScoreboardWindow.xaml`
-- `src/PiazzettaMadness.App/ScoreboardWindow.xaml.cs`
-- `src/PiazzettaMadness.App/Live/ScoreboardBroadcaster.cs`
-- `src/PiazzettaMadness.App/Live/ScoreboardState.cs`
-- `src/PiazzettaMadness.App/Live/GameClock.cs`
-- `src/PiazzettaMadness.App/Data/Entities.cs`
-- `src/PiazzettaMadness.App/Data/AppDbContext.cs`
-- `src/PiazzettaMadness.App/Data/DatabaseInitializer.cs`
-- `src/PiazzettaMadness.App/Scoreboard/index.html`
-- `src/PiazzettaMadness.App/Scoreboard/styles.css`
-- `src/PiazzettaMadness.App/Scoreboard/app.js`
-
-## Documenti di progetto
-
-- `docs/er-model.md`
-- `docs/sqlite-schema-v1.sql`
-- `docs/mvp-scope.md`
-- `docs/database-decisions.md`
-- `docs/architecture.md`
-
-## Comandi utili
-
-Build:
-
-```powershell
-dotnet build PiazzettaMadness.sln
+```text
+server/migrations/db_struttura.sql
 ```
 
-Avvio:
+Seed dati test/ripristino:
 
-```powershell
-dotnet run --project src\PiazzettaMadness.App\PiazzettaMadness.App.csproj
+```text
+server/migrations/piazzetta_test_edition_seed.sql
 ```
 
-Se la build fallisce per file bloccato, probabilmente l'app e ancora aperta. Chiuderla oppure terminare il processo prima della build.
+Il seed contiene solo dati, pulisce le tabelle interessate e reinserisce record con ID espliciti. Va usato su ambienti di test/ripristino, non su produzione con dati da conservare.
 
-## Prossimi step consigliati
+## File Da Pubblicare Su Git
 
-1. Eseguire test manuali completi del 3 Point Contest con database online attivo.
-2. Verificare il tabellone contest su monitor/proiettore reale e rifinire le proporzioni.
-3. Decidere se registrare in futuro anche l'esito dei singoli palloni.
-4. Migliorare la gestione sponsor: anteprime e ordinamento visuale.
+Da includere:
+
+- `src/`;
+- `docs/`;
+- `html/`;
+- `server/` escluso `server/api/config.php`;
+- `README.md`;
+- regolamento PDF.
+
+Da non includere:
+
+- `online-api.local.json`;
+- database locali;
+- `publish/`, `bin/`, `obj/`;
+- `Fonts/`.

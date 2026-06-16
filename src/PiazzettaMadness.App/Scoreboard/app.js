@@ -196,10 +196,11 @@ function showScoreboard() {
   }
 }
 
-function showSponsors(slides) {
+function showSponsors(slides, intervalMs) {
   displayMode = "sponsors";
   sponsorSlides = Array.isArray(slides) ? slides : [];
   sponsorIndex = 0;
+  const sponsorIntervalMs = Math.max(1000, Math.min(60000, Number(intervalMs) || 7000));
   document.getElementById("scoreboardView").classList.add("hidden");
   document.getElementById("sponsorView").classList.remove("hidden");
   document.getElementById("playerStatsView").classList.add("hidden");
@@ -218,7 +219,7 @@ function showSponsors(slides) {
 
     sponsorIndex = (sponsorIndex + 1) % sponsorSlides.length;
     renderSponsor();
-  }, 7000);
+  }, sponsorIntervalMs);
 }
 
 function showPlayerStats() {
@@ -442,7 +443,7 @@ window.chrome?.webview?.addEventListener("message", event => {
 
   if (message?.type === "displayMode") {
     if (message.mode === "sponsors") {
-      showSponsors(message.sponsors);
+      showSponsors(message.sponsors, message.sponsorIntervalMs);
     } else if (message.mode === "playerStats") {
       showPlayerStats();
     } else if (message.mode === "contest") {

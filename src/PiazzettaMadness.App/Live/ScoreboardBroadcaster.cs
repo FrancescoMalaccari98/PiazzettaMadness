@@ -75,13 +75,14 @@ public sealed class ScoreboardBroadcaster
         });
     }
 
-    public Task ShowSponsorsAsync(IReadOnlyList<SponsorSlide> sponsors)
+    public Task ShowSponsorsAsync(IReadOnlyList<SponsorSlide> sponsors, int intervalMs)
     {
         return PostAsync(new
         {
             type = "displayMode",
             mode = "sponsors",
-            sponsors
+            sponsors,
+            sponsorIntervalMs = intervalMs
         });
     }
 

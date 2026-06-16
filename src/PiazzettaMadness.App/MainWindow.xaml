@@ -435,6 +435,17 @@
                                 <TextBlock Text="Cosa vuoi mostrare?" FontSize="17" FontWeight="SemiBold" Foreground="#111827" />
                                 <RadioButton x:Name="ShowScoreboardRadio" GroupName="DisplayMode" Content="Partita e punteggi" Margin="0,18,0,14" FontSize="16" IsChecked="True" />
                                 <RadioButton x:Name="ShowSponsorsRadio" GroupName="DisplayMode" Content="Carosello sponsor" Margin="0,0,0,14" FontSize="16" />
+                                <StackPanel Margin="28,-4,0,14" Orientation="Horizontal">
+                                    <TextBlock Text="Cambio ogni" VerticalAlignment="Center" Foreground="#4b5563" />
+                                    <TextBox x:Name="SponsorIntervalSecondsBox"
+                                             Width="56"
+                                             Height="30"
+                                             Margin="8,0"
+                                             Text="7"
+                                             HorizontalContentAlignment="Center"
+                                             VerticalContentAlignment="Center" />
+                                    <TextBlock Text="secondi" VerticalAlignment="Center" Foreground="#4b5563" />
+                                </StackPanel>
                                 <RadioButton x:Name="ShowPlayerStatsRadio" GroupName="DisplayMode" Content="Statistiche giocatori" FontSize="16" />
                                 <RadioButton x:Name="ShowContestRadio" GroupName="DisplayMode" Content="3 Point Contest" Margin="0,14,0,0" FontSize="16" />
                                 <TextBlock Text="Le statistiche sono disponibili solo durante una partita in corso o in pausa."

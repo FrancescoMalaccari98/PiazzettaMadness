@@ -33,7 +33,7 @@ Risposta indicativa:
 {
   "ok": true,
   "api": "piazzetta-madness-entities",
-  "version": "2026-06-08.1"
+  "version": "2026-06-10.2"
 }
 ```
 
@@ -166,6 +166,23 @@ POST /api/entities.php?action=initialize_match_players&id=5
 
 Copia automaticamente in `match_players` tutti i giocatori attivi delle due squadre. Se i giocatori erano gia stati inizializzati, restituisce quelli esistenti.
 
+### Sincronizzare una partita live
+
+```http
+POST /api/entities.php?action=sync_live
+Content-Type: application/json
+```
+
+Usato dall'app desktop durante la partita. Aggiorna in una singola transazione:
+
+- `matches`;
+- `match_teams`;
+- `match_players`;
+- `scoreboard_states`;
+- nuovi `match_events` non ancora presenti.
+
+Non e pensato come endpoint pubblico per il sito.
+
 ### Creare o modificare un risultato a tavolino
 
 ```http
@@ -242,6 +259,20 @@ entities.php?table=tournaments
 ### `snapshot.php`
 
 Permette ancora la lettura completa tramite `GET`, ma le scritture `POST` e `PUT` sono disabilitate. Non deve essere usato per nuove sincronizzazioni; utilizzare le operazioni incrementali di `entities.php`.
+
+## Schema
+
+Lo schema di riferimento attuale e:
+
+```text
+server/migrations/db_struttura.sql
+```
+
+Il seed dati di test/ripristino e:
+
+```text
+server/migrations/piazzetta_test_edition_seed.sql
+```
 
 ## Esempio cURL
 

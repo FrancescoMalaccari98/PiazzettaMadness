@@ -1,9 +1,7 @@
-using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using Microsoft.Win32;
 using PiazzettaMadness.App.Data;
 
@@ -12,11 +10,6 @@ namespace PiazzettaMadness.App.Forms;
 public partial class TeamFormWindow : Window
 {
     private static readonly Regex HexColorRegex = new("^#[0-9a-fA-F]{6}$", RegexOptions.Compiled);
-    private static readonly HashSet<string> ImageExtensions = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ".png", ".jpg", ".jpeg", ".webp", ".bmp"
-    };
-
     public TeamFormWindow(Team team, bool isNew)
     {
         Team = team;
@@ -59,7 +52,7 @@ public partial class TeamFormWindow : Window
         }
 
         var logoPath = EmptyToNull(LogoPathBox.Text);
-        if (!IsValidOptionalImagePath(logoPath))
+        if (!ImageAssetStore.IsValidOptionalImagePath(logoPath))
         {
             ShowValidation("Il logo deve essere un file immagine esistente: PNG, JPG, JPEG, WEBP o BMP.");
             return;
@@ -85,7 +78,7 @@ public partial class TeamFormWindow : Window
 
         if (dialog.ShowDialog(this) == true)
         {
-            LogoPathBox.Text = dialog.FileName;
+            LogoPathBox.Text = ImageAssetStore.Import(dialog.FileName, "teams");
             UpdateLogoPreview();
         }
     }
@@ -170,39 +163,9 @@ public partial class TeamFormWindow : Window
         return string.IsNullOrWhiteSpace(trimmed) ? null : trimmed;
     }
 
-    private static bool IsValidOptionalImagePath(string? path)
-    {
-        return string.IsNullOrWhiteSpace(path)
-            || File.Exists(path)
-            && ImageExtensions.Contains(Path.GetExtension(path));
-    }
-
     private void UpdateLogoPreview()
     {
-        LogoPreview.Source = CreateImageSource(LogoPathBox.Text);
-    }
-
-    private static BitmapImage? CreateImageSource(string path)
-    {
-        if (!IsValidOptionalImagePath(path) || string.IsNullOrWhiteSpace(path))
-        {
-            return null;
-        }
-
-        try
-        {
-            var image = new BitmapImage();
-            image.BeginInit();
-            image.CacheOption = BitmapCacheOption.OnLoad;
-            image.UriSource = new Uri(path);
-            image.EndInit();
-            image.Freeze();
-            return image;
-        }
-        catch
-        {
-            return null;
-        }
+        LogoPreview.Source = ImageAssetStore.CreateImageSource(LogoPathBox.Text);
     }
 
     private static void ShowValidation(string message)

@@ -1,8 +1,6 @@
 using System.Globalization;
-using System.IO;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media.Imaging;
 using Microsoft.Win32;
 using PiazzettaMadness.App.Data;
 
@@ -10,11 +8,6 @@ namespace PiazzettaMadness.App.Forms;
 
 public partial class PlayerFormWindow : Window
 {
-    private static readonly HashSet<string> ImageExtensions = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ".png", ".jpg", ".jpeg", ".webp", ".bmp"
-    };
-
     public PlayerFormWindow(Player player, bool isNew)
     {
         Player = player;
@@ -76,7 +69,7 @@ public partial class PlayerFormWindow : Window
         }
 
         var photoPath = EmptyToNull(PhotoPathBox.Text);
-        if (!IsValidOptionalImagePath(photoPath))
+        if (!ImageAssetStore.IsValidOptionalImagePath(photoPath))
         {
             ShowValidation("La foto deve essere un file immagine esistente: PNG, JPG, JPEG, WEBP o BMP.");
             return;
@@ -106,7 +99,7 @@ public partial class PlayerFormWindow : Window
 
         if (dialog.ShowDialog(this) == true)
         {
-            PhotoPathBox.Text = dialog.FileName;
+            PhotoPathBox.Text = ImageAssetStore.Import(dialog.FileName, "players");
             UpdatePhotoPreview();
         }
     }
@@ -129,39 +122,9 @@ public partial class PlayerFormWindow : Window
         return string.IsNullOrWhiteSpace(trimmed) ? null : trimmed;
     }
 
-    private static bool IsValidOptionalImagePath(string? path)
-    {
-        return string.IsNullOrWhiteSpace(path)
-            || File.Exists(path)
-            && ImageExtensions.Contains(Path.GetExtension(path));
-    }
-
     private void UpdatePhotoPreview()
     {
-        PhotoPreview.Source = CreateImageSource(PhotoPathBox.Text);
-    }
-
-    private static BitmapImage? CreateImageSource(string path)
-    {
-        if (!IsValidOptionalImagePath(path) || string.IsNullOrWhiteSpace(path))
-        {
-            return null;
-        }
-
-        try
-        {
-            var image = new BitmapImage();
-            image.BeginInit();
-            image.CacheOption = BitmapCacheOption.OnLoad;
-            image.UriSource = new Uri(path);
-            image.EndInit();
-            image.Freeze();
-            return image;
-        }
-        catch
-        {
-            return null;
-        }
+        PhotoPreview.Source = ImageAssetStore.CreateImageSource(PhotoPathBox.Text);
     }
 
     private static void ShowValidation(string message)

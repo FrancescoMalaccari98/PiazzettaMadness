@@ -250,9 +250,6 @@ body { overflow: hidden; background: var(--ink); color: var(--bone); font-family
 .contest-station-box.current { border-left:4px solid var(--orange); border-radius:4px; background:color-mix(in srgb,var(--orange) 14%,transparent); }
 .contest-total { display:flex; align-items:center; justify-content:space-between; margin:clamp(8px,1.4vh,16px); padding:clamp(8px,1.6vh,16px) clamp(16px,2vw,28px); border:3px solid var(--orange); border-radius:8px; background:var(--box); box-shadow:8px 8px 0 var(--steel); }
 .contest-total strong { color:var(--orange); font-size:clamp(48px,8vh,104px); font-weight:900; font-variant-numeric:tabular-nums; line-height:1; }
-.contest-marquee { overflow:hidden; padding:clamp(6px,1vh,10px) 0; border-radius:4px; background:var(--orange); color:var(--ink); }
-.contest-marquee div { display:flex; width:max-content; font-size:clamp(13px,1.8vh,20px); font-weight:900; letter-spacing:.05em; text-transform:uppercase; white-space:nowrap; animation:contestMarquee 24s linear infinite; will-change:transform; }
-@keyframes contestMarquee { from { transform:translateX(0); } to { transform:translateX(-50%); } }
 @keyframes contestSpotPulse { 50% { opacity:.55; } }
 
 .three-point-overlay {

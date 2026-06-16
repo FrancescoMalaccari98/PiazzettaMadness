@@ -1,31 +1,52 @@
-# Tabelle del database
+# Tabelle Del Database
 
 Descrizione semplice delle tabelle presenti nel database di Piazzetta Madness.
 
 | Tabella | Descrizione |
 |---|---|
-| `tournaments` | Contiene i tornei principali, per esempio "Piazzetta Madness". |
-| `editions` | Contiene le singole edizioni annuali di un torneo, per esempio l'edizione 2026. |
-| `courts` | Contiene i campi da gioco disponibili per una determinata edizione. |
-| `teams` | Contiene le squadre partecipanti, con nome, colori e logo. |
-| `players` | Contiene i dati anagrafici di tutti i giocatori. |
-| `team_rosters` | Indica a quale squadra appartiene ogni giocatore, con numero di maglia e ruolo. |
-| `tournament_groups` | Contiene i gironi di un'edizione, per esempio Girone A e Girone B. |
-| `group_teams` | Indica quali squadre fanno parte di ciascun girone. |
-| `matches` | Contiene le partite programmate e le loro impostazioni generali. |
-| `match_teams` | Collega a ogni partita la squadra di casa e quella ospite, mantenendo anche punteggio, falli e timeout. |
-| `match_players` | Contiene i giocatori coinvolti in una partita e i loro dati aggiornati durante il live, come punti e falli. |
-| `match_events` | Registra gli eventi avvenuti durante una partita, per esempio canestri, correzioni e altre azioni live. |
-| `scoreboard_states` | Salva lo stato corrente del tabellone di una partita: punteggio, periodo, cronometri, falli e timeout. |
-| `standings` | Contiene la classifica di ogni girone con vittorie, sconfitte, punti e posizione. |
-| `forfeit_results` | Contiene gli eventuali risultati assegnati a tavolino. |
-| `competition_events` | Contiene gli eventi aggiuntivi del torneo, come la gara del tiro da tre punti e le premiazioni. |
-| `three_point_contest_entries` | Contiene i partecipanti alla gara del tiro da tre punti e il loro risultato complessivo. |
-| `three_point_contest_rounds` | Contiene i punteggi ottenuti dai partecipanti nei singoli round della gara da tre punti. |
-| `sponsors` | Contiene gli sponsor da mostrare nell'applicazione o sul tabellone. |
-| `match_player_stats` | Contiene le statistiche complete di ogni giocatore per una partita. È gestita dal programma dedicato alle statistiche. |
-| `match_team_stats` | Contiene le statistiche complete delle squadre per una partita. È gestita dal programma dedicato alle statistiche. |
+| `tournaments` | Tornei principali, per esempio "Piazzetta Madness". |
+| `editions` | Singole edizioni annuali di un torneo. |
+| `courts` | Campi da gioco disponibili per una edizione. |
+| `teams` | Squadre partecipanti, con nome, colori e logo. |
+| `players` | Anagrafica giocatori. |
+| `team_rosters` | Collegamento giocatore-squadra, numero maglia, ruolo e capitano. |
+| `tournament_groups` | Gironi di una edizione. |
+| `group_teams` | Squadre inserite in ciascun girone. |
+| `standings` | Classifica di ogni girone. |
+| `matches` | Partite programmate, stato e impostazioni di gioco. |
+| `match_teams` | Squadre Home/Away di ogni partita, punteggio, falli e timeout. |
+| `match_players` | Giocatori coinvolti in una partita e dati live base: punti e falli. |
+| `match_events` | Eventi live della partita, inclusi canestri, correzioni e reset. |
+| `scoreboard_states` | Snapshot corrente del tabellone: cronometri, periodo, punteggio e falli. |
+| `forfeit_results` | Risultati assegnati a tavolino. |
+| `competition_events` | Eventi non partita: 3 Point Contest, premiazioni, intervalli. |
+| `three_point_contest_entries` | Partecipanti alla gara da tre punti. |
+| `three_point_contest_rounds` | Prove/fasi della gara da tre punti e punteggi per postazione. |
+| `sponsors` | Sponsor mostrati nell'app e nei tabelloni. |
+| `staff` | Persone e ruoli mostrati sul sito. |
+| `match_player_stats` | Statistiche complete dei giocatori. Gestita dal programma statistiche. |
+| `match_team_stats` | Statistiche complete delle squadre. Gestita dal programma statistiche. |
 
-## Nota sul database locale
+## Schema
 
-L'applicazione legge e modifica questi dati tramite il database online. Il database locale persistente viene usato solamente per conservare temporaneamente la partita live in corso, così da poterla recuperare in caso di chiusura o interruzione.
+La struttura reale del database online e:
+
+```text
+server/migrations/db_struttura.sql
+```
+
+Il seed dati di test/ripristino e:
+
+```text
+server/migrations/piazzetta_test_edition_seed.sql
+```
+
+## Nota Sul Database Locale
+
+L'app desktop usa SQLite locale per cache e sessione live, ma il database condiviso principale e MySQL online.
+
+Percorso sessione live:
+
+```text
+%LOCALAPPDATA%/PiazzettaMadness/piazzetta-madness-live.db
+```

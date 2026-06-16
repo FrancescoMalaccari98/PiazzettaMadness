@@ -1,6 +1,4 @@
-using System.IO;
 using System.Windows;
-using System.Windows.Media.Imaging;
 using Microsoft.Win32;
 using PiazzettaMadness.App.Data;
 
@@ -8,11 +6,6 @@ namespace PiazzettaMadness.App.Forms;
 
 public partial class SponsorFormWindow : Window
 {
-    private static readonly HashSet<string> ImageExtensions = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ".png", ".jpg", ".jpeg", ".webp", ".bmp"
-    };
-
     public SponsorFormWindow(Sponsor sponsor, bool isNew)
     {
         Sponsor = sponsor;
@@ -44,7 +37,7 @@ public partial class SponsorFormWindow : Window
         }
 
         var imagePath = EmptyToNull(ImagePathBox.Text);
-        if (!IsValidOptionalImagePath(imagePath))
+        if (!ImageAssetStore.IsValidOptionalImagePath(imagePath))
         {
             ShowValidation("L'immagine deve essere un file esistente: PNG, JPG, JPEG, WEBP o BMP.");
             return;
@@ -69,7 +62,7 @@ public partial class SponsorFormWindow : Window
 
         if (dialog.ShowDialog(this) == true)
         {
-            ImagePathBox.Text = dialog.FileName;
+            ImagePathBox.Text = ImageAssetStore.Import(dialog.FileName, "sponsors");
             UpdatePreview();
         }
     }
@@ -82,43 +75,13 @@ public partial class SponsorFormWindow : Window
 
     private void UpdatePreview()
     {
-        ImagePreview.Source = CreateImageSource(ImagePathBox.Text);
-    }
-
-    private static BitmapImage? CreateImageSource(string path)
-    {
-        if (!IsValidOptionalImagePath(path) || string.IsNullOrWhiteSpace(path))
-        {
-            return null;
-        }
-
-        try
-        {
-            var image = new BitmapImage();
-            image.BeginInit();
-            image.CacheOption = BitmapCacheOption.OnLoad;
-            image.UriSource = new Uri(path);
-            image.EndInit();
-            image.Freeze();
-            return image;
-        }
-        catch
-        {
-            return null;
-        }
+        ImagePreview.Source = ImageAssetStore.CreateImageSource(ImagePathBox.Text);
     }
 
     private static string? EmptyToNull(string value)
     {
         var trimmed = value.Trim();
         return string.IsNullOrWhiteSpace(trimmed) ? null : trimmed;
-    }
-
-    private static bool IsValidOptionalImagePath(string? path)
-    {
-        return string.IsNullOrWhiteSpace(path)
-            || File.Exists(path)
-            && ImageExtensions.Contains(Path.GetExtension(path));
     }
 
     private static void ShowValidation(string message)
