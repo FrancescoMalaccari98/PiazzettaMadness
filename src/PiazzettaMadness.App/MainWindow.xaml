@@ -22,7 +22,8 @@
                 <TextBlock Text="Piazzetta Madness" FontSize="28" FontWeight="Bold" Foreground="#111827" />
                 <TextBlock x:Name="DatabasePathText" Margin="0,6,0,0" Foreground="#4b5563" />
             </StackPanel>
-            <Button DockPanel.Dock="Right"
+            <Button x:Name="OpenScoreboardButton"
+                    DockPanel.Dock="Right"
                     Width="190"
                     Height="42"
                     HorizontalAlignment="Right"

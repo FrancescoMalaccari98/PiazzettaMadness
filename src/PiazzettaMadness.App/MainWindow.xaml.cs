@@ -21,8 +21,7 @@ public partial class MainWindow : Window
     private readonly GameClock _shotClock = new(24000);
     private readonly GameClock _contestClock = new(60000);
     private readonly ScoreboardBroadcaster _broadcaster = new();
-    private readonly OnlineEntityClient _onlineEntities = OnlineEntityClient.TryCreate()
-        ?? throw new InvalidOperationException("Configurazione online mancante: crea online-api.local.json.");
+    private readonly OnlineEntityClient? _onlineEntities = OnlineEntityClient.TryCreate();
     private readonly DispatcherTimer _timer;
     private readonly DispatcherTimer _liveSyncTimer;
     private readonly ScoreboardState _state = new();
@@ -77,6 +76,14 @@ public partial class MainWindow : Window
         InitializeComponent();
         DatabasePathText.Text = $"Sessione live locale: {AppPaths.LiveDatabasePath}";
 
+        if (_onlineEntities is null)
+        {
+            _timer = new DispatcherTimer();
+            _liveSyncTimer = new DispatcherTimer();
+            DisableApplicationForMissingOnlineConfig();
+            return;
+        }
+
         _currentLiveMatchId = LiveSessionStore.Restore(_db);
         if (_currentLiveMatchId is int restoredMatchId)
         {
@@ -108,6 +115,18 @@ public partial class MainWindow : Window
         RenderLocalState();
         LoadCrudData();
         RefreshOpenDisplays();
+    }
+
+    private void DisableApplicationForMissingOnlineConfig()
+    {
+        MainTabControl.IsEnabled = false;
+        OpenScoreboardButton.IsEnabled = false;
+        DatabasePathText.Text = "Configurazione online mancante: crea online-api.local.json per usare l'app.";
+        MessageBox.Show(
+            "Configurazione online mancante.\n\nCrea o copia il file online-api.local.json nella cartella dell'app, poi riavvia il programma.",
+            "Piazzetta Madness",
+            MessageBoxButton.OK,
+            MessageBoxImage.Error);
     }
 
     private void OpenScoreboard_Click(object sender, RoutedEventArgs e)
@@ -1019,7 +1038,9 @@ public partial class MainWindow : Window
                 return true;
             }
 
-            var matchPlayers = await _onlineEntities.InitializeMatchPlayersAsync(match.Id);
+            var matchPlayers = _onlineEntities is not null
+                ? await _onlineEntities.InitializeMatchPlayersAsync(match.Id)
+                : CreateLocalMatchPlayers(match.Id);
             foreach (var matchPlayer in matchPlayers)
             {
                 UpsertLocalMatchPlayer(matchPlayer);
@@ -1038,6 +1059,31 @@ public partial class MainWindow : Window
             MessageBox.Show(exception.Message, "Giocatori partita", MessageBoxButton.OK, MessageBoxImage.Error);
             return false;
         }
+    }
+
+    private List<MatchPlayer> CreateLocalMatchPlayers(int matchId)
+    {
+        var sides = _db.MatchTeams.Where(x => x.MatchId == matchId).ToList();
+        var teamIds = sides.Select(x => x.TeamId).ToHashSet();
+        return _db.TeamRosters
+            .Where(x => teamIds.Contains(x.TeamId) && x.IsActive)
+            .OrderBy(x => x.TeamId)
+            .ThenBy(x => x.JerseyNumber)
+            .ThenBy(x => x.PlayerId)
+            .Select(roster => new MatchPlayer
+            {
+                MatchId = matchId,
+                TeamId = roster.TeamId,
+                PlayerId = roster.PlayerId,
+                JerseyNumber = roster.JerseyNumber,
+                IsStartingFive = false,
+                IsOnCourt = false,
+                Points = 0,
+                PersonalFouls = 0,
+                IsFouledOut = false,
+                IsEjected = false
+            })
+            .ToList();
     }
 
     private void PauseMatch_Click(object sender, RoutedEventArgs e)
