@@ -23,7 +23,5 @@ public static class AppPaths
 
     public static string LiveDatabasePath => Path.Combine(AppDataDirectory, "piazzetta-madness-live.db");
 
-    public static string SchemaPath => Path.Combine(AppContext.BaseDirectory, "Data", "sqlite-schema-v1.sql");
-
     public static string ScoreboardIndexPath => Path.Combine(AppContext.BaseDirectory, "Scoreboard", "index.html");
 }

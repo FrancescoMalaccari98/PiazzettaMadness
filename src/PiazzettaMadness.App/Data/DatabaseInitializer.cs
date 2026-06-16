@@ -19,18 +19,8 @@ public static class DatabaseInitializer
 
     private static void ApplySchema()
     {
-        if (!File.Exists(AppPaths.SchemaPath))
-        {
-            throw new FileNotFoundException("SQLite schema file not found.", AppPaths.SchemaPath);
-        }
-
-        var sql = File.ReadAllText(AppPaths.SchemaPath);
-        using var connection = new SqliteConnection($"Data Source={AppPaths.DatabasePath}");
-        connection.Open();
-
-        using var command = connection.CreateCommand();
-        command.CommandText = sql;
-        command.ExecuteNonQuery();
+        using var db = new AppDbContext();
+        db.Database.EnsureCreated();
     }
 
     private static void SeedDemoData()
