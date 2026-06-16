@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tabellone — Piazzetta Madness</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0d0c0b;
+    --bone:#fffefd;
+    --orange:#ea6324;       /* COLORE DEL TORNEO */
+    --steel:#3574aa;        /* secondario: ombra sfalsata (firma del marchio) */
+
+    --dim:#8a847d;
+    --box:#131110;
+    --line:#2a2521;
+
+    --display:'Barlow Condensed',system-ui,sans-serif;
+    --mono:'Space Mono',ui-monospace,monospace;
+    --offset:11px;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+
+  body{
+    background:var(--ink);
+    color:var(--bone);
+    font-family:var(--display);
+    overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .lab{
+    font-family:var(--mono);
+    font-size:clamp(11px,1.5vh,15px);
+    letter-spacing:.32em;text-transform:uppercase;color:var(--orange);
+  }
+  .lab.muted{color:var(--dim)}
+
+  .board{
+    width:100vw;height:100vh;
+    display:flex;flex-direction:column;
+    padding:clamp(16px,3vh,34px) clamp(16px,2.6vw,40px);
+    gap:clamp(14px,2.2vh,26px);
+  }
+
+  .grid{
+    flex:1;min-height:0;
+    display:grid;
+    grid-template-columns:1fr .86fr 1fr;
+    gap:clamp(14px,1.8vw,26px);
+    align-items:stretch;
+  }
+
+  /* pannello generico: bordo + ombra sfalsata blu acciaio (device del brand) */
+  .panel{
+    border-radius:9px;
+    box-shadow:var(--offset) var(--offset) 0 0 var(--steel);
+    overflow:hidden;
+    display:flex;flex-direction:column;
+    min-height:0;
+  }
+
+  /* ---------- SQUADRA ---------- */
+  .team{
+    border:3px solid var(--team);
+    background:
+      linear-gradient(180deg,
+        color-mix(in srgb, var(--team) 14%, var(--box)) 0%,
+        var(--box) 38%);
+  }
+  /* barra nome col colore squadra */
+  .team .bar{
+    background:var(--team);
+    color:var(--bone);
+    text-align:center;
+    font-weight:800;text-transform:uppercase;letter-spacing:.04em;
+    font-size:clamp(22px,3.6vh,48px);
+    line-height:1.05;
+    padding:clamp(8px,1.5vh,16px) 10px;
+    text-shadow:0 2px 3px rgba(0,0,0,.45);
+  }
+  .team .scorewrap{flex:1;display:grid;place-items:center;min-height:0;padding:6px}
+  .team .score{
+    font-weight:800;
+    font-size:clamp(120px,27vh,320px);
+    line-height:.8;font-variant-numeric:tabular-nums;
+    text-shadow:0 3px 0 rgba(0,0,0,.35);
+  }
+  .team .fouls{
+    display:flex;align-items:center;justify-content:center;gap:14px;
+    padding:clamp(10px,1.8vh,18px);
+    border-top:1px solid color-mix(in srgb, var(--team) 30%, transparent);
+  }
+  .fouls .pips{display:flex;gap:8px}
+  .pip{width:17px;height:17px;border-radius:2px;background:#26211d;border:1px solid #352f2a}
+  .pip.on{background:var(--team);border-color:var(--team)}
+
+  /* ---------- CENTRO ---------- */
+  .center{
+    border:3px solid var(--orange);
+    background:linear-gradient(180deg,#1a1715,var(--box));
+    align-items:center;justify-content:space-evenly;
+    padding:clamp(14px,2.4vh,26px) clamp(10px,1.4vw,18px);
+    text-align:center;
+  }
+  .center .blk{display:flex;flex-direction:column;align-items:center;gap:clamp(7px,1.2vh,12px)}
+  .clock{
+    font-weight:800;font-size:clamp(52px,12vh,140px);line-height:1;
+    font-variant-numeric:tabular-nums;letter-spacing:.02em;
+  }
+  .clock .colon{color:var(--orange);animation:blink 1s steps(1,end) infinite}
+  .shot .num{
+    font-weight:800;font-size:clamp(40px,7.5vh,86px);line-height:1;color:var(--orange);
+    font-variant-numeric:tabular-nums;
+    animation:glow 1.5s ease-in-out infinite;
+  }
+  .periods{display:flex;gap:10px}
+  .q{
+    font-weight:800;font-size:clamp(16px,2vh,24px);
+    width:clamp(44px,4.4vh,62px);height:clamp(44px,4.4vh,62px);
+    display:grid;place-items:center;border-radius:5px;
+    color:var(--dim);background:#100e0d;border:2px solid var(--line);
+  }
+  .q.done{color:var(--bone);border-color:#3a342e}
+  .q.now{color:var(--ink);background:var(--orange);border-color:var(--orange)}
+
+  /* ---------- FASCIA BRAND ---------- */
+  .marquee{
+    overflow:hidden;
+    background:var(--orange);color:var(--ink);border-radius:4px;
+    padding:clamp(7px,1.2vh,12px) 0;
+  }
+  .marquee .track{
+    display:flex;width:max-content;
+    font-weight:800;letter-spacing:.05em;text-transform:uppercase;
+    font-size:clamp(15px,2.1vh,24px);
+    animation:scroll 45s linear infinite;
+    will-change:transform;
+  }
+  .marquee .seg{white-space:nowrap}
+
+  /* ---------- ANIMAZIONI ---------- */
+  @keyframes blink{50%{opacity:.18}}
+  @keyframes glow{
+    0%,100%{text-shadow:0 0 0 transparent}
+    50%{text-shadow:0 0 24px color-mix(in srgb, var(--orange) 60%, transparent)}
+  }
+  @keyframes scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+  @media(prefers-reduced-motion:reduce){
+    .clock .colon,.shot .num,.marquee .track{animation:none}
+  }
+
+  @media(max-width:860px){
+    .grid{grid-template-columns:1fr 1fr;grid-template-areas:"home away" "center center";gap:18px}
+    .team.home{grid-area:home}.team.away{grid-area:away}.center{grid-area:center}
+  }
+</style>
+</head>
+<body>
+  <!-- COLORI SQUADRA: cambia --home-c e --away-c -->
+  <main class="board" style="--home-c:#d23b3b; --away-c:#1f9d57;"
+        role="img" aria-label="Tabellone: Falchi 72, Pantere 68, periodo 3, tempo 08:24">
+
+    <div class="grid">
+
+      <!-- CASA -->
+      <section class="panel team home" style="--team:var(--home-c)">
+        <div class="bar">Falchi</div>
+        <div class="scorewrap"><span class="score">72</span></div>
+        <div class="fouls">
+          <span class="lab muted">Falli</span>
+          <span class="pips">
+            <span class="pip on"></span><span class="pip on"></span><span class="pip on"></span><span class="pip on"></span><span class="pip"></span>
+          </span>
+        </div>
+      </section>
+
+      <!-- CENTRO -->
+      <section class="panel center">
+        <div class="blk">
+          <span class="lab">Tempo di gioco</span>
+          <span class="clock">08<span class="colon">:</span>24</span>
+        </div>
+        <div class="blk shot">
+          <span class="lab">24 sec</span>
+          <span class="num">14</span>
+        </div>
+        <div class="blk">
+          <span class="lab muted">Periodo</span>
+          <div class="periods">
+            <span class="q done">1</span>
+            <span class="q done">2</span>
+            <span class="q now">3</span>
+            <span class="q">4</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- OSPITI -->
+      <section class="panel team away" style="--team:var(--away-c)">
+        <div class="bar">Pantere</div>
+        <div class="scorewrap"><span class="score">68</span></div>
+        <div class="fouls">
+          <span class="lab muted">Falli</span>
+          <span class="pips">
+            <span class="pip on"></span><span class="pip on"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span>
+          </span>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- FASCIA BRAND -->
+    <div class="marquee">
+      <div class="track">
+        <span class="seg">Piazzetta Madness // Street Basketball // No Excuses // Play Hard // Piazzetta Madness // Street Basketball // No Excuses // Play Hard // Piazzetta Madness // Street Basketball // No Excuses // Play Hard // Piazzetta Madness // Street Basketball // No Excuses // Play Hard // Piazzetta Madness // Street Basketball // No Excuses // Play Hard // Piazzetta Madness // Street Basketball // No Excuses // Play Hard // Piazzetta Madness // Street Basketball // No Excuses // Play Hard // Piazzetta Madness // Street Basketball // No Excuses // Play Hard // </span>
+        <span class="seg" aria-hidden="true">Piazzetta Madness // Street Basketball // No Excuses // Play Hard // Piazzetta Madness // Street Basketball // No Excuses // Play Hard // Piazzetta Madness // Street Basketball // No Excuses // Play Hard // Piazzetta Madness // Street Basketball // No Excuses // Play Hard // Piazzetta Madness // Street Basketball // No Excuses // Play Hard // Piazzetta Madness // Street Basketball // No Excuses // Play Hard // Piazzetta Madness // Street Basketball // No Excuses // Play Hard // Piazzetta Madness // Street Basketball // No Excuses // Play Hard // </span>
+      </div>
+    </div>
+
+  </main>
+</body>
+</html>

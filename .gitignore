@@ -1,0 +1,27 @@
+# Build output
+bin/
+obj/
+publish/
+.build-check/
+
+# IDE / user files
+.vs/
+.vscode/
+*.user
+*.suo
+
+# Local databases and runtime state
+*.db
+*.db-shm
+*.db-wal
+
+# Local configuration / secrets
+*.local.json
+server/api/config.php
+
+# Site/API files are owned by the website repository.
+# Keep the desktop app repository focused on the WPF app and its docs.
+server/
+
+# Local font downloads/reference assets not used by the app build
+Fonts/

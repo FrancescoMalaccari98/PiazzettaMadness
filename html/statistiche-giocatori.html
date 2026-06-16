@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Statistiche Giocatori — Piazzetta Madness</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0d0c0b;
+    --bone:#fffefd;
+    --orange:#ea6324;
+    --steel:#3574aa;
+    --dim:#8a847d;
+    --box:#131110;
+    --line:#2a2521;
+    --display:'Barlow Condensed',system-ui,sans-serif;
+    --mono:'Space Mono',ui-monospace,monospace;
+    --offset:11px;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:var(--ink);color:var(--bone);font-family:var(--display);
+    overflow:hidden;-webkit-font-smoothing:antialiased}
+
+  .lab{font-family:var(--mono);font-size:clamp(10px,1.4vh,14px);
+    letter-spacing:.3em;text-transform:uppercase;color:var(--orange)}
+  .lab.muted{color:var(--dim)}
+
+  .page{width:100vw;height:100vh;display:flex;flex-direction:column;
+    padding:clamp(16px,3vh,32px) clamp(16px,2.6vw,40px);gap:clamp(14px,2.2vh,24px)}
+
+  /* ---------- COLONNE SQUADRA ---------- */
+  .cols{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;
+    gap:clamp(14px,1.8vw,26px)}
+
+  .tcol{
+    min-height:0;display:flex;flex-direction:column;
+    border:3px solid var(--team);border-radius:9px;overflow:hidden;
+    box-shadow:var(--offset) var(--offset) 0 0 var(--steel);
+    background:linear-gradient(180deg,color-mix(in srgb,var(--team) 12%,var(--box)) 0%,var(--box) 32%);
+  }
+  .tcol .bar{
+    background:var(--team);color:var(--bone);
+    display:flex;align-items:center;justify-content:space-between;
+    padding:clamp(8px,1.5vh,14px) clamp(14px,1.6vw,22px);
+    text-shadow:0 2px 3px rgba(0,0,0,.45);
+  }
+  .tcol .bar .tn{font-weight:800;text-transform:uppercase;letter-spacing:.03em;
+    font-size:clamp(20px,3vh,38px);line-height:1}
+  .tcol .bar .tt{font-family:var(--mono);font-size:clamp(10px,1.4vh,14px);
+    letter-spacing:.24em;text-transform:uppercase;opacity:.85}
+
+  /* riga (usata per intestazione e giocatori) */
+  .prow{display:grid;
+    grid-template-columns:clamp(34px,3.6vw,50px) 1fr clamp(58px,7vw,86px) clamp(52px,6vw,78px);
+    align-items:center;gap:clamp(8px,1vw,16px);
+    padding:clamp(7px,1.3vh,13px) clamp(12px,1.5vw,20px)}
+  .colhead{border-bottom:1px solid var(--line);background:rgba(0,0,0,.25)}
+  .colhead .lab{font-size:clamp(10px,1.3vh,13px)}
+  .r{text-align:right}
+
+  .list-viewport{flex:1;min-height:0;overflow:hidden;position:relative}
+  .list-track{will-change:transform}
+
+  .pl{border-bottom:1px solid rgba(255,255,255,.05)}
+  .pl .num{
+    width:clamp(30px,3.4vw,44px);height:clamp(30px,3.4vw,44px);
+    display:grid;place-items:center;border-radius:4px;
+    background:var(--team);color:var(--ink);
+    font-weight:800;font-size:clamp(14px,1.8vh,22px);font-variant-numeric:tabular-nums}
+  .pl .name{font-weight:700;text-transform:uppercase;letter-spacing:.02em;
+    font-size:clamp(17px,2.4vh,30px);line-height:1;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pl .pts{font-weight:800;font-variant-numeric:tabular-nums;
+    font-size:clamp(22px,3.2vh,42px);line-height:1}
+  .pl .fls{font-weight:700;font-variant-numeric:tabular-nums;color:var(--orange);
+    font-size:clamp(18px,2.6vh,32px);line-height:1}
+
+  /* ---------- BARRA PARTITA ---------- */
+  .matchbar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
+    gap:clamp(14px,2.5vw,40px);
+    background:linear-gradient(180deg,#161311,var(--box));
+    border:2px solid var(--line);border-radius:9px;
+    box-shadow:var(--offset) var(--offset) 0 0 var(--steel);
+    padding:clamp(10px,1.8vh,18px) clamp(16px,2.5vw,34px)}
+  .side{display:flex;align-items:center;gap:clamp(12px,1.6vw,20px)}
+  .side.away{justify-content:flex-end}
+  .chip{width:clamp(20px,2.4vh,30px);height:clamp(20px,2.4vh,30px);border-radius:3px;flex:none}
+  .side .tname{font-weight:800;text-transform:uppercase;letter-spacing:.03em;
+    font-size:clamp(20px,3vh,38px);line-height:1}
+  .side .pts{font-weight:800;font-variant-numeric:tabular-nums;line-height:1;
+    font-size:clamp(38px,6vh,72px)}
+  .mid{display:flex;flex-direction:column;align-items:center;gap:5px;white-space:nowrap}
+  .mid .clock{font-weight:800;font-variant-numeric:tabular-nums;
+    font-size:clamp(28px,4.6vh,52px);line-height:1}
+  .mid .clock .colon{color:var(--orange);animation:blink 1s steps(1,end) infinite}
+  .mid .per{font-family:var(--mono);font-size:clamp(10px,1.4vh,14px);
+    letter-spacing:.3em;text-transform:uppercase;color:var(--orange)}
+
+  @keyframes blink{50%{opacity:.18}}
+  @keyframes vscroll{from{transform:translateY(0)}to{transform:translateY(-50%)}}
+  .list-track.scrolling{animation:vscroll var(--dur,30s) linear infinite}
+
+  @media(prefers-reduced-motion:reduce){
+    .mid .clock .colon{animation:none}
+    .list-track.scrolling{animation:none}
+  }
+
+  @media(max-width:760px){
+    .pl .name{font-size:clamp(14px,2.2vh,20px)}
+    .side .tname{font-size:clamp(15px,2.4vh,22px)}
+    .side .pts{font-size:clamp(28px,5vh,44px)}
+  }
+</style>
+</head>
+<body>
+  <main class="page" style="--home-c:#d23b3b; --away-c:#1f9d57;">
+
+    <div class="cols">
+
+      <!-- SQUADRA CASA -->
+      <section class="tcol" style="--team:var(--home-c)">
+        <div class="bar"><span class="tn">Falchi</span><span class="tt">Giocatori</span></div>
+        <div class="prow colhead">
+          <span class="lab muted">#</span>
+          <span class="lab muted">Giocatore</span>
+          <span class="lab r">Pts</span>
+          <span class="lab muted r">Falli</span>
+        </div>
+        <div class="list-viewport">
+          <div class="list-track">
+            <div class="prow pl"><span class="num">4</span><span class="name">Bianchi L.</span><span class="pts r">22</span><span class="fls r">2</span></div>
+            <div class="prow pl"><span class="num">7</span><span class="name">Rossi M.</span><span class="pts r">18</span><span class="fls r">3</span></div>
+            <div class="prow pl"><span class="num">9</span><span class="name">Ferrari A.</span><span class="pts r">12</span><span class="fls r">4</span></div>
+            <div class="prow pl"><span class="num">10</span><span class="name">Esposito D.</span><span class="pts r">8</span><span class="fls r">1</span></div>
+            <div class="prow pl"><span class="num">3</span><span class="name">Russo G.</span><span class="pts r">6</span><span class="fls r">2</span></div>
+            <div class="prow pl"><span class="num">5</span><span class="name">Romano F.</span><span class="pts r">4</span><span class="fls r">0</span></div>
+            <div class="prow pl"><span class="num">8</span><span class="name">Gallo S.</span><span class="pts r">2</span><span class="fls r">3</span></div>
+            <div class="prow pl"><span class="num">11</span><span class="name">Costa P.</span><span class="pts r">0</span><span class="fls r">1</span></div>
+            <div class="prow pl"><span class="num">6</span><span class="name">Fontana E.</span><span class="pts r">0</span><span class="fls r">0</span></div>
+            <div class="prow pl"><span class="num">12</span><span class="name">Greco M.</span><span class="pts r">0</span><span class="fls r">2</span></div>
+            <div class="prow pl"><span class="num">14</span><span class="name">Bruno T.</span><span class="pts r">0</span><span class="fls r">1</span></div>
+            <div class="prow pl"><span class="num">15</span><span class="name">Rizzo V.</span><span class="pts r">0</span><span class="fls r">0</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SQUADRA OSPITI -->
+      <section class="tcol" style="--team:var(--away-c)">
+        <div class="bar"><span class="tn">Pantere</span><span class="tt">Giocatori</span></div>
+        <div class="prow colhead">
+          <span class="lab muted">#</span>
+          <span class="lab muted">Giocatore</span>
+          <span class="lab r">Pts</span>
+          <span class="lab muted r">Falli</span>
+        </div>
+        <div class="list-viewport">
+          <div class="list-track">
+            <div class="prow pl"><span class="num">5</span><span class="name">Verdi A.</span><span class="pts r">20</span><span class="fls r">1</span></div>
+            <div class="prow pl"><span class="num">8</span><span class="name">Neri M.</span><span class="pts r">16</span><span class="fls r">2</span></div>
+            <div class="prow pl"><span class="num">11</span><span class="name">Conti L.</span><span class="pts r">12</span><span class="fls r">3</span></div>
+            <div class="prow pl"><span class="num">6</span><span class="name">Marino G.</span><span class="pts r">9</span><span class="fls r">4</span></div>
+            <div class="prow pl"><span class="num">9</span><span class="name">Gatti F.</span><span class="pts r">6</span><span class="fls r">2</span></div>
+            <div class="prow pl"><span class="num">4</span><span class="name">Lombardi S.</span><span class="pts r">3</span><span class="fls r">1</span></div>
+            <div class="prow pl"><span class="num">7</span><span class="name">Moretti D.</span><span class="pts r">2</span><span class="fls r">0</span></div>
+            <div class="prow pl"><span class="num">10</span><span class="name">Barbieri P.</span><span class="pts r">0</span><span class="fls r">2</span></div>
+            <div class="prow pl"><span class="num">12</span><span class="name">Villa E.</span><span class="pts r">0</span><span class="fls r">1</span></div>
+            <div class="prow pl"><span class="num">13</span><span class="name">Mancini T.</span><span class="pts r">0</span><span class="fls r">0</span></div>
+            <div class="prow pl"><span class="num">15</span><span class="name">Galli V.</span><span class="pts r">0</span><span class="fls r">3</span></div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- BARRA PARTITA -->
+    <div class="matchbar">
+      <div class="side home">
+        <span class="chip" style="background:var(--home-c)"></span>
+        <span class="tname">Falchi</span>
+        <span class="pts">72</span>
+      </div>
+      <div class="mid">
+        <span class="clock">08<span class="colon">:</span>24</span>
+        <span class="per">3° Periodo</span>
+      </div>
+      <div class="side away">
+        <span class="pts">68</span>
+        <span class="tname">Pantere</span>
+        <span class="chip" style="background:var(--away-c)"></span>
+      </div>
+    </div>
+
+  </main>
+
+<script>
+  // Scorri la lista solo se i giocatori non entrano nello spazio disponibile.
+  function setupAutoScroll(){
+    document.querySelectorAll('.list-viewport').forEach(vp=>{
+      const track=vp.querySelector('.list-track');
+      track.classList.remove('scrolling');
+      // rimuovo eventuale clone precedente
+      track.querySelectorAll('[data-clone]').forEach(n=>n.remove());
+      if(track.scrollHeight > vp.clientHeight + 4){
+        const original=track.innerHTML;
+        const clone=document.createElement('div');
+        clone.setAttribute('data-clone','1');
+        clone.innerHTML=original;
+        track.appendChild(clone);
+        // velocità costante (~38 px/s)
+        const dist=track.scrollHeight/2;
+        track.style.setProperty('--dur', (dist/38)+'s');
+        track.classList.add('scrolling');
+      }
+    });
+  }
+  window.addEventListener('load', setupAutoScroll);
+  let rt; window.addEventListener('resize', ()=>{clearTimeout(rt);rt=setTimeout(setupAutoScroll,200)});
+</script>
+</body>
+</html>

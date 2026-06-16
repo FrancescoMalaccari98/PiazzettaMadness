@@ -1,0 +1,109 @@
+<Window x:Class="PiazzettaMadness.App.Forms.MatchFormWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:PiazzettaMadness.App.Controls"
+        Title="Partita"
+        Width="680"
+        Height="720"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        Background="#f4f6f8">
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock x:Name="TitleText" Text="Partita" FontSize="24" FontWeight="Bold" Foreground="#111827" />
+
+        <ScrollViewer Grid.Row="1" Margin="0,22,0,0" VerticalScrollBarVisibility="Auto">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="150" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+            <TextBlock Text="Edizione *" Grid.Row="0" VerticalAlignment="Center" Margin="0,0,12,10" />
+            <ComboBox x:Name="EditionCombo" Grid.Row="0" Grid.Column="1" Height="34" Margin="0,0,0,10" DisplayMemberPath="Name" SelectionChanged="EditionCombo_SelectionChanged" />
+
+            <TextBlock Text="Nome" Grid.Row="1" VerticalAlignment="Center" Margin="0,0,12,10" />
+            <TextBox x:Name="NameBox" Grid.Row="1" Grid.Column="1" Height="34" Margin="0,0,0,10" />
+
+            <TextBlock Text="Fase *" Grid.Row="2" VerticalAlignment="Center" Margin="0,0,12,10" />
+            <ComboBox x:Name="PhaseCombo" Grid.Row="2" Grid.Column="1" Height="34" Margin="0,0,0,10">
+                <ComboBoxItem Content="GroupStage" />
+                <ComboBoxItem Content="SemiFinal" />
+                <ComboBoxItem Content="ThirdPlaceFinal" />
+                <ComboBoxItem Content="Final" />
+            </ComboBox>
+
+            <TextBlock Text="Girone" Grid.Row="3" VerticalAlignment="Center" Margin="0,0,12,10" />
+            <ComboBox x:Name="GroupCombo" Grid.Row="3" Grid.Column="1" Height="34" Margin="0,0,0,10" DisplayMemberPath="Name" />
+
+            <TextBlock Text="Campo" Grid.Row="4" VerticalAlignment="Center" Margin="0,0,12,10" />
+            <ComboBox x:Name="CourtCombo" Grid.Row="4" Grid.Column="1" Height="34" Margin="0,0,0,10" DisplayMemberPath="Name" />
+
+            <TextBlock Text="Squadra casa *" Grid.Row="5" VerticalAlignment="Center" Margin="0,0,12,10" />
+            <ComboBox x:Name="HomeTeamCombo" Grid.Row="5" Grid.Column="1" Height="34" Margin="0,0,0,10" DisplayMemberPath="Name" />
+
+            <TextBlock Text="Squadra ospite *" Grid.Row="6" VerticalAlignment="Center" Margin="0,0,12,10" />
+            <ComboBox x:Name="AwayTeamCombo" Grid.Row="6" Grid.Column="1" Height="34" Margin="0,0,0,10" DisplayMemberPath="Name" />
+
+            <TextBlock Text="Inizio previsto" Grid.Row="7" VerticalAlignment="Center" Margin="0,0,12,10" />
+            <StackPanel Grid.Row="7" Grid.Column="1" Orientation="Horizontal" Margin="0,0,0,10">
+                <DatePicker x:Name="StartDatePicker" Width="160" Height="34" DateValidationError="DatePicker_DateValidationError" />
+                <controls:TimePickerControl x:Name="StartTimePicker" Margin="8,0,0,0" />
+            </StackPanel>
+
+            <TextBlock Text="Fine prevista" Grid.Row="8" VerticalAlignment="Center" Margin="0,0,12,10" />
+            <StackPanel Grid.Row="8" Grid.Column="1" Orientation="Horizontal" Margin="0,0,0,10">
+                <DatePicker x:Name="EndDatePicker" Width="160" Height="34" DateValidationError="DatePicker_DateValidationError" />
+                <controls:TimePickerControl x:Name="EndTimePicker" Margin="8,0,0,0" />
+            </StackPanel>
+
+            <TextBlock Text="Durata tempo (min)" Grid.Row="9" VerticalAlignment="Center" Margin="0,0,12,10" />
+            <TextBox x:Name="PeriodDurationBox" Grid.Row="9" Grid.Column="1" Height="34" Margin="0,0,0,10" />
+
+            <TextBlock Text="Shot clock (sec)" Grid.Row="10" VerticalAlignment="Center" Margin="0,0,12,10" />
+            <TextBox x:Name="ShotClockBox" Grid.Row="10" Grid.Column="1" Height="34" Margin="0,0,0,10" />
+
+            <TextBlock Text="Limite punti" Grid.Row="11" VerticalAlignment="Center" Margin="0,0,12,10" />
+            <StackPanel Grid.Row="11" Grid.Column="1" Orientation="Horizontal" Margin="0,0,0,10">
+                <CheckBox x:Name="MaxScoreEnabledBox" Content="Abilitato" VerticalAlignment="Center" Margin="0,0,12,0" />
+                <TextBox x:Name="MaxScoreBox" Width="90" Height="34" />
+            </StackPanel>
+
+            <TextBlock Text="Stato" Grid.Row="12" VerticalAlignment="Center" Margin="0,0,12,0" />
+            <ComboBox x:Name="StatusCombo" Grid.Row="12" Grid.Column="1" Height="34">
+                <ComboBoxItem Content="Scheduled" />
+                <ComboBoxItem Content="Ready" />
+                <ComboBoxItem Content="Live" />
+                <ComboBoxItem Content="Paused" />
+                <ComboBoxItem Content="Finished" />
+                <ComboBoxItem Content="Cancelled" />
+            </ComboBox>
+            </Grid>
+        </ScrollViewer>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="Annulla" Width="100" Height="36" Margin="0,0,8,0" IsCancel="True" />
+            <Button Content="Salva" Width="100" Height="36" Click="Save_Click" />
+        </StackPanel>
+    </Grid>
+</Window>

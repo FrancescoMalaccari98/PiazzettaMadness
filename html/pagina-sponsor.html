@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sponsor — Piazzetta Madness</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0d0c0b;
+    --bone:#fffefd;
+    --orange:#ea6324;       /* COLORE DEL TORNEO */
+    --steel:#3574aa;        /* ombra sfalsata (firma del marchio) */
+
+    --dim:#8a847d;
+    --box:#131110;
+    --line:#2a2521;
+
+    --display:'Barlow Condensed',system-ui,sans-serif;
+    --mono:'Space Mono',ui-monospace,monospace;
+    --offset:11px;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:var(--ink);color:var(--bone);
+    font-family:var(--display);overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .lab{
+    font-family:var(--mono);
+    font-size:clamp(11px,1.5vh,15px);
+    letter-spacing:.32em;text-transform:uppercase;color:var(--orange);
+  }
+  .lab.muted{color:var(--dim)}
+
+  .page{
+    width:100vw;height:100vh;
+    display:flex;flex-direction:column;
+    padding:clamp(16px,3vh,36px) clamp(16px,2.6vw,44px);
+    gap:clamp(14px,2.4vh,28px);
+  }
+
+  /* intestazione pagina */
+  .head{display:flex;align-items:center;justify-content:center;gap:14px}
+  .head .rule{height:2px;flex:1;max-width:160px;background:var(--line)}
+
+  /* ---------- CAROSELLO ---------- */
+  .stage{
+    flex:1;min-height:0;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:clamp(14px,2.4vh,26px);
+  }
+  .featured{
+    position:relative;
+    width:min(980px,92vw);
+    flex:1;min-height:0;
+    background:linear-gradient(180deg,#1a1715,var(--box));
+    border:3px solid var(--orange);
+    box-shadow:var(--offset) var(--offset) 0 0 var(--steel);
+    border-radius:10px;
+    overflow:hidden;
+  }
+  .slide{
+    position:absolute;inset:0;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:clamp(10px,2vh,20px);padding:clamp(20px,4vh,48px);text-align:center;
+    opacity:0;transition:opacity .8s ease;
+  }
+  .slide.active{opacity:1}
+  /* AL CENTRO SOLO IL LOGO. Per il logo vero sostituisci l'<svg> con:
+     <img src="logo-sponsor.png" class="logo-img" alt="Nome"> */
+  .logo-svg{width:min(82%,720px);height:auto;max-height:72%}
+  .logo-svg text{font-family:var(--display)}
+  .logo-img{max-width:82%;max-height:72%;object-fit:contain}
+
+  .dots{display:flex;gap:11px}
+  .dot{width:14px;height:14px;border-radius:2px;background:#2a2521;border:1px solid #3a342e;cursor:pointer}
+  .dot.on{background:var(--orange);border-color:var(--orange)}
+
+  /* ---------- BARRA PARTITA ---------- */
+  .matchbar{
+    display:grid;
+    grid-template-columns:1fr auto 1fr;
+    align-items:center;
+    gap:clamp(14px,2.5vw,40px);
+    background:linear-gradient(180deg,#161311,var(--box));
+    border:2px solid var(--line);
+    box-shadow:var(--offset) var(--offset) 0 0 var(--steel);
+    border-radius:9px;
+    padding:clamp(12px,2vh,20px) clamp(16px,2.5vw,34px);
+  }
+  .side{display:flex;align-items:center;gap:clamp(12px,1.6vw,20px)}
+  .side.away{justify-content:flex-end}
+  .chip{width:clamp(20px,2.4vh,30px);height:clamp(20px,2.4vh,30px);border-radius:3px;flex:none}
+  .side .tname{font-weight:800;text-transform:uppercase;letter-spacing:.03em;
+    font-size:clamp(20px,3vh,38px);line-height:1}
+  .side .pts{font-weight:800;font-variant-numeric:tabular-nums;line-height:1;
+    font-size:clamp(40px,6.5vh,76px)}
+
+  .mid{display:flex;flex-direction:column;align-items:center;gap:6px;white-space:nowrap}
+  .mid .clock{font-weight:800;font-variant-numeric:tabular-nums;
+    font-size:clamp(30px,5vh,56px);line-height:1}
+  .mid .clock .colon{color:var(--orange);animation:blink 1s steps(1,end) infinite}
+  .mid .per{font-family:var(--mono);font-size:clamp(11px,1.5vh,15px);
+    letter-spacing:.3em;text-transform:uppercase;color:var(--orange)}
+
+  /* ---------- ANIMAZIONI ---------- */
+  @keyframes blink{50%{opacity:.18}}
+
+  @media(prefers-reduced-motion:reduce){
+    .slide{transition:none}
+    .mid .clock .colon{animation:none}
+  }
+
+  @media(max-width:760px){
+    .side .tname{font-size:clamp(15px,2.4vh,22px)}
+    .side .pts{font-size:clamp(30px,5vh,46px)}
+  }
+</style>
+</head>
+<body>
+  <!-- colori squadra coerenti col tabellone -->
+  <main class="page" style="--home-c:#d23b3b; --away-c:#1f9d57;">
+
+    <div class="head">
+      <span class="rule"></span>
+      <span class="lab">Partner Ufficiali</span>
+      <span class="rule"></span>
+    </div>
+
+    <!-- CAROSELLO SPONSOR -->
+    <div class="stage">
+      <div class="featured">
+        <!-- Ogni .slide = uno sponsor. Per il logo vero, sostituisci l'<svg> con:
+             <img src="logo-sponsor.png" class="logo-img" alt="Nome sponsor"> -->
+        <div class="slide active">
+          <svg class="logo-svg" viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Bar Centrale">
+            <rect x="14" y="44" width="152" height="152" rx="20" fill="none" stroke="#ea6324" stroke-width="11"/>
+            <text x="90" y="158" text-anchor="middle" font-size="120" font-weight="800" fill="#ea6324">B</text>
+            <text x="200" y="112" font-size="76" font-weight="800" fill="#fffefd" letter-spacing="2">BAR</text>
+            <text x="200" y="182" font-size="76" font-weight="800" fill="#fffefd" letter-spacing="2">CENTRALE</text>
+            <text x="202" y="216" font-size="22" font-weight="700" fill="#ea6324" letter-spacing="6" style="font-family:'Space Mono',monospace">// CAFFÈ &amp; SPORT</text>
+          </svg>
+        </div>
+        <div class="slide">
+          <svg class="logo-svg" viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pizzeria da Mario">
+            <rect x="14" y="44" width="152" height="152" rx="20" fill="none" stroke="#3574aa" stroke-width="11"/>
+            <text x="90" y="158" text-anchor="middle" font-size="120" font-weight="800" fill="#3574aa">P</text>
+            <text x="200" y="112" font-size="76" font-weight="800" fill="#fffefd" letter-spacing="2">PIZZERIA</text>
+            <text x="200" y="182" font-size="76" font-weight="800" fill="#fffefd" letter-spacing="2">DA MARIO</text>
+            <text x="202" y="216" font-size="22" font-weight="700" fill="#3574aa" letter-spacing="6" style="font-family:'Space Mono',monospace">// FORNO A LEGNA</text>
+          </svg>
+        </div>
+        <div class="slide">
+          <svg class="logo-svg" viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Energy X">
+            <rect x="14" y="44" width="152" height="152" rx="20" fill="none" stroke="#ea6324" stroke-width="11"/>
+            <path d="M108 70 L70 138 L96 138 L82 178 L120 116 L94 116 Z" fill="#ea6324"/>
+            <text x="200" y="150" font-size="92" font-weight="800" fill="#fffefd" letter-spacing="2">ENERGY X</text>
+            <text x="202" y="200" font-size="22" font-weight="700" fill="#ea6324" letter-spacing="6" style="font-family:'Space Mono',monospace">// OFFICIAL DRINK</text>
+          </svg>
+        </div>
+        <div class="slide">
+          <svg class="logo-svg" viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Officina Rossi">
+            <rect x="14" y="44" width="152" height="152" rx="20" fill="none" stroke="#fffefd" stroke-width="11"/>
+            <text x="90" y="156" text-anchor="middle" font-size="84" font-weight="800" fill="#fffefd">OR</text>
+            <text x="200" y="112" font-size="76" font-weight="800" fill="#fffefd" letter-spacing="2">OFFICINA</text>
+            <text x="200" y="182" font-size="76" font-weight="800" fill="#fffefd" letter-spacing="2">ROSSI</text>
+            <text x="202" y="216" font-size="22" font-weight="700" fill="#ea6324" letter-spacing="6" style="font-family:'Space Mono',monospace">// MOTORI</text>
+          </svg>
+        </div>
+        <div class="slide">
+          <svg class="logo-svg" viewBox="0 0 720 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Radio Onda">
+            <rect x="14" y="44" width="152" height="152" rx="20" fill="none" stroke="#3574aa" stroke-width="11"/>
+            <text x="90" y="158" text-anchor="middle" font-size="120" font-weight="800" fill="#3574aa">R</text>
+            <text x="200" y="112" font-size="76" font-weight="800" fill="#fffefd" letter-spacing="2">RADIO</text>
+            <text x="200" y="182" font-size="76" font-weight="800" fill="#fffefd" letter-spacing="2">ONDA</text>
+            <text x="202" y="216" font-size="22" font-weight="700" fill="#3574aa" letter-spacing="6" style="font-family:'Space Mono',monospace">// MEDIA PARTNER</text>
+          </svg>
+        </div>
+      </div>
+
+      <div class="dots">
+        <span class="dot on"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+    </div>
+
+    <!-- BARRA PARTITA IN CORSO -->
+    <div class="matchbar">
+      <div class="side home">
+        <span class="chip" style="background:var(--home-c)"></span>
+        <span class="tname">Falchi</span>
+        <span class="pts">72</span>
+      </div>
+      <div class="mid">
+        <span class="clock">08<span class="colon">:</span>24</span>
+        <span class="per">3° Periodo</span>
+      </div>
+      <div class="side away">
+        <span class="pts">68</span>
+        <span class="tname">Pantere</span>
+        <span class="chip" style="background:var(--away-c)"></span>
+      </div>
+    </div>
+
+  </main>
+
+<script>
+  const slides=[...document.querySelectorAll('.slide')];
+  const dots=[...document.querySelectorAll('.dot')];
+  let i=0;
+  function show(n){
+    i=(n+slides.length)%slides.length;
+    slides.forEach((s,k)=>s.classList.toggle('active',k===i));
+    dots.forEach((d,k)=>d.classList.toggle('on',k===i));
+  }
+  let timer=setInterval(()=>show(i+1),4500);
+  dots.forEach((d,k)=>d.addEventListener('click',()=>{show(k);clearInterval(timer);timer=setInterval(()=>show(i+1),4500);}));
+</script>
+</body>
+</html>
