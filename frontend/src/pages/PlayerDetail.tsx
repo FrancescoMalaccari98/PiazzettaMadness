@@ -57,7 +57,10 @@ export function PlayerDetail() {
     );
   }
 
-  const playedMatches = player.matchLog.filter(m => m.result !== "-");
+  const hasPlayedStats = (log: Player["matchLog"][number]) =>
+    log.played ?? log.result !== "-";
+
+  const playedMatches = player.matchLog.filter(hasPlayedStats);
   const bestGame = [...playedMatches].sort((a, b) => b.pts - a.pts)[0];
 
   // Ranking calcolato sulla lista reale dal backend (fallback ai dati statici)
@@ -246,7 +249,7 @@ export function PlayerDetail() {
               </thead>
               <tbody>
                 {player.matchLog.map((log, i) => {
-                  const isPending = log.result === "-";
+                  const isPending = !hasPlayedStats(log);
                   const isBest = bestGame && log.matchId === bestGame.matchId;
                   return (
                     <tr

@@ -2,13 +2,13 @@
 // ============================================================
 // api/index.php  —  Entry point / Router principale
 //
-// Deployare questo file (e tutta la dir api/) in public_html/api/
+// Deployare questo file (e tutta la dir api-web/) in public_html/api-web/
 // su hosting Aruba. Il file .htaccess nella stessa dir gestisce
 // il rewriting: tutte le richieste → index.php.
 //
 // URL structure (da frontend):
-//   VITE_API_URL/api/partite          → /api/index.php → route "partite"
-//   VITE_API_URL/api/matches/5/live   → route "matches/{5}/live"
+//   VITE_API_URL/api-web/partite          → /api-web/index.php → route "partite"
+//   VITE_API_URL/api-web/matches/5/live   → route "matches/{5}/live"
 // ============================================================
 
 declare(strict_types=1);

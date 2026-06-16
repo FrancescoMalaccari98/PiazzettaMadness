@@ -3,6 +3,7 @@ export type MatchLog = {
   date: string;
   opponent: string;
   result: "V" | "P" | "-";
+  played?: boolean;
   pts: number; ast: number; reb: number; stl: number;
 };
 

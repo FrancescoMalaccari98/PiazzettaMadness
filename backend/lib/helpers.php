@@ -70,7 +70,6 @@ function format_minutes(?int $seconds): string {
 // ── Edition attiva ──────────────────────────────────────────
 
 // Ritorna l'ID dell'edizione attiva (singleton per request).
-<<<<<<< HEAD
 // Se ACTIVE_EDITION_ID è definito in database.php, usa quello come override.
 function get_active_edition_id(PDO $pdo): ?int {
     static $eid = false; // false = non ancora caricato, null = non trovato
@@ -82,12 +81,6 @@ function get_active_edition_id(PDO $pdo): ?int {
     }
 
     $stmt = $pdo->query("SELECT id FROM editions WHERE status = 'Active' ORDER BY year DESC LIMIT 1");
-=======
-function get_active_edition_id(PDO $pdo): ?int {
-    static $eid = false; // false = non ancora caricato, null = non trovato
-    if ($eid !== false) return $eid;
-    $stmt = $pdo->query("SELECT id FROM editions WHERE status = 'active' ORDER BY year DESC LIMIT 1");
->>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
     $row  = $stmt->fetch();
     $eid  = $row ? (int)$row['id'] : null;
     return $eid;
@@ -97,18 +90,11 @@ function get_active_edition_id(PDO $pdo): ?int {
 
 // Mappa lo status DB nel formato atteso dal frontend React.
 function map_match_status(string $status): string {
-    switch ($status) {
-<<<<<<< HEAD
-        case 'Live':     return 'LIVE';
-        case 'Paused':   return 'LIVE';
-        case 'Finished': return 'COMPLETA';
-        default:         return 'IN PROGRAMMA'; // Scheduled, Ready, Cancelled
-=======
+    switch (strtolower($status)) {
         case 'live':    return 'LIVE';
         case 'paused':  return 'LIVE';
         case 'finished':return 'COMPLETA';
         default:        return 'IN PROGRAMMA'; // scheduled, ready, cancelled
->>>>>>> 8c935b5209820221f529d117fe84c8a3fdce6e97
     }
 }
 

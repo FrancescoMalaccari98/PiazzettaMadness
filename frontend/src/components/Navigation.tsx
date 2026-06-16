@@ -43,7 +43,29 @@ export function Navigation() {
 
   useEffect(() => {
     setIsOpen(false);
-  }, [location.pathname]);
+  }, [location.pathname, location.search, location.hash]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsOpen(false);
+    };
+
+    const handleResize = () => {
+      if (window.matchMedia("(min-width: 768px)").matches) {
+        setIsOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -163,47 +185,45 @@ export function Navigation() {
       </div>
 
       {/* Mobile menu */}
-      <div
-        aria-hidden={!isOpen}
-        className={cn(
-          "relative md:hidden w-full bg-zinc-950/98 backdrop-blur-md border-b-2 border-brand-orange/50",
-          "transition-[opacity,transform] duration-200 overflow-hidden",
-          isOpen ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-3 pointer-events-none"
-        )}
-      >
-        <div className="px-4 py-4 space-y-1">
-          {navLinks.map((link) => (
-            <Link
-              key={link.name}
-              to={link.path}
+      {isOpen && (
+        <div
+          className="relative md:hidden w-full bg-zinc-950/98 backdrop-blur-md border-b-2 border-brand-orange/50 overflow-hidden"
+        >
+          <div className="px-4 py-4 space-y-1">
+            {navLinks.map((link) => (
+              <Link
+                key={link.name}
+                to={link.path}
+                onClick={() => setIsOpen(false)}
+                className={cn(
+                  "flex items-center gap-3 px-4 py-3 font-display text-lg tracking-wider uppercase transition-colors border-l-4",
+                  location.pathname === link.path
+                    ? "text-brand-orange border-brand-orange bg-brand-orange/5"
+                    : "text-zinc-300 border-transparent hover:text-white hover:border-zinc-600 hover:bg-zinc-800/40"
+                )}
+              >
+                {link.live && (
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
+                  </span>
+                )}
+                {link.name}
+              </Link>
+            ))}
+            <a
+              href="https://www.instagram.com/piazzetta_madness/"
+              target="_blank"
+              rel="noreferrer"
               onClick={() => setIsOpen(false)}
-              className={cn(
-                "flex items-center gap-3 px-4 py-3 font-display text-lg tracking-wider uppercase transition-colors border-l-4",
-                location.pathname === link.path
-                  ? "text-brand-orange border-brand-orange bg-brand-orange/5"
-                  : "text-zinc-300 border-transparent hover:text-white hover:border-zinc-600 hover:bg-zinc-800/40"
-              )}
+              className="flex items-center gap-3 px-4 py-3 border-l-4 border-transparent text-zinc-400 hover:text-brand-orange transition-colors"
             >
-              {link.live && (
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
-                </span>
-              )}
-              {link.name}
-            </Link>
-          ))}
-          <a
-            href="https://www.instagram.com/piazzetta_madness/"
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-3 px-4 py-3 border-l-4 border-transparent text-zinc-400 hover:text-brand-orange transition-colors"
-          >
-            <InstagramIcon size={18} />
-            <span className="font-display text-lg tracking-wider uppercase">Instagram</span>
-          </a>
+              <InstagramIcon size={18} />
+              <span className="font-display text-lg tracking-wider uppercase">Instagram</span>
+            </a>
+          </div>
         </div>
-      </div>
+      )}
     </nav>
   );
 }
