@@ -713,11 +713,11 @@ public partial class MainWindow : Window
                 UpsertLocalThreePointContestEntries(entries);
                 UpsertLocalThreePointContestRounds(rounds);
                 _db.SaveChanges();
-                LiveSyncStatusText.Text = "Sync contest: aggiornata";
+                LiveSyncStatusText.Text = "Sinc: contest";
             }
-            catch (Exception exception)
+            catch (Exception)
             {
-                LiveSyncStatusText.Text = $"Sync contest fallita: {exception.Message}";
+                LiveSyncStatusText.Text = "Sinc: errore";
             }
         }
 
@@ -1836,9 +1836,9 @@ public partial class MainWindow : Window
             _db.SaveChanges();
             RefreshThreePointContestCrudViews();
         }
-        catch (Exception exception)
+        catch (Exception)
         {
-            LiveSyncStatusText.Text = $"Sync contest fallita: {exception.Message}";
+            LiveSyncStatusText.Text = "Sinc: errore";
         }
     }
 
@@ -4282,7 +4282,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        LiveSyncStatusText.Text = $"Sync: {text}";
+        LiveSyncStatusText.Text = $"Sinc: {text}";
         LiveSyncStatusText.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(foreground));
         LiveSyncStatusBorder.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(background));
     }

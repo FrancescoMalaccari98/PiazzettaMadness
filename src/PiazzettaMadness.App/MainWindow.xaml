@@ -11,36 +11,39 @@
         MinWidth="1200"
         Background="#f4f6f8"
         PreviewKeyDown="MainWindow_PreviewKeyDown">
-    <Grid Margin="24">
+        <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <DockPanel Grid.Row="0" Margin="0,0,0,16">
+        <DockPanel Grid.Row="0" Margin="0,0,0,8">
             <StackPanel>
-                <TextBlock Text="Piazzetta Madness" FontSize="28" FontWeight="Bold" Foreground="#111827" />
-                <TextBlock x:Name="DatabasePathText" Margin="0,6,0,0" Foreground="#4b5563" />
+                <TextBlock Text="Piazzetta Madness" FontSize="22" FontWeight="Bold" Foreground="#111827" />
+                <TextBlock x:Name="DatabasePathText" Visibility="Collapsed" Margin="0,4,0,0" Foreground="#4b5563" />
             </StackPanel>
             <Button x:Name="OpenScoreboardButton"
                     DockPanel.Dock="Right"
-                    Width="190"
-                    Height="42"
+                    Width="150"
+                    Height="34"
                     HorizontalAlignment="Right"
+                    Background="#2563eb"
+                    Foreground="White"
+                    FontWeight="SemiBold"
                     Content="Apri tabellone"
                     Click="OpenScoreboard_Click" />
         </DockPanel>
 
         <TabControl x:Name="MainTabControl" Grid.Row="1">
             <TabItem x:Name="LiveTabItem" Header="Partita live">
-                <Grid Margin="0,16,0,0">
+                <Grid Margin="0,10,0,0">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="1.15*" />
-                        <ColumnDefinition Width="280" />
+                        <ColumnDefinition Width="250" />
                         <ColumnDefinition Width="1.15*" />
                     </Grid.ColumnDefinitions>
 
@@ -62,93 +65,102 @@
                                       DisplayMemberPath="DisplayName"
                                       SelectionChanged="LiveMatchCombo_SelectionChanged" />
                             <CheckBox x:Name="AnimationsEnabledCheckBox"
-                                      Content="Animazioni tabellone"
+                                      Content="Animazioni"
                                       IsChecked="True"
                                       VerticalAlignment="Center"
                                       Margin="18,0,0,0"
                                       FontWeight="SemiBold" />
                         </StackPanel>
                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right">
-                            <Border x:Name="LiveSyncStatusBorder" Padding="10,6" Margin="0,0,8,0" Background="#e5e7eb" BorderBrush="#cbd5e1" BorderThickness="1">
+                            <Border x:Name="LiveSyncStatusBorder" Padding="8,6" Margin="0,0,6,0" Background="#e5e7eb" BorderBrush="#cbd5e1" BorderThickness="1">
                                 <TextBlock x:Name="LiveSyncStatusText" Text="Sync: nessuna modifica" FontWeight="SemiBold" Foreground="#334155" />
                             </Border>
-                            <Border Padding="10,6" Margin="0,0,8,0" Background="#e5e7eb" BorderBrush="#cbd5e1" BorderThickness="1">
+                            <Border Padding="8,6" Margin="0,0,6,0" Background="#e5e7eb" BorderBrush="#cbd5e1" BorderThickness="1">
                                 <TextBlock x:Name="LiveMatchStatusText" Text="Stato: -" FontWeight="SemiBold" Foreground="#111827" />
                             </Border>
-                            <Button x:Name="PrepareMatchButton" Content="Prepara" Width="82" Height="34" Margin="0,0,6,0" Click="PrepareMatch_Click" />
-                            <Button x:Name="StartMatchButton" Content="Inizia" Width="82" Height="34" Margin="0,0,6,0" Click="StartMatch_Click" />
-                            <Button x:Name="PauseMatchButton" Content="Pausa" Width="82" Height="34" Margin="0,0,6,0" Click="PauseMatch_Click" />
-                            <Button x:Name="ResumeMatchButton" Content="Riprendi" Width="82" Height="34" Margin="0,0,6,0" Click="ResumeMatch_Click" />
-                            <Button x:Name="FinishMatchButton" Content="Chiudi" Width="82" Height="34" Click="FinishMatch_Click" />
+                            <Button x:Name="PrepareMatchButton" Content="Prepara" Width="76" Height="34" Margin="0,0,4,0" Click="PrepareMatch_Click" />
+                            <Button x:Name="StartMatchButton" Content="Inizia" Width="76" Height="34" Margin="0,0,4,0" Click="StartMatch_Click" />
+                            <Button x:Name="PauseMatchButton" Content="Pausa" Width="76" Height="34" Margin="0,0,4,0" Click="PauseMatch_Click" />
+                            <Button x:Name="ResumeMatchButton" Content="Riprendi" Width="76" Height="34" Margin="0,0,4,0" Click="ResumeMatch_Click" />
+                            <Button x:Name="FinishMatchButton" Content="Chiudi" Width="76" Height="34" Click="FinishMatch_Click" />
                         </StackPanel>
                     </DockPanel>
 
-                    <Border x:Name="HomeLivePanel" Grid.Row="1" Grid.Column="0" Padding="16" Background="White" BorderBrush="#d1d5db" BorderThickness="1">
+                    <Border x:Name="HomeLivePanel" Grid.Row="1" Grid.Column="0" Padding="12" Background="White" BorderBrush="#d1d5db" BorderThickness="1">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
                                 <RowDefinition Height="*" />
                             </Grid.RowDefinitions>
-                            <StackPanel>
-                                <TextBlock x:Name="HomeNameText" Text="A2" FontSize="28" FontWeight="Bold" />
-                                <TextBlock x:Name="HomeScoreText" Text="0" FontSize="68" FontWeight="Bold" />
-                                <TextBlock x:Name="HomeFoulsText" Text="Falli 0" Margin="0,-4,0,0" FontSize="20" FontWeight="SemiBold" Foreground="#475569" />
-                            </StackPanel>
-                            <StackPanel Grid.Row="1" Margin="0,8,0,12">
-                                <WrapPanel>
-                                    <Button Content="+1" Width="78" Height="48" FontSize="18" Margin="0,0,8,8" Click="HomePlusOne_Click" />
-                                    <Button Content="+2" Width="78" Height="48" FontSize="18" Margin="0,0,8,8" Click="HomePlusTwo_Click" />
-                                    <Button Content="+3" Width="78" Height="48" FontSize="18" Margin="0,0,8,8" Click="HomePlusThree_Click" />
-                                    <Button Content="-1" Width="78" Height="48" FontSize="18" Margin="0,0,8,8" Click="HomeMinusOne_Click" />
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock x:Name="HomeNameText" Text="A2" FontSize="25" FontWeight="Bold" />
+                                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                        <TextBlock x:Name="HomeScoreText" Text="0" FontSize="50" FontWeight="Bold" />
+                                        <TextBlock x:Name="HomeFoulsText" Text="Falli 0" Margin="14,23,0,0" FontSize="18" FontWeight="SemiBold" Foreground="#475569" />
+                                    </StackPanel>
+                                </StackPanel>
+                                <WrapPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                    <Button Content="+1" Width="54" Height="34" FontSize="15" Margin="0,0,6,6" Click="HomePlusOne_Click" />
+                                    <Button Content="+2" Width="54" Height="34" FontSize="15" Margin="0,0,6,6" Click="HomePlusTwo_Click" />
+                                    <Button Content="+3" Width="54" Height="34" FontSize="15" Margin="0,0,6,6" Click="HomePlusThree_Click" />
+                                    <Button Content="-1" Width="54" Height="34" FontSize="15" Margin="0,0,6,6" Click="HomeMinusOne_Click" />
+                                    <Button Content="F+" Width="54" Height="34" FontSize="15" Margin="0,0,6,6" Click="HomeTeamFoulPlus_Click" />
+                                    <Button Content="F-" Width="54" Height="34" FontSize="15" Margin="0,0,0,6" Click="HomeTeamFoulMinus_Click" />
                                 </WrapPanel>
-                                <WrapPanel>
-                                    <Button Content="F+" Width="100" Height="46" FontSize="17" Margin="0,0,8,0" Click="HomeTeamFoulPlus_Click" />
-                                    <Button Content="F-" Width="100" Height="46" FontSize="17" Margin="0,0,8,0" Click="HomeTeamFoulMinus_Click" />
-                                </WrapPanel>
-                            </StackPanel>
+                            </Grid>
                             <DataGrid x:Name="HomeLivePlayersGrid"
-                                      Grid.Row="2"
+                                      Grid.Row="1"
                                       AutoGenerateColumns="False"
                                       CanUserAddRows="False"
                                       IsReadOnly="True"
                                       SelectionMode="Single"
                                       HeadersVisibility="Column"
-                                      RowHeight="48"
+                                      RowHeight="42"
                                       AlternatingRowBackground="#f9fafb">
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Header="#" Binding="{Binding JerseyNumber}" Width="44" />
-                                    <DataGridTextColumn Header="Giocatore" Binding="{Binding PlayerName}" Width="145" />
-                                    <DataGridTextColumn Header="Pt" Binding="{Binding Points}" Width="48" />
-                                    <DataGridTextColumn Header="F" Binding="{Binding Fouls}" Width="44" />
-                                    <DataGridTemplateColumn Header="Punti" Width="240">
+                                    <DataGridTextColumn Header="#" Binding="{Binding JerseyNumber}" Width="34" />
+                                    <DataGridTemplateColumn Header="Giocatore" Width="112">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding PlayerName}" TextWrapping="Wrap" FontSize="12" LineHeight="14" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTextColumn Header="Pt" Binding="{Binding Points}" Width="36" />
+                                    <DataGridTextColumn Header="F" Binding="{Binding Fouls}" Width="32" />
+                                    <DataGridTemplateColumn Header="Punti" Width="184">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <StackPanel Orientation="Horizontal">
-                                                    <Button Content="+1" Width="54" Height="38" FontSize="16" Margin="0,0,6,0" Click="PlayerPlusOne_Click" />
-                                                    <Button Content="+2" Width="54" Height="38" FontSize="16" Margin="0,0,6,0" Click="PlayerPlusTwo_Click" />
-                                                    <Button Content="+3" Width="54" Height="38" FontSize="16" Margin="0,0,6,0" Click="PlayerPlusThree_Click" />
-                                                    <Button Content="-1" Width="54" Height="38" FontSize="16" Click="PlayerMinusOne_Click" />
+                                                    <Button Content="+1" Width="40" Height="32" FontSize="14" Margin="0,0,5,0" Click="PlayerPlusOne_Click" />
+                                                    <Button Content="+2" Width="40" Height="32" FontSize="14" Margin="0,0,5,0" Click="PlayerPlusTwo_Click" />
+                                                    <Button Content="+3" Width="40" Height="32" FontSize="14" Margin="0,0,5,0" Click="PlayerPlusThree_Click" />
+                                                    <Button Content="-1" Width="40" Height="32" FontSize="14" Click="PlayerMinusOne_Click" />
                                                 </StackPanel>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTemplateColumn Header="Falli" Width="124">
+                                    <DataGridTemplateColumn Header="Falli" Width="92">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <StackPanel Orientation="Horizontal">
-                                                    <Button Content="+" Width="54" Height="38" FontSize="18" Margin="0,0,6,0" Click="PlayerFoulPlus_Click" />
-                                                    <Button Content="-" Width="54" Height="38" FontSize="18" Click="PlayerFoulMinus_Click" />
+                                                    <Button Content="+" Width="40" Height="32" FontSize="16" Margin="0,0,5,0" Click="PlayerFoulPlus_Click" />
+                                                    <Button Content="-" Width="40" Height="32" FontSize="16" Click="PlayerFoulMinus_Click" />
                                                 </StackPanel>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTemplateColumn Header="Azioni" Width="190">
+                                    <DataGridTemplateColumn Header="Azioni" Width="158">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <StackPanel Orientation="Horizontal">
-                                                    <Button Content="Schiacciata" Width="92" Height="38" FontSize="13" Margin="0,0,6,0" Click="PlayerDunk_Click" />
-                                                    <Button Content="Stoppata" Width="84" Height="38" FontSize="13" Click="PlayerBlock_Click" />
+                                                    <Button Content="Dunk" Width="58" Height="32" FontSize="12" Margin="0,0,5,0" Click="PlayerDunk_Click" />
+                                                    <Button Content="Block" Width="58" Height="32" FontSize="12" Click="PlayerBlock_Click" />
                                                 </StackPanel>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
@@ -159,19 +171,20 @@
                         </Grid>
                     </Border>
 
-                    <Border x:Name="ClockLivePanel" Grid.Row="1" Grid.Column="1" Margin="18,0" Padding="18" Background="#111827">
+                    <Border x:Name="ClockLivePanel" Grid.Row="1" Grid.Column="1" Margin="12,0" Padding="12" Background="#111827">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="*" />
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
+                        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                             <StackPanel VerticalAlignment="Center">
-                            <TextBlock Text="Periodo" Foreground="#cbd5e1" HorizontalAlignment="Center" FontSize="18" />
-                            <Border Width="150" Height="42" Margin="0,6,0,0" Background="#f8fafc" BorderBrush="#64748b" BorderThickness="1">
+                            <TextBlock Text="Periodo" Foreground="#cbd5e1" HorizontalAlignment="Center" FontSize="15" />
+                            <Border Width="132" Height="36" Margin="0,5,0,0" Background="#f8fafc" BorderBrush="#64748b" BorderThickness="1" HorizontalAlignment="Center">
                                 <ComboBox x:Name="PeriodCombo"
                                           BorderThickness="0"
                                           Background="#f8fafc"
-                                          FontSize="18"
+                                          FontSize="15"
                                           FontWeight="SemiBold"
                                           HorizontalContentAlignment="Center"
                                           VerticalContentAlignment="Center"
@@ -182,22 +195,22 @@
                                 </ComboBox>
                             </Border>
                             <TextBlock x:Name="PeriodText" Text="1" Visibility="Collapsed" />
-                            <TextBlock Text="Tempo partita" Margin="0,18,0,0" Foreground="#cbd5e1" HorizontalAlignment="Center" FontSize="16" />
-                            <TextBlock x:Name="GameClockText" Text="12:00" Foreground="White" HorizontalAlignment="Center" FontSize="52" FontWeight="Bold" />
+                            <TextBlock Text="Tempo partita" Margin="0,12,0,0" Foreground="#cbd5e1" HorizontalAlignment="Center" FontSize="14" />
+                            <TextBlock x:Name="GameClockText" Text="12:00" Foreground="White" HorizontalAlignment="Center" FontSize="44" FontWeight="Bold" />
                             <Button x:Name="StartPauseButton"
                                     Content="▶ Start / Pausa [Spazio]"
-                                    Height="40"
-                                    Margin="0,10,0,14"
+                                    Height="36"
+                                    Margin="0,8,0,10"
                                     Background="#16a34a"
                                     Foreground="White"
                                     FontWeight="SemiBold"
                                     Click="StartPause_Click" />
-                            <TextBlock Text="24 secondi" Margin="0,14,0,0" Foreground="#cbd5e1" HorizontalAlignment="Center" FontSize="16" />
-                            <TextBlock x:Name="ShotClockText" Text="24" Foreground="#fca5a5" HorizontalAlignment="Center" FontSize="64" FontWeight="Bold" />
+                            <TextBlock Text="24 secondi" Margin="0,10,0,0" Foreground="#cbd5e1" HorizontalAlignment="Center" FontSize="14" />
+                            <TextBlock x:Name="ShotClockText" Text="24" Foreground="#fca5a5" HorizontalAlignment="Center" FontSize="52" FontWeight="Bold" />
                             <Button x:Name="ShotStartPauseButton"
                                     Content="▶ Start / Pausa 24 [0]"
-                                    Height="40"
-                                    Margin="0,8,0,14"
+                                    Height="36"
+                                    Margin="0,6,0,10"
                                     Background="#16a34a"
                                     Foreground="White"
                                     FontWeight="SemiBold"
@@ -208,88 +221,98 @@
                                     <ColumnDefinition Width="8" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <Button Content="Reset 24 [2]" Height="42" FontSize="16" FontWeight="SemiBold" Click="ResetShotClock_Click" />
-                                <Button Grid.Column="2" Content="Reset 14 [1]" Height="42" FontSize="16" FontWeight="SemiBold" Background="#fde68a" Click="ResetShotClock14_Click" />
+                                <Button Content="Reset 24 [2]" Height="36" FontSize="14" FontWeight="SemiBold" Click="ResetShotClock_Click" />
+                                <Button Grid.Column="2" Content="Reset 14 [1]" Height="36" FontSize="14" FontWeight="SemiBold" Background="#fde68a" Click="ResetShotClock14_Click" />
                             </Grid>
-                            <TextBlock x:Name="TeamFoulsText" Text="Falli 0 - 0" Margin="0,8,0,0" Foreground="#cbd5e1" HorizontalAlignment="Center" FontSize="18" />
+                            <TextBlock x:Name="TeamFoulsText" Text="Falli 0 - 0" Visibility="Collapsed" Margin="0,7,0,0" Foreground="#cbd5e1" HorizontalAlignment="Center" FontSize="15" />
                             </StackPanel>
-                            <Border Grid.Row="1" Margin="0,14,0,0" Padding="10" Background="#1f2937" BorderBrush="#475569" BorderThickness="1">
+                        </ScrollViewer>
+                            <Border Grid.Row="1" Margin="0,10,0,0" Padding="8" Background="#1f2937" BorderBrush="#475569" BorderThickness="1">
                                 <StackPanel>
-                                    <TextBlock Text="Correzioni e reset" Foreground="#cbd5e1" HorizontalAlignment="Center" Margin="0,0,0,8" />
-                                    <Button Content="Reset tempo partita" Height="36" Background="#f59e0b" Foreground="#111827" FontWeight="SemiBold" Click="ResetGameClock_Click" />
-                                    <Button Content="Imposta tempo manualmente" Height="36" Margin="0,6,0,0" Background="#e5e7eb" Foreground="#111827" FontWeight="SemiBold" Click="SetGameClock_Click" />
-                                    <Button Content="Reset partita" Height="36" Margin="0,6,0,0" Background="#dc2626" Foreground="White" FontWeight="SemiBold" Click="ResetGame_Click" />
+                                    <TextBlock Text="Correzioni e reset" Foreground="#cbd5e1" HorizontalAlignment="Center" Margin="0,0,0,6" FontSize="12" />
+                                    <Button Content="Reset tempo partita" Height="32" Background="#f59e0b" Foreground="#111827" FontSize="12" FontWeight="SemiBold" Click="ResetGameClock_Click" />
+                                    <Button Content="Imposta tempo manualmente" Height="32" Margin="0,5,0,0" Background="#e5e7eb" Foreground="#111827" FontSize="12" FontWeight="SemiBold" Click="SetGameClock_Click" />
+                                    <Button Content="Reset partita" Height="32" Margin="0,5,0,0" Background="#dc2626" Foreground="White" FontSize="12" FontWeight="SemiBold" Click="ResetGame_Click" />
                                 </StackPanel>
                             </Border>
                         </Grid>
                     </Border>
 
-                    <Border x:Name="AwayLivePanel" Grid.Row="1" Grid.Column="2" Padding="16" Background="White" BorderBrush="#d1d5db" BorderThickness="1">
+                    <Border x:Name="AwayLivePanel" Grid.Row="1" Grid.Column="2" Padding="12" Background="White" BorderBrush="#d1d5db" BorderThickness="1">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
                                 <RowDefinition Height="*" />
                             </Grid.RowDefinitions>
-                            <StackPanel>
-                                <TextBlock x:Name="AwayNameText" Text="A4" FontSize="28" FontWeight="Bold" />
-                                <TextBlock x:Name="AwayScoreText" Text="0" FontSize="68" FontWeight="Bold" />
-                                <TextBlock x:Name="AwayFoulsText" Text="Falli 0" Margin="0,-4,0,0" FontSize="20" FontWeight="SemiBold" Foreground="#475569" />
-                            </StackPanel>
-                            <StackPanel Grid.Row="1" Margin="0,8,0,12">
-                                <WrapPanel>
-                                    <Button Content="+1" Width="78" Height="48" FontSize="18" Margin="0,0,8,8" Click="AwayPlusOne_Click" />
-                                    <Button Content="+2" Width="78" Height="48" FontSize="18" Margin="0,0,8,8" Click="AwayPlusTwo_Click" />
-                                    <Button Content="+3" Width="78" Height="48" FontSize="18" Margin="0,0,8,8" Click="AwayPlusThree_Click" />
-                                    <Button Content="-1" Width="78" Height="48" FontSize="18" Margin="0,0,8,8" Click="AwayMinusOne_Click" />
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock x:Name="AwayNameText" Text="A4" FontSize="25" FontWeight="Bold" />
+                                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                        <TextBlock x:Name="AwayScoreText" Text="0" FontSize="50" FontWeight="Bold" />
+                                        <TextBlock x:Name="AwayFoulsText" Text="Falli 0" Margin="14,23,0,0" FontSize="18" FontWeight="SemiBold" Foreground="#475569" />
+                                    </StackPanel>
+                                </StackPanel>
+                                <WrapPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                    <Button Content="+1" Width="54" Height="34" FontSize="15" Margin="0,0,6,6" Click="AwayPlusOne_Click" />
+                                    <Button Content="+2" Width="54" Height="34" FontSize="15" Margin="0,0,6,6" Click="AwayPlusTwo_Click" />
+                                    <Button Content="+3" Width="54" Height="34" FontSize="15" Margin="0,0,6,6" Click="AwayPlusThree_Click" />
+                                    <Button Content="-1" Width="54" Height="34" FontSize="15" Margin="0,0,6,6" Click="AwayMinusOne_Click" />
+                                    <Button Content="F+" Width="54" Height="34" FontSize="15" Margin="0,0,6,6" Click="AwayTeamFoulPlus_Click" />
+                                    <Button Content="F-" Width="54" Height="34" FontSize="15" Margin="0,0,0,6" Click="AwayTeamFoulMinus_Click" />
                                 </WrapPanel>
-                                <WrapPanel>
-                                    <Button Content="F+" Width="100" Height="46" FontSize="17" Margin="0,0,8,0" Click="AwayTeamFoulPlus_Click" />
-                                    <Button Content="F-" Width="100" Height="46" FontSize="17" Margin="0,0,8,0" Click="AwayTeamFoulMinus_Click" />
-                                </WrapPanel>
-                            </StackPanel>
+                            </Grid>
                             <DataGrid x:Name="AwayLivePlayersGrid"
-                                      Grid.Row="2"
+                                      Grid.Row="1"
                                       AutoGenerateColumns="False"
                                       CanUserAddRows="False"
                                       IsReadOnly="True"
                                       SelectionMode="Single"
                                       HeadersVisibility="Column"
-                                      RowHeight="48"
+                                      RowHeight="42"
                                       AlternatingRowBackground="#f9fafb">
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Header="#" Binding="{Binding JerseyNumber}" Width="44" />
-                                    <DataGridTextColumn Header="Giocatore" Binding="{Binding PlayerName}" Width="145" />
-                                    <DataGridTextColumn Header="Pt" Binding="{Binding Points}" Width="48" />
-                                    <DataGridTextColumn Header="F" Binding="{Binding Fouls}" Width="44" />
-                                    <DataGridTemplateColumn Header="Punti" Width="240">
+                                    <DataGridTextColumn Header="#" Binding="{Binding JerseyNumber}" Width="34" />
+                                    <DataGridTemplateColumn Header="Giocatore" Width="112">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding PlayerName}" TextWrapping="Wrap" FontSize="12" LineHeight="14" />
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <DataGridTextColumn Header="Pt" Binding="{Binding Points}" Width="36" />
+                                    <DataGridTextColumn Header="F" Binding="{Binding Fouls}" Width="32" />
+                                    <DataGridTemplateColumn Header="Punti" Width="184">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <StackPanel Orientation="Horizontal">
-                                                    <Button Content="+1" Width="54" Height="38" FontSize="16" Margin="0,0,6,0" Click="PlayerPlusOne_Click" />
-                                                    <Button Content="+2" Width="54" Height="38" FontSize="16" Margin="0,0,6,0" Click="PlayerPlusTwo_Click" />
-                                                    <Button Content="+3" Width="54" Height="38" FontSize="16" Margin="0,0,6,0" Click="PlayerPlusThree_Click" />
-                                                    <Button Content="-1" Width="54" Height="38" FontSize="16" Click="PlayerMinusOne_Click" />
+                                                    <Button Content="+1" Width="40" Height="32" FontSize="14" Margin="0,0,5,0" Click="PlayerPlusOne_Click" />
+                                                    <Button Content="+2" Width="40" Height="32" FontSize="14" Margin="0,0,5,0" Click="PlayerPlusTwo_Click" />
+                                                    <Button Content="+3" Width="40" Height="32" FontSize="14" Margin="0,0,5,0" Click="PlayerPlusThree_Click" />
+                                                    <Button Content="-1" Width="40" Height="32" FontSize="14" Click="PlayerMinusOne_Click" />
                                                 </StackPanel>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTemplateColumn Header="Falli" Width="124">
+                                    <DataGridTemplateColumn Header="Falli" Width="92">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <StackPanel Orientation="Horizontal">
-                                                    <Button Content="+" Width="54" Height="38" FontSize="18" Margin="0,0,6,0" Click="PlayerFoulPlus_Click" />
-                                                    <Button Content="-" Width="54" Height="38" FontSize="18" Click="PlayerFoulMinus_Click" />
+                                                    <Button Content="+" Width="40" Height="32" FontSize="16" Margin="0,0,5,0" Click="PlayerFoulPlus_Click" />
+                                                    <Button Content="-" Width="40" Height="32" FontSize="16" Click="PlayerFoulMinus_Click" />
                                                 </StackPanel>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTemplateColumn Header="Azioni" Width="190">
+                                    <DataGridTemplateColumn Header="Azioni" Width="158">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <StackPanel Orientation="Horizontal">
-                                                    <Button Content="Schiacciata" Width="92" Height="38" FontSize="13" Margin="0,0,6,0" Click="PlayerDunk_Click" />
-                                                    <Button Content="Stoppata" Width="84" Height="38" FontSize="13" Click="PlayerBlock_Click" />
+                                                    <Button Content="Dunk" Width="58" Height="32" FontSize="12" Margin="0,0,5,0" Click="PlayerDunk_Click" />
+                                                    <Button Content="Block" Width="58" Height="32" FontSize="12" Click="PlayerBlock_Click" />
                                                 </StackPanel>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
