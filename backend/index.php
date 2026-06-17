@@ -179,6 +179,11 @@ try {
         require_once __DIR__ . '/endpoints/live.php';
         handle_live_current(get_pdo());
 
+    // ── /three-point-contest ───────────────────────────────
+    } elseif ($seg0 === 'three-point-contest') {
+        require_once __DIR__ . '/endpoints/three_point_contest.php';
+        handle_three_point_contest(get_pdo());
+
     // ── /staff ──────────────────────────────────────────────
     } elseif ($seg0 === 'staff') {
         require_once __DIR__ . '/endpoints/staff.php';

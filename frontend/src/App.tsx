@@ -25,6 +25,7 @@ const Privacy = lazy(() => import("./pages/Privacy").then(m => ({ default: m.Pri
 const Sponsors = lazy(() => import("./pages/Sponsors").then(m => ({ default: m.Sponsors })));
 const PlayerDetail = lazy(() => import("./pages/PlayerDetail").then(m => ({ default: m.PlayerDetail })));
 const Players = lazy(() => import("./pages/Players").then(m => ({ default: m.Players })));
+const ThreePointContest = lazy(() => import("./pages/ThreePointContest").then(m => ({ default: m.ThreePointContest })));
 
 export function App() {
   const location = useLocation();
@@ -57,6 +58,7 @@ export function App() {
             <Route path="/sponsor" element={<Sponsors />} />
             <Route path="/statistiche/:slug" element={<PlayerDetail />} />
             <Route path="/giocatori" element={<Players />} />
+            <Route path="/3pt" element={<ThreePointContest />} />
             <Route path="*" element={
               <div className="pt-40 pb-20 text-center">
                 <p className="font-display text-[80px] md:text-[120px] text-brand-orange uppercase leading-none tracking-[-4px] mb-4">404</p>

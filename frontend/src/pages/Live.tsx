@@ -49,40 +49,6 @@ const ACCENTS = {
 } as const;
 type Accent = keyof typeof ACCENTS;
 
-// ⚠️ TEMPORANEO — dati finti per vedere la grafica senza partita live.
-// Mettere USE_MOCK = false (o rimuovere il blocco) prima del deploy reale.
-const USE_MOCK = true;
-const MOCK_DATA: LiveData = {
-  has_live: true,
-  source: "live",
-  status: "Live",
-  period: 2,
-  clock_seconds: 454,
-  clock_running: true,
-  home_score: 38,
-  away_score: 34,
-  home_team: {
-    id: 1, name: "Porto Pirates", short_name: "PIR", score: 38,
-    players: [
-      { player_id: 1, name: "Luca Marchetti",  jersey_number: 3,  points: 14, fouls: 2 },
-      { player_id: 2, name: "Marco Rossi",      jersey_number: 6,  points: 9,  fouls: 1 },
-      { player_id: 3, name: "Andrea Ferri",     jersey_number: 9,  points: 7,  fouls: 4 },
-      { player_id: 4, name: "Matteo Moretti",   jersey_number: 12, points: 5,  fouls: 3 },
-      { player_id: 5, name: "Davide Gentili",   jersey_number: 15, points: 3,  fouls: 5 },
-    ],
-  },
-  away_team: {
-    id: 3, name: "Potenza Warriors", short_name: "WAR", score: 34,
-    players: [
-      { player_id: 17, name: "Leonardo Marini",  jersey_number: 3,  points: 12, fouls: 2 },
-      { player_id: 18, name: "Samuele Galli",    jersey_number: 6,  points: 10, fouls: 1 },
-      { player_id: 19, name: "Emanuele Costa",   jersey_number: 9,  points: 6,  fouls: 3 },
-      { player_id: 20, name: "Daniele Fontana",  jersey_number: 12, points: 4,  fouls: 2 },
-      { player_id: 21, name: "Cristian Rinaldi", jersey_number: 15, points: 2,  fouls: 4 },
-    ],
-  },
-};
-
 function formatClock(totalSec: number): string {
   const s = Math.max(0, Math.floor(totalSec));
   const m = Math.floor(s / 60);
@@ -107,11 +73,8 @@ export function Live() {
         const r = await fetch(`${API}/api-web/live`);
         if (r.ok) d = await r.json();
       } catch {
-        // Errore di rete o JSON non valido (es. backend non attivo in locale):
-        // resta lo stato "nessuna diretta", così sotto scatta il mock se attivo.
+        // Errore di rete: resta "nessuna diretta"
       }
-      // ⚠️ TEMPORANEO: se non c'è nessuna partita live, mostra i dati finti.
-      if (USE_MOCK && !d.has_live) d = MOCK_DATA;
       if (!active) return;
       setData(d);
       setLoading(false);
@@ -332,9 +295,7 @@ function EmptyState({ message }: { message?: string }) {
   return (
     <div className="border-[3px] border-dashed border-zinc-700 bg-zinc-900/50 p-10 sm:p-16 text-center max-w-2xl mx-auto">
       <div className="flex justify-center mb-6">
-        <span className="relative flex h-4 w-4">
-          <span className="relative inline-flex rounded-full h-4 w-4 bg-zinc-600" />
-        </span>
+        <img src="/assets/logo.png" alt="" className="w-16 h-16 opacity-30" />
       </div>
       <h2 className="font-display text-3xl sm:text-4xl uppercase text-white mb-3">
         Nessuna diretta in corso
