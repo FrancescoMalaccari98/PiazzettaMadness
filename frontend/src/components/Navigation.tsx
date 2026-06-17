@@ -11,7 +11,7 @@ const navLinks: { name: string; path: string; live?: boolean }[] = [
   { name: "Staff", path: "/staff" },
   { name: "Player", path: "/giocatori" },
   { name: "Sponsor", path: "/sponsor" },
-  { name: "Live", path: "/scoreboard", live: true },
+  { name: "Live", path: "/live", live: true },
 ];
 
 const MenuIcon = () => (
@@ -112,7 +112,7 @@ export function Navigation() {
             className="flex-shrink-0 flex items-center gap-3 group"
             onClick={() => setIsOpen(false)}
           >
-            {/* wrapper gestisce il resize scroll (scale composited), img gestisce la rotazione */}
+            {/* wrapper gestisce il resize scroll (scale composited) */}
             <div
               className="origin-left transition-transform duration-300"
               style={{ transform: scrolled ? 'scale(0.643)' : 'scale(1)' }}
@@ -123,7 +123,6 @@ export function Navigation() {
                 width={56}
                 height={56}
                 className="w-auto h-14"
-                style={{ animation: 'logoSpin 8s linear infinite' }}
               />
             </div>
             <div

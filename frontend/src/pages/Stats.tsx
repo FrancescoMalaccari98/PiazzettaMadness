@@ -67,6 +67,11 @@ export function Stats() {
 
   const teams = [...new Set(allPlayers.map(p => p.team))];
 
+  // Helper per i link: nome giocatore → pagina statistiche; nome squadra →
+  // pagina Players filtrata su quella squadra.
+  const slugByName = (name: string) => allPlayers.find(p => p.name === name)?.slug;
+  const teamLink = (team: string) => `/giocatori?team=${encodeURIComponent(team)}`;
+
   return (
     <div className="w-full pt-28 pb-24 bg-brand-bg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -105,8 +110,10 @@ export function Stats() {
               </div>
               <div className="col-span-2 p-6 md:p-10 flex flex-col justify-center">
                 <span className="font-display text-xs uppercase tracking-[0.3em] text-zinc-500 mb-2">Miglior giocatore del torneo</span>
-                <h3 className="font-display text-2xl sm:text-4xl md:text-6xl uppercase text-white leading-tight mb-2">{tournamentMvp.name}</h3>
-                <p className="font-sans font-bold text-brand-yellow text-base mb-4">{tournamentMvp.team}</p>
+                <h3 className="font-display text-2xl sm:text-4xl md:text-6xl uppercase text-white leading-tight mb-2">
+                  <Link to={`/statistiche/${tournamentMvp.slug}`} className="hover:text-brand-yellow transition-colors">{tournamentMvp.name}</Link>
+                </h3>
+                <Link to={teamLink(tournamentMvp.team)} className="inline-block font-sans font-bold text-brand-yellow text-base mb-4 hover:underline">{tournamentMvp.team}</Link>
                 <div className="grid grid-cols-4 gap-2 sm:gap-4">
                   {[
                     { label: "PPG", val: tournamentMvp.pts },
@@ -153,8 +160,8 @@ export function Stats() {
                 <div className="p-5">
                   <AnimatedNumber value={card.val} className={`font-mono text-5xl font-bold ${card.accent} mb-2 block`} />
                   <div className="font-display text-xs uppercase tracking-widest text-zinc-500 mb-3">{card.unit}</div>
-                  <div className="font-sans font-bold text-white text-lg uppercase leading-tight">{card.player.name}</div>
-                  <div className="font-sans text-zinc-500 text-sm">{card.player.team}</div>
+                  <Link to={`/statistiche/${card.player.slug}`} className="block font-sans font-bold text-white text-lg uppercase leading-tight hover:text-brand-orange transition-colors">{card.player.name}</Link>
+                  <Link to={teamLink(card.player.team)} className="block font-sans text-zinc-500 text-sm hover:text-zinc-300 transition-colors">{card.player.team}</Link>
                 </div>
               </div>
             ))}
@@ -176,8 +183,13 @@ export function Stats() {
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
                   <div className="text-right hidden sm:block">
-                    <div className="font-sans font-bold text-white text-sm uppercase">{mvp.player}</div>
-                    <div className="font-sans text-zinc-500 text-xs">{mvp.team}</div>
+                    {(() => {
+                      const s = slugByName(mvp.player);
+                      return s
+                        ? <Link to={`/statistiche/${s}`} className="block font-sans font-bold text-white text-sm uppercase hover:text-brand-orange transition-colors">{mvp.player}</Link>
+                        : <div className="font-sans font-bold text-white text-sm uppercase">{mvp.player}</div>;
+                    })()}
+                    <Link to={teamLink(mvp.team)} className="block font-sans text-zinc-500 text-xs hover:text-zinc-300 transition-colors">{mvp.team}</Link>
                   </div>
                   <div className="bg-brand-orange/10 border border-brand-orange/30 px-3 py-1">
                     <span className="font-mono text-xs text-brand-orange font-bold">{mvp.stat}</span>
@@ -244,7 +256,7 @@ export function Stats() {
                       <Link to={`/statistiche/${player.slug}`} className={`font-sans font-bold text-xs sm:text-sm uppercase hover:text-brand-orange transition-colors truncate ${i === 0 ? "text-white" : "text-zinc-300"}`}>
                         {player.name}
                       </Link>
-                      <span className="font-sans text-xs text-zinc-600 truncate hidden sm:block">{player.team}</span>
+                      <Link to={teamLink(player.team)} className="font-sans text-xs text-zinc-600 truncate hidden sm:block hover:text-brand-orange transition-colors">{player.team}</Link>
                     </div>
                     <div className="h-1 bg-zinc-800 w-full">
                       <div
@@ -289,7 +301,7 @@ export function Stats() {
                     <tr key={ts.squadra} className={`border-b border-zinc-800/50 ${i === 0 ? "bg-brand-orange/5" : "hover:bg-zinc-800/30"} transition-colors`}>
                       <td className="px-5 py-3">
                         {i === 0 && <span className="text-brand-orange mr-2">★</span>}
-                        <span className="font-sans font-bold text-sm uppercase text-zinc-300">{ts.squadra}</span>
+                        <Link to={teamLink(ts.squadra)} className="font-sans font-bold text-sm uppercase text-zinc-300 hover:text-brand-orange transition-colors">{ts.squadra}</Link>
                       </td>
                       <td className="text-center px-4 py-3 font-mono font-bold text-brand-orange">{avg(ts.puntiInArea, ts.partiteGiocate)}</td>
                       <td className="text-center px-4 py-3 font-mono text-zinc-400">{avg(ts.puntiPanchina, ts.partiteGiocate)}</td>

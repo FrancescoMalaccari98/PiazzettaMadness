@@ -19,6 +19,43 @@
 //   match_players: jersey_number, points, personal_fouls
 // ============================================================
 
+// ── GET /api-web/live ────────────────────────────────────────
+// Trova la partita attualmente in diretta (status Live o Paused)
+// e ne restituisce lo stato completo. Se nessuna partita è live,
+// risponde con has_live=false. Usata dalla pagina pubblica LIVE
+// che fa polling ogni 5 secondi.
+
+function handle_live_current(PDO $pdo): void {
+    require_method('GET');
+
+    // Una sola partita può essere live alla volta; se per qualche motivo
+    // ce ne fossero più di una, prende la più recente ad essere iniziata.
+    $stmt = $pdo->query("
+        SELECT id
+        FROM matches
+        WHERE status IN ('Live', 'Paused')
+        ORDER BY COALESCE(actual_start_at, scheduled_start_at) DESC, id DESC
+        LIMIT 1
+    ");
+    $row = $stmt->fetch();
+
+    if (!$row) {
+        // Nessuna partita in diretta: payload "vuoto" che la pagina
+        // pubblica interpreta come "nessuna diretta in corso".
+        send_json([
+            'has_live' => false,
+            'source'   => 'none',
+            'status'   => 'none',
+            'message'  => 'Nessuna partita in diretta al momento',
+        ]);
+        return;
+    }
+
+    // Delega alla logica esistente: trova lo stato live della partita
+    // e fa send_json() (che termina la richiesta).
+    handle_match_live($pdo, (int)$row['id']);
+}
+
 function handle_match_live(PDO $pdo, int $match_id): void {
     require_method('GET');
 

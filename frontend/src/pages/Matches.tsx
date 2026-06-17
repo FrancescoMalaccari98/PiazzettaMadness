@@ -1,6 +1,30 @@
 ﻿import { useState, useEffect, useMemo } from "react";
+import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { Trophy, Flame, X, Swords, Calendar, ChevronRight } from "lucide-react";
+
+// ── Helper link squadra → pagina Players filtrata su quella squadra ──
+const teamLink = (team: string) => `/giocatori?team=${encodeURIComponent(team)}`;
+
+// Esclude i segnaposto del bracket (es. "1° Girone A", "TBD") dai link.
+const isRealTeam = (name: string) =>
+  !!name && name !== "TBD" && !/^\d+°/.test(name) && !name.includes("Girone");
+
+// Link cliccabile sul nome squadra. stopPropagation: dentro righe/card
+// che hanno un loro onClick (apertura tabellino), il click sul nome
+// naviga alla pagina squadra senza aprire anche il modal.
+function TeamLink({ name, className = "" }: { name: string; className?: string }) {
+  if (!isRealTeam(name)) return <span className={className}>{name}</span>;
+  return (
+    <Link
+      to={teamLink(name)}
+      onClick={e => e.stopPropagation()}
+      className={`${className} hover:text-brand-orange transition-colors`}
+    >
+      {name}
+    </Link>
+  );
+}
 
 type TeamScore = { name: string; score: number };
 type Match = {
@@ -95,13 +119,15 @@ type MatchDetail = {
 
 // ── Componente tabella box score ──────────────────────────────────────────
 
-function BoxScoreTable({ team }: { team: TeamBoxScore }) {
+function BoxScoreTable({ team, getPlayerSlug }: { team: TeamBoxScore; getPlayerSlug: (nome: string) => string | undefined }) {
   const pct = (r: number, t: number) => t === 0 ? "—" : `${Math.round(r * 100 / t)}%`;
 
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
-        <h5 className="font-display text-lg uppercase text-white tracking-wide">{team.nome}</h5>
+        <h5 className="font-display text-lg uppercase text-white tracking-wide">
+          <TeamLink name={team.nome} />
+        </h5>
         {team.allenatore && (
           <span className="font-sans text-xs text-zinc-500">All.: {team.allenatore}</span>
         )}
@@ -133,7 +159,14 @@ function BoxScoreTable({ team }: { team: TeamBoxScore }) {
             {team.giocatori.map((p) => (
               <tr key={p.numero} className="border-b border-zinc-800/40 hover:bg-zinc-800/20 transition-colors">
                 <td className="py-2 pr-2 font-mono text-zinc-500">{p.numero}{p.isCapitano ? "C" : ""}{p.isQuintetto ? "*" : ""}</td>
-                <td className="py-2 pr-4 font-sans font-bold text-zinc-300">{p.nome}</td>
+                <td className="py-2 pr-4 font-sans font-bold text-zinc-300">
+                  {(() => {
+                    const slug = getPlayerSlug(p.nome);
+                    return slug
+                      ? <Link to={`/statistiche/${slug}`} className="hover:text-brand-orange transition-colors">{p.nome}</Link>
+                      : p.nome;
+                  })()}
+                </td>
                 <td className="py-2 px-2 text-center font-mono text-zinc-500">{p.minuti}</td>
                 <td className="py-2 px-2 text-center font-mono font-bold text-brand-orange">{p.punti}</td>
                 <td className="py-2 px-2 text-center font-mono text-zinc-400">{p.p2R}/{p.p2T}<span className="text-zinc-600 text-[10px] ml-1">{pct(p.p2R, p.p2T)}</span></td>
@@ -269,9 +302,7 @@ function StandingsTable({ group }: { group: Group }) {
                   {qualifies && (
                     <span className={`w-1 h-4 ${group.borderClass} bg-current ${group.accentClass} opacity-60 shrink-0`} />
                   )}
-                  <span className={`font-sans font-bold text-sm uppercase truncate ${i === 0 ? "text-white" : "text-zinc-300"}`}>
-                    {row.name}
-                  </span>
+                  <TeamLink name={row.name} className={`font-sans font-bold text-sm uppercase truncate ${i === 0 ? "text-white" : "text-zinc-300"}`} />
                   {qualifies && (
                     <span className={`font-display text-[9px] uppercase tracking-widest ${group.accentClass} border ${group.borderClass} px-1 shrink-0 opacity-70`}>
                       Q
@@ -303,10 +334,8 @@ function TeamScoreLine({ name, score, win, pending, accent = "text-brand-orange"
 }) {
   return (
     <div className="flex items-center justify-between gap-2">
-      <span className={`font-sans font-bold text-xs sm:text-sm uppercase truncate transition-colors
-        ${win ? "text-white" : pending ? "text-zinc-400" : "text-zinc-500"}`}>
-        {name}
-      </span>
+      <TeamLink name={name} className={`font-sans font-bold text-xs sm:text-sm uppercase truncate
+        ${win ? "text-white" : pending ? "text-zinc-400" : "text-zinc-500"}`} />
       <span className={`font-mono text-base sm:text-lg font-bold shrink-0 tabular-nums w-7 text-right
         ${win ? accent : pending ? "text-zinc-600" : "text-zinc-500"}`}>
         {pending ? "—" : score}
@@ -370,11 +399,11 @@ function PlayoffCard({ match, isFinal = false, onClick }: { match: Match; isFina
       </div>
       <div className="p-4 flex flex-col gap-3">
         <div className={`flex justify-between items-center ${!isPending && match.team1.score > match.team2.score ? "text-white" : "text-zinc-500"}`}>
-          <span className="font-sans font-[900] tracking-tight text-sm uppercase truncate max-w-[150px]">{match.team1.name}</span>
+          <TeamLink name={match.team1.name} className="font-sans font-[900] tracking-tight text-sm uppercase truncate max-w-[150px]" />
           <span className="font-mono text-2xl font-bold">{isPending ? "—" : match.team1.score}</span>
         </div>
         <div className={`flex justify-between items-center ${!isPending && match.team2.score > match.team1.score ? "text-white" : "text-zinc-500"}`}>
-          <span className="font-sans font-[900] tracking-tight text-sm uppercase truncate max-w-[150px]">{match.team2.name}</span>
+          <TeamLink name={match.team2.name} className="font-sans font-[900] tracking-tight text-sm uppercase truncate max-w-[150px]" />
           <span className="font-mono text-2xl font-bold">{isPending ? "—" : match.team2.score}</span>
         </div>
       </div>
@@ -392,6 +421,22 @@ export function Matches() {
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [matchDetail,   setMatchDetail]   = useState<MatchDetail | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
+  // Mappa nome giocatore (minuscolo) → slug, per linkare i nomi nei tabellini
+  // alla pagina statistiche del giocatore.
+  const [playerSlugs, setPlayerSlugs] = useState<Record<string, string>>({});
+  const getPlayerSlug = (nome: string) => playerSlugs[nome.trim().toLowerCase()];
+
+  useEffect(() => {
+    fetch(`${API}/api-web/giocatori`)
+      .then(r => r.ok ? r.json() as Promise<{ name: string; slug: string }[]> : null)
+      .then(list => {
+        if (!list) return;
+        const map: Record<string, string> = {};
+        for (const p of list) if (p.name && p.slug) map[p.name.trim().toLowerCase()] = p.slug;
+        setPlayerSlugs(map);
+      })
+      .catch(() => {});
+  }, []);
 
   // Fetch squadre + partite in parallelo dal backend
   useEffect(() => {
@@ -697,7 +742,7 @@ export function Matches() {
                       <Trophy className={`w-16 h-16 mx-auto mb-4 ${campione ? "text-brand-yellow" : "text-brand-yellow/30"}`} />
                       <span className="font-display text-2xl text-zinc-400 uppercase tracking-widest block">Campione</span>
                       <span className={`font-display text-2xl uppercase tracking-widest block mt-2 leading-tight ${campione ? "text-brand-yellow" : "text-white opacity-20"}`}>
-                        {campione ?? "???"}
+                        {campione ? <TeamLink name={campione} /> : "???"}
                       </span>
                     </div>
                   );
@@ -776,14 +821,18 @@ export function Matches() {
                     {/* Punteggio finale */}
                     <div className="flex justify-center items-center gap-4 mb-6">
                       <div className="text-center flex-1">
-                        <div className="font-sans font-black text-base md:text-xl uppercase mb-2 text-zinc-300 leading-tight">{selectedMatch.team1.name}</div>
+                        <div className="font-sans font-black text-base md:text-xl uppercase mb-2 text-zinc-300 leading-tight">
+                          <TeamLink name={selectedMatch.team1.name} />
+                        </div>
                         <div className={`font-mono text-6xl md:text-8xl font-bold ${selectedMatch.team1.score >= selectedMatch.team2.score ? "text-brand-orange" : "text-zinc-600"}`}>
                           {selectedMatch.team1.score}
                         </div>
                       </div>
                       <div className="font-display text-3xl text-zinc-800">VS</div>
                       <div className="text-center flex-1">
-                        <div className="font-sans font-black text-base md:text-xl uppercase mb-2 text-zinc-300 leading-tight">{selectedMatch.team2.name}</div>
+                        <div className="font-sans font-black text-base md:text-xl uppercase mb-2 text-zinc-300 leading-tight">
+                          <TeamLink name={selectedMatch.team2.name} />
+                        </div>
                         <div className={`font-mono text-6xl md:text-8xl font-bold ${selectedMatch.team2.score >= selectedMatch.team1.score ? "text-white" : "text-zinc-600"}`}>
                           {selectedMatch.team2.score}
                         </div>
@@ -830,12 +879,12 @@ export function Matches() {
                             </thead>
                             <tbody>
                               <tr className="border-b border-zinc-800">
-                                <td className="text-left px-3 py-2 font-sans font-bold text-zinc-300 truncate">{matchDetail.squadraCasa.nome}</td>
+                                <td className="text-left px-3 py-2 font-sans font-bold text-zinc-300 truncate"><TeamLink name={matchDetail.squadraCasa.nome} /></td>
                                 {matchDetail.quartiCasa.map((q, i) => <td key={i} className="px-3 py-2 font-mono text-zinc-400">{q}</td>)}
                                 <td className="px-3 py-2 font-mono font-bold text-brand-orange">{matchDetail.totaleCasa}</td>
                               </tr>
                               <tr>
-                                <td className="text-left px-3 py-2 font-sans font-bold text-zinc-300 truncate">{matchDetail.squadraTrasferta.nome}</td>
+                                <td className="text-left px-3 py-2 font-sans font-bold text-zinc-300 truncate"><TeamLink name={matchDetail.squadraTrasferta.nome} /></td>
                                 {matchDetail.quartiTrasferta.map((q, i) => <td key={i} className="px-3 py-2 font-mono text-zinc-400">{q}</td>)}
                                 <td className="px-3 py-2 font-mono font-bold text-white">{matchDetail.totaleTrasferta}</td>
                               </tr>
@@ -845,8 +894,8 @@ export function Matches() {
 
                         {/* Tabella giocatori */}
                         <div className="space-y-6 mb-6">
-                          <BoxScoreTable team={matchDetail.squadraCasa} />
-                          <BoxScoreTable team={matchDetail.squadraTrasferta} />
+                          <BoxScoreTable team={matchDetail.squadraCasa} getPlayerSlug={getPlayerSlug} />
+                          <BoxScoreTable team={matchDetail.squadraTrasferta} getPlayerSlug={getPlayerSlug} />
                         </div>
 
                         {/* Stats di squadra a confronto */}
@@ -890,7 +939,14 @@ export function Matches() {
                           </div>
                           <div>
                             <h4 className="font-display uppercase text-brand-blue mb-1 text-xl">MVP / Key Player</h4>
-                            <p className="font-sans text-white text-lg font-bold">{selectedMatch.details.mvp}</p>
+                            <p className="font-sans text-white text-lg font-bold">
+                              {(() => {
+                                const slug = getPlayerSlug(selectedMatch.details.mvp);
+                                return slug
+                                  ? <Link to={`/statistiche/${slug}`} className="hover:text-brand-orange transition-colors">{selectedMatch.details.mvp}</Link>
+                                  : selectedMatch.details.mvp;
+                              })()}
+                            </p>
                           </div>
                         </div>
                       </>

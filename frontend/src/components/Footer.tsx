@@ -46,7 +46,7 @@ export function Footer() {
                 src="/assets/logo.png"
                 alt="Piazzetta Madness"
                 className="h-10 md:h-16 w-auto"
-                style={{ animation: 'logoSpin 8s linear infinite', filter: "brightness(0)" }}
+                style={{ filter: "brightness(0)" }}
               />
               <div className="font-display text-2xl md:text-4xl uppercase leading-[0.82] border-l-4 border-brand-bg pl-3 md:pl-4 text-brand-bg">
                 PIAZZETTA<br />MADNESS

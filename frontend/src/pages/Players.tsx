@@ -1,13 +1,16 @@
-﻿import { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
-import { motion, useInView } from "motion/react";
+﻿import { useState, useEffect } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import { motion } from "motion/react";
 import { allPlayers as defaultPlayers, type Player } from "../data/stats";
 
 const API = import.meta.env.VITE_API_URL ?? "";
 
 export function Players() {
   const [players, setPlayers] = useState<Player[]>(defaultPlayers);
-  const [activeTeam, setActiveTeam] = useState<string>("all");
+  // Filtro squadra pre-impostato dal parametro URL ?team= (link dalla pagina Stats)
+  const [searchParams] = useSearchParams();
+  const teamParam = searchParams.get("team");
+  const [activeTeam, setActiveTeam] = useState<string>(teamParam ?? "all");
 
   useEffect(() => {
     fetch(`${API}/api-web/giocatori`)
@@ -15,6 +18,11 @@ export function Players() {
       .then(data => { if (data) setPlayers(data); })
       .catch(() => {});
   }, []);
+
+  // Se si arriva con un nuovo ?team= (es. cliccando un'altra squadra), aggiorna il filtro
+  useEffect(() => {
+    if (teamParam) setActiveTeam(teamParam);
+  }, [teamParam]);
 
   const teams = [...new Set(players.map(p => p.team))];
 

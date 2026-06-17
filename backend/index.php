@@ -174,6 +174,11 @@ try {
             send_error('Parametri snapshot non validi: /api/snapshots/{match_id}/{kind}', 400);
         }
 
+    // ── /live  (partita attualmente in diretta) ─────────────
+    } elseif ($seg0 === 'live' && $seg1 === '') {
+        require_once __DIR__ . '/endpoints/live.php';
+        handle_live_current(get_pdo());
+
     // ── /staff ──────────────────────────────────────────────
     } elseif ($seg0 === 'staff') {
         require_once __DIR__ . '/endpoints/staff.php';

@@ -19,6 +19,7 @@ const Stats = lazy(() => import("./pages/Stats").then(m => ({ default: m.Stats }
 const Matches = lazy(() => import("./pages/Matches").then(m => ({ default: m.Matches })));
 const Staff = lazy(() => import("./pages/Staff").then(m => ({ default: m.Staff })));
 const Scoreboard = lazy(() => import("./pages/Scoreboard").then(m => ({ default: m.Scoreboard })));
+const Live = lazy(() => import("./pages/Live").then(m => ({ default: m.Live })));
 const Projection = lazy(() => import("./pages/Projection").then(m => ({ default: m.Projection })));
 const Privacy = lazy(() => import("./pages/Privacy").then(m => ({ default: m.Privacy })));
 const Sponsors = lazy(() => import("./pages/Sponsors").then(m => ({ default: m.Sponsors })));
@@ -49,6 +50,7 @@ export function App() {
             <Route path="/statistiche" element={<Stats />} />
             <Route path="/match" element={<Matches />} />
             <Route path="/staff" element={<Staff />} />
+            <Route path="/live" element={<Live />} />
             <Route path="/scoreboard" element={<Scoreboard />} />
             <Route path="/projection" element={<Projection />} />
             <Route path="/privacy" element={<Privacy />} />
