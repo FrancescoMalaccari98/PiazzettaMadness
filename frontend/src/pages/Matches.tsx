@@ -813,8 +813,28 @@ export function Matches() {
               <div className="p-4 sm:p-6 overflow-y-auto">
                 {selectedMatch.status === "IN PROGRAMMA" ? (
                   <div className="text-center py-10">
+                    <img src="/assets/logo.png" alt="" className="w-16 h-16 mx-auto mb-6 opacity-30" />
                     <p className="font-display text-3xl uppercase text-zinc-500 mb-2">Match in programma</p>
                     <p className="font-sans text-zinc-600">{selectedMatch.date}</p>
+                  </div>
+                ) : selectedMatch.status === "LIVE" ? (
+                  <div className="text-center py-10">
+                    <div className="inline-flex items-center gap-2.5 px-4 py-2 border-2 border-red-500 text-red-500 font-display uppercase tracking-widest text-sm mb-6">
+                      <span className="relative flex h-2.5 w-2.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500" />
+                      </span>
+                      Live
+                    </div>
+                    <p className="font-display text-3xl uppercase text-white mb-4">Partita in corso</p>
+                    <p className="font-sans text-zinc-400 mb-8">Segui il punteggio in tempo reale sulla pagina dedicata.</p>
+                    <Link
+                      to="/live"
+                      onClick={() => setSelectedMatch(null)}
+                      className="inline-block bg-brand-orange text-brand-bg font-display uppercase tracking-widest px-8 py-4 text-lg hover:bg-white transition-colors"
+                    >
+                      Vai alla Diretta
+                    </Link>
                   </div>
                 ) : (
                   <>

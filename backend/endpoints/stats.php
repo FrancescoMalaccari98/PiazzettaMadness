@@ -84,20 +84,20 @@ function handle_statistiche_compat(PDO $pdo): void {
         ];
     }
 
-    // ── 4. Statistiche squadra aggregate ────────────────────
+    // ── 4. Statistiche squadra aggregate (da match_player_stats) ──
     $sql_team = "
         SELECT
-            t.name          AS squadra,
-            COUNT(DISTINCT m.id)                            AS partiteGiocate,
-            COALESCE(SUM(mts.points_in_paint),      0)      AS puntiInArea,
-            COALESCE(SUM(mts.bench_points),         0)      AS puntiPanchina,
-            COALESCE(SUM(mts.fast_break_points),    0)      AS puntiContropiede,
-            COALESCE(SUM(mts.points_off_turnovers), 0)      AS puntiDaPallePerse,
-            ROUND(AVG(COALESCE(mts.points_per_possession, 0)), 3) AS pointsPerPossession,
-            COALESCE(MAX(mts.biggest_lead),         0)      AS massimoVantaggio
-        FROM match_team_stats mts
-        JOIN matches m ON m.id = mts.match_id AND m.edition_id = ?
-        JOIN teams   t ON t.id = mts.team_id
+            t.name                                          AS squadra,
+            COUNT(DISTINCT mps.match_id)                    AS partiteGiocate,
+            COALESCE(SUM(mps.points), 0)                    AS punti,
+            COALESCE(SUM(mps.assists), 0)                   AS assist,
+            COALESCE(SUM(COALESCE(mps.reb_off,0) + COALESCE(mps.reb_def,0)), 0) AS rimbalzi,
+            COALESCE(SUM(mps.steals), 0)                    AS recuperi,
+            COALESCE(SUM(mps.blocks), 0)                    AS stoppate,
+            COALESCE(SUM(mps.turnovers), 0)                 AS pallePerse
+        FROM match_player_stats mps
+        JOIN matches m ON m.id = mps.match_id AND m.edition_id = ?
+        JOIN teams   t ON t.id = mps.team_id
         GROUP BY t.id, t.name
         ORDER BY t.name
     ";
@@ -105,17 +105,45 @@ function handle_statistiche_compat(PDO $pdo): void {
     $stmt->execute([$eid]);
     $team_rows = $stmt->fetchAll();
 
+    // Punti subiti: per ogni squadra, somma i punti dell'avversario
+    $sql_against = "
+        SELECT
+            mt.team_id,
+            SUM(mt_opp.score) AS puntiSubiti
+        FROM match_teams mt
+        JOIN match_teams mt_opp ON mt_opp.match_id = mt.match_id AND mt_opp.team_id != mt.team_id
+        JOIN matches m ON m.id = mt.match_id AND m.edition_id = ? AND m.status = 'Finished'
+        GROUP BY mt.team_id
+    ";
+    $stmt = $pdo->prepare($sql_against);
+    $stmt->execute([$eid]);
+    $against_rows = $stmt->fetchAll();
+    $against_map = [];
+    foreach ($against_rows as $a) {
+        $against_map[(int)$a['team_id']] = (int)$a['puntiSubiti'];
+    }
+
+    // Mappa nome squadra → team_id per collegare i punti subiti
+    $team_ids = [];
+    $stmt = $pdo->prepare("SELECT id, name FROM teams WHERE edition_id = ?");
+    $stmt->execute([$eid]);
+    foreach ($stmt->fetchAll() as $t) {
+        $team_ids[$t['name']] = (int)$t['id'];
+    }
+
     $team_stats = [];
     foreach ($team_rows as $r) {
+        $tid = $team_ids[$r['squadra']] ?? 0;
         $team_stats[] = [
-            'squadra'               => $r['squadra'],
-            'partiteGiocate'        => (int)$r['partiteGiocate'],
-            'puntiInArea'           => (int)$r['puntiInArea'],
-            'puntiPanchina'         => (int)$r['puntiPanchina'],
-            'puntiContropiede'      => (int)$r['puntiContropiede'],
-            'puntiDaPallePerse'     => (int)$r['puntiDaPallePerse'],
-            'pointsPerPossession'   => (float)$r['pointsPerPossession'],
-            'massimoVantaggio'      => (int)$r['massimoVantaggio'],
+            'squadra'        => $r['squadra'],
+            'partiteGiocate' => (int)$r['partiteGiocate'],
+            'punti'          => (int)$r['punti'],
+            'puntiSubiti'    => $against_map[$tid] ?? 0,
+            'assist'         => (int)$r['assist'],
+            'rimbalzi'       => (int)$r['rimbalzi'],
+            'recuperi'       => (int)$r['recuperi'],
+            'stoppate'       => (int)$r['stoppate'],
+            'pallePerse'     => (int)$r['pallePerse'],
         ];
     }
 

@@ -21,6 +21,8 @@ Options -Indexes -MultiViews
   </FilesMatch>
 </IfModule>
 
+AddDefaultCharset UTF-8
+
 RewriteEngine On
 RewriteBase /
 

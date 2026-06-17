@@ -48,7 +48,7 @@ export function Stats() {
       .catch(() => {});
   }, []);
 
-  const { players: allPlayers, matchMvps, tournamentMvpSlug, teamStats } = data;
+  const { players: allPlayers, matchMvps, tournamentMvpSlug } = data;
 
   const topLeader = (key: StatKey, n = 5) =>
     [...allPlayers].sort((a, b) => b[key] - a[key]).slice(0, n);
@@ -276,7 +276,9 @@ export function Stats() {
           </div>
         </section>
 
-        {/* — STATISTICHE DI SQUADRA (FIBA) — */}
+
+        {/* — STATISTICHE DI SQUADRA (medie per partita) — */}
+        {data.teamStats.length > 0 && (
         <section className="mb-16">
           <h2 className="font-display text-lg sm:text-2xl uppercase tracking-widest text-zinc-500 mb-6 flex items-center gap-3">
             <BarChart2 className="w-5 h-5 text-brand-blue" /> Statistiche di Squadra
@@ -286,38 +288,45 @@ export function Stats() {
               <thead>
                 <tr className="bg-zinc-950 border-b-2 border-zinc-800">
                   <th className="text-left px-5 py-3 font-display text-xs uppercase tracking-widest text-zinc-400">Squadra</th>
-                  <th className="text-center px-4 py-3 font-display text-xs uppercase tracking-widest text-brand-orange">Area/G</th>
-                  <th className="text-center px-4 py-3 font-display text-xs uppercase tracking-widest text-brand-blue">Panchina/G</th>
-                  <th className="text-center px-4 py-3 font-display text-xs uppercase tracking-widest text-brand-yellow">Contropiede/G</th>
-                  <th className="text-center px-4 py-3 font-display text-xs uppercase tracking-widest text-green-400">P.Perse/G</th>
-                  <th className="text-center px-4 py-3 font-display text-xs uppercase tracking-widest text-cyan-400">PPP</th>
-                  <th className="text-center px-4 py-3 font-display text-xs uppercase tracking-widest text-purple-400">Max Vantaggio</th>
+                  <th className="text-center px-3 py-3 font-display text-xs uppercase tracking-widest text-zinc-500">G</th>
+                  <th className="text-center px-3 py-3 font-display text-xs uppercase tracking-widest text-brand-orange">PPG</th>
+                  <th className="text-center px-3 py-3 font-display text-xs uppercase tracking-widest text-red-400">PSG</th>
+                  <th className="text-center px-3 py-3 font-display text-xs uppercase tracking-widest text-brand-blue">APG</th>
+                  <th className="text-center px-3 py-3 font-display text-xs uppercase tracking-widest text-brand-yellow">RPG</th>
+                  <th className="text-center px-3 py-3 font-display text-xs uppercase tracking-widest text-green-400">REC</th>
+                  <th className="text-center px-3 py-3 font-display text-xs uppercase tracking-widest text-purple-400">STO</th>
+                  <th className="text-center px-3 py-3 font-display text-xs uppercase tracking-widest text-zinc-500">PP</th>
                 </tr>
               </thead>
               <tbody>
-                {[...teamStats]
-                  .sort((a, b) => b.pointsPerPossession - a.pointsPerPossession)
-                  .map((ts, i) => (
-                    <tr key={ts.squadra} className={`border-b border-zinc-800/50 ${i === 0 ? "bg-brand-orange/5" : "hover:bg-zinc-800/30"} transition-colors`}>
-                      <td className="px-5 py-3">
-                        {i === 0 && <span className="text-brand-orange mr-2">★</span>}
-                        <Link to={teamLink(ts.squadra)} className="font-sans font-bold text-sm uppercase text-zinc-300 hover:text-brand-orange transition-colors">{ts.squadra}</Link>
-                      </td>
-                      <td className="text-center px-4 py-3 font-mono font-bold text-brand-orange">{avg(ts.puntiInArea, ts.partiteGiocate)}</td>
-                      <td className="text-center px-4 py-3 font-mono text-zinc-400">{avg(ts.puntiPanchina, ts.partiteGiocate)}</td>
-                      <td className="text-center px-4 py-3 font-mono text-zinc-400">{avg(ts.puntiContropiede, ts.partiteGiocate)}</td>
-                      <td className="text-center px-4 py-3 font-mono text-zinc-400">{avg(ts.puntiDaPallePerse, ts.partiteGiocate)}</td>
-                      <td className="text-center px-4 py-3 font-mono text-cyan-400 font-bold">{ts.pointsPerPossession.toFixed(2)}</td>
-                      <td className="text-center px-4 py-3 font-mono text-zinc-400">{ts.massimoVantaggio}</td>
-                    </tr>
-                  ))}
+                {[...data.teamStats]
+                  .sort((a, b) => (b.partiteGiocate > 0 ? b.punti / b.partiteGiocate : 0) - (a.partiteGiocate > 0 ? a.punti / a.partiteGiocate : 0))
+                  .map((ts, i) => {
+                    const g = Math.max(1, ts.partiteGiocate);
+                    return (
+                      <tr key={ts.squadra} className={`border-b border-zinc-800/50 ${i === 0 ? "bg-brand-orange/5" : "hover:bg-zinc-800/30"} transition-colors`}>
+                        <td className="px-5 py-3">
+                                                    <Link to={teamLink(ts.squadra)} className="font-sans font-bold text-sm uppercase text-zinc-300 hover:text-brand-orange transition-colors">{ts.squadra}</Link>
+                        </td>
+                        <td className="text-center px-3 py-3 font-mono text-zinc-500">{ts.partiteGiocate}</td>
+                        <td className="text-center px-3 py-3 font-mono font-bold text-brand-orange">{avg(ts.punti, g)}</td>
+                        <td className="text-center px-3 py-3 font-mono text-red-400">{avg(ts.puntiSubiti, g)}</td>
+                        <td className="text-center px-3 py-3 font-mono text-brand-blue">{avg(ts.assist, g)}</td>
+                        <td className="text-center px-3 py-3 font-mono text-brand-yellow">{avg(ts.rimbalzi, g)}</td>
+                        <td className="text-center px-3 py-3 font-mono text-green-400">{avg(ts.recuperi, g)}</td>
+                        <td className="text-center px-3 py-3 font-mono text-purple-400">{avg(ts.stoppate, g)}</td>
+                        <td className="text-center px-3 py-3 font-mono text-zinc-500">{avg(ts.pallePerse, g)}</td>
+                      </tr>
+                    );
+                  })}
               </tbody>
             </table>
           </div>
           <p className="font-display text-[10px] uppercase tracking-widest text-zinc-600 mt-2">
-            PPP = Points Per Possession · ordinate per efficienza offensiva
+            PPG = Punti/G · PSG = Punti Subiti/G · APG = Assist/G · RPG = Rimbalzi/G · ordinate per PPG
           </p>
         </section>
+        )}
 
         {/* — ROSTER PER SQUADRA — */}
         <section>
@@ -373,8 +382,7 @@ export function Stats() {
                               {roster.map((player: Player, i: number) => (
                                 <tr key={player.name} className={`border-t border-zinc-800/50 ${i === 0 ? "bg-brand-orange/5" : "hover:bg-zinc-800/30"} transition-colors`}>
                                   <td className="px-5 py-3">
-                                    {i === 0 && <span className="text-brand-orange mr-2">★</span>}
-                                    <Link to={`/statistiche/${player.slug}`} className="font-sans font-bold text-sm uppercase text-zinc-300 hover:text-brand-orange transition-colors">
+                                                                        <Link to={`/statistiche/${player.slug}`} className="font-sans font-bold text-sm uppercase text-zinc-300 hover:text-brand-orange transition-colors">
                                       {player.name}
                                     </Link>
                                   </td>

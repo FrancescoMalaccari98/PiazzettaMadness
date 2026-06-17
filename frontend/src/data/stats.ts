@@ -35,12 +35,13 @@ export type Player = {
 export type TeamStats = {
   squadra: string;
   partiteGiocate: number;
-  puntiInArea: number;
-  puntiPanchina: number;
-  puntiContropiede: number;
-  puntiDaPallePerse: number;
-  pointsPerPossession: number;
-  massimoVantaggio: number;
+  punti: number;
+  puntiSubiti: number;
+  assist: number;
+  rimbalzi: number;
+  recuperi: number;
+  stoppate: number;
+  pallePerse: number;
 };
 
 export type MatchMvp = {
@@ -131,14 +132,14 @@ const matchMvpsData: MatchMvp[] = [
 ];
 
 const teamStatsData: TeamStats[] = [
-  { squadra: "Saluta Andonio Spurs",  partiteGiocate: 2, puntiInArea: 76, puntiPanchina: 24, puntiContropiede: 36, puntiDaPallePerse: 16, pointsPerPossession: 1.12, massimoVantaggio: 22 },
-  { squadra: "Atlanta Robba",         partiteGiocate: 2, puntiInArea: 72, puntiPanchina: 28, puntiContropiede: 30, puntiDaPallePerse: 20, pointsPerPossession: 1.08, massimoVantaggio: 19 },
-  { squadra: "Minnesode Timbermilf",  partiteGiocate: 2, puntiInArea: 68, puntiPanchina: 20, puntiContropiede: 40, puntiDaPallePerse: 18, pointsPerPossession: 1.05, massimoVantaggio: 18 },
-  { squadra: "Miami Spritz",          partiteGiocate: 2, puntiInArea: 60, puntiPanchina: 32, puntiContropiede: 24, puntiDaPallePerse: 14, pointsPerPossession: 1.02, massimoVantaggio: 15 },
-  { squadra: "Boston Lopez",          partiteGiocate: 2, puntiInArea: 56, puntiPanchina: 22, puntiContropiede: 20, puntiDaPallePerse: 12, pointsPerPossession: 0.98, massimoVantaggio: 12 },
-  { squadra: "Chicago Poolls",        partiteGiocate: 2, puntiInArea: 52, puntiPanchina: 26, puntiContropiede: 18, puntiDaPallePerse: 10, pointsPerPossession: 0.95, massimoVantaggio: 10 },
-  { squadra: "Denver McNuggets",      partiteGiocate: 2, puntiInArea: 48, puntiPanchina: 16, puntiContropiede: 14, puntiDaPallePerse: 8,  pointsPerPossession: 0.90, massimoVantaggio: 8  },
-  { squadra: "Golden State Worriers", partiteGiocate: 2, puntiInArea: 44, puntiPanchina: 18, puntiContropiede: 12, puntiDaPallePerse: 6,  pointsPerPossession: 0.88, massimoVantaggio: 7  },
+  { squadra: "Saluta Andonio Spurs",  partiteGiocate: 2, punti: 140, puntiSubiti: 110, assist: 32, rimbalzi: 56, recuperi: 12, stoppate: 6, pallePerse: 18 },
+  { squadra: "Atlanta Robba",         partiteGiocate: 2, punti: 130, puntiSubiti: 115, assist: 28, rimbalzi: 50, recuperi: 10, stoppate: 8, pallePerse: 20 },
+  { squadra: "Minnesode Timbermilf",  partiteGiocate: 2, punti: 125, puntiSubiti: 120, assist: 24, rimbalzi: 48, recuperi: 14, stoppate: 4, pallePerse: 16 },
+  { squadra: "Miami Spritz",          partiteGiocate: 2, punti: 120, puntiSubiti: 118, assist: 30, rimbalzi: 44, recuperi: 8,  stoppate: 6, pallePerse: 22 },
+  { squadra: "Boston Lopez",          partiteGiocate: 2, punti: 115, puntiSubiti: 125, assist: 22, rimbalzi: 52, recuperi: 10, stoppate: 5, pallePerse: 14 },
+  { squadra: "Chicago Poolls",        partiteGiocate: 2, punti: 110, puntiSubiti: 130, assist: 20, rimbalzi: 46, recuperi: 6,  stoppate: 4, pallePerse: 24 },
+  { squadra: "Denver McNuggets",      partiteGiocate: 2, punti: 105, puntiSubiti: 128, assist: 18, rimbalzi: 42, recuperi: 12, stoppate: 3, pallePerse: 20 },
+  { squadra: "Golden State Worriers", partiteGiocate: 2, punti: 100, puntiSubiti: 135, assist: 16, rimbalzi: 40, recuperi: 8,  stoppate: 2, pallePerse: 26 },
 ];
 
 export const defaultStatsData: StatsData = {
