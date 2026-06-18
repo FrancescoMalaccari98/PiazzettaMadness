@@ -43,13 +43,30 @@ public sealed class AlreadyProcessedPdfSelectionServiceTests
     }
 
     [Fact]
-    public void Main_window_composes_detector_and_wpf_prompt()
+    public void App_composition_builds_detector_and_pipeline()
     {
-        var source = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "src", "BasketPdfStats.App", "MainWindow.xaml.cs"));
+        // Fase 2: la costruzione del grafo non-UI è in AppComposition (WPF-free).
+        var source = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "src", "BasketPdfStats.App", "AppComposition.cs"));
 
         Assert.Contains("new AlreadyProcessedPdfDetector(settings.Runtime)", source);
+        Assert.Contains("new PdfProcessingPipeline(", source);
+        Assert.Contains("new OcrImportService(settings.OcrApi)", source);
+    }
+
+    [Fact]
+    public void Main_window_wires_composition_and_wpf_adapters()
+    {
+        // Fase 2: MainWindow non conosce più engine/opzioni; usa AppComposition + adapter WPF.
+        var source = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "src", "BasketPdfStats.App", "MainWindow.xaml.cs"));
+
+        Assert.Contains("AppComposition.Build(settings, root)", source);
+        Assert.Contains("composition.AlreadyProcessedPdfDetector", source);
         Assert.Contains("new WpfAlreadyProcessedPdfDecisionService()", source);
         Assert.Contains("new WpfTeamMismatchConfirmationService()", source);
+        // MainWindow non deve più conoscere le opzioni specifiche dei motori OCR.
+        Assert.DoesNotContain("TesseractPythonOptions", source);
+        Assert.DoesNotContain("PaddleCropOptions", source);
+        Assert.DoesNotContain("EngineWeightOptions", source);
     }
 
     [Fact]

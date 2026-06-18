@@ -129,7 +129,16 @@ provider is part of the solution. Adobe and GLM-OCR are fully removed.
   - `OcrApiOptions.MatchLookupDate` marcato `[Obsolete]` (non controlla più il flusso; rimozione in Fase 9).
   - Test: `OcrImportServiceTests` (5) + `MainViewModelMatchLoadingTests` (13). Suite: 190 passed.
   - Nessuna modifica a Python, PHP, pipeline OCR, CH1–CH4, schema JSON, matching, backend ZIP.
-- **Prossima fase:** Fase 2 (estrazione `AppComposition`) — in attesa di approvazione.
+- **Fase 2** (estrazione `AppComposition`): **completata 2026-06-18**.
+  - Nuovo `src/BasketPdfStats.App/AppComposition.cs` (WPF-free): costruisce engine OCR, document
+    preparation, pipeline, `OcrImportService`, `AlreadyProcessedPdfDetector`. Espone anche `FindRuntimeRoot()`.
+  - `MainWindow.xaml.cs` ridotto a ~30 righe: solo bootstrap (root + settings), `AppComposition.Build`,
+    e wiring degli adapter WPF (`WpfFilePicker`, `WinFormsProcessingResultPresenter`,
+    `WpfAlreadyProcessedPdfDecisionService`, `WpfTeamMismatchConfirmationService`) nel `MainViewModel`.
+    Non referenzia più `TesseractPythonOptions`/`PaddleCropOptions`/`EngineWeightOptions`.
+  - Test: `AppCompositionTests` (4) + `AlreadyProcessedPdfSelectionServiceTests` aggiornati. Suite: 195 passed.
+  - Nessun DI container. Nessuna modifica a Python, PHP, pipeline OCR, CH1–CH4, schema JSON, matching, backend ZIP.
+- **Prossima fase:** Fase 3 (endpoint e modello del contesto partita) — in attesa di approvazione.
 
 ## Risky or Unfinished Areas
 

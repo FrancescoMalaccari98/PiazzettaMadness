@@ -568,17 +568,25 @@ Nessuna modifica a Python, PHP, pipeline OCR, CH1–CH4, schema JSON, matching o
 
 ---
 
-### Fase 2 — Estrazione di AppComposition
+### Fase 2 — Estrazione di AppComposition ✅ COMPLETATA (2026-06-18)
 
 **Obiettivo:** Composition root stabile prima di aggiungere nuovi servizi.
 
 **File:**
 - Nuovo: `src/BasketPdfStats.App/AppComposition.cs`
-- Modificato: `src/BasketPdfStats.App/MainWindow.xaml.cs` → ≤25 righe
+- Modificato: `src/BasketPdfStats.App/MainWindow.xaml.cs` → ~30 righe (solo bootstrap + adapter WPF)
 
-**Test:** `AppComposition_builds_all_services_without_UI()`
+**Esito:** Build verde (0 errori). Test: 195 passed, 0 failed, 0 ignored (+5 vs Fase 1).
+`AppComposition` è WPF-free (linkabile nei test net10.0); costruisce engine OCR, document
+preparation, pipeline, `OcrImportService` e `AlreadyProcessedPdfDetector`. MainWindow non
+referenzia più `TesseractPythonOptions`, `PaddleCropOptions` o `EngineWeightOptions`; crea solo
+gli adapter WPF (file picker, presenter, dialog) e li combina con il grafo di `AppComposition`.
 
-**Criterio:** Comportamento identico all'attuale; MainWindow non conosce più TesseractPythonOptions o PaddleCropOptions.
+**Test:** `AppCompositionTests` (4: pipeline+detector senza UI, importService null/non-null,
+FindRuntimeRoot) + `AlreadyProcessedPdfSelectionServiceTests` aggiornati (split:
+`App_composition_builds_detector_and_pipeline`, `Main_window_wires_composition_and_wpf_adapters`).
+
+**Criterio:** Comportamento identico all'attuale; MainWindow non conosce più TesseractPythonOptions o PaddleCropOptions. ✓
 
 ---
 
