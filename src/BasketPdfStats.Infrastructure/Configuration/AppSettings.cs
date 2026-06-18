@@ -15,6 +15,8 @@ public sealed class OcrApiOptions
 {
     public string BaseUrl { get; set; } = string.Empty;
     public string Token { get; set; } = string.Empty;
+
+    [Obsolete("Non più usato dal flusso: la data proviene dal DatePicker (Fase 1). Rimozione pianificata in Fase 9.")]
     public string MatchLookupDate { get; set; } = string.Empty;
 }
 

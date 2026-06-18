@@ -29,6 +29,10 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private string _matchIdText = string.Empty;
     private OcrMatchOption? _selectedMatchOption;
     private bool _isBusy;
+    private bool _isLoadingMatches;
+    private DateOnly _selectedDate = DateOnly.FromDateTime(DateTime.Today);
+    private CancellationTokenSource? _matchLoadCts;
+    private Task? _activeMatchLoad;
     private ProcessingResult? _lastResult;
 
     public MainViewModel(
@@ -46,8 +50,10 @@ public sealed class MainViewModel : INotifyPropertyChanged
         _importService = importService;
         _teamMismatchConfirmation = teamMismatchConfirmation;
         SelectPdfCommand = new AsyncRelayCommand(SelectPdfAsync);
-        ProcessPdfCommand = new AsyncRelayCommand(ProcessSelectedPdfAsync, () => !string.IsNullOrWhiteSpace(SelectedPdfPath));
-        LoadMatchesCommand = new AsyncRelayCommand(LoadTodayMatchesAsync, () => HasImportService);
+        ProcessPdfCommand = new AsyncRelayCommand(
+            ProcessSelectedPdfAsync,
+            () => !string.IsNullOrWhiteSpace(SelectedPdfPath) && !IsLoadingMatches);
+        LoadMatchesCommand = new AsyncRelayCommand(LoadMatchesForDateAsync, () => HasImportService);
         ImportToDbCommand = new AsyncRelayCommand(ImportToDbAsync, CanImport);
     }
 
@@ -97,6 +103,55 @@ public sealed class MainViewModel : INotifyPropertyChanged
         get => _isBusy;
         set => SetField(ref _isBusy, value);
     }
+
+    public bool IsLoadingMatches
+    {
+        get => _isLoadingMatches;
+        private set
+        {
+            if (SetField(ref _isLoadingMatches, value))
+            {
+                ProcessPdfCommand.RaiseCanExecuteChanged();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Data canonica selezionata per il lookup delle partite. Default: oggi.
+    /// La modifica avvia un ricaricamento con cancellazione della richiesta precedente.
+    /// </summary>
+    public DateOnly SelectedDate
+    {
+        get => _selectedDate;
+        set
+        {
+            if (SetField(ref _selectedDate, value))
+            {
+                RaisePropertyChanged(nameof(SelectedDateValue));
+                _activeMatchLoad = LoadMatchesForDateAsync();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Adattatore per il binding del DatePicker WPF (SelectedDate è DateTime?).
+    /// </summary>
+    public DateTime? SelectedDateValue
+    {
+        get => _selectedDate.ToDateTime(TimeOnly.MinValue);
+        set
+        {
+            if (value is DateTime dateTime)
+            {
+                SelectedDate = DateOnly.FromDateTime(dateTime);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Task del caricamento partite in corso. Esposto per i test (await deterministico).
+    /// </summary>
+    public Task? ActiveMatchLoad => _activeMatchLoad;
 
     public string ResultWindowStatusText
     {
@@ -220,7 +275,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         _resultPresentation.TryPresent(result, AppendResultViewerStatus);
     }
 
-    private async Task LoadTodayMatchesAsync()
+    public async Task LoadMatchesForDateAsync()
     {
         if (_importService is null)
         {
@@ -228,19 +283,31 @@ public sealed class MainViewModel : INotifyPropertyChanged
             return;
         }
 
+        // Cancella la richiesta precedente (cambio rapido data) e diventa la richiesta corrente.
+        // La CTS non viene disposta esplicitamente: una richiesta successiva potrebbe ancora
+        // referenziarla per cancellarla. Sono oggetti leggeri e di breve vita (GC).
+        var cts = new CancellationTokenSource();
+        var previousCts = _matchLoadCts;
+        _matchLoadCts = cts;
+        previousCts?.Cancel();
+
+        var requestDate = _selectedDate;
+
+        // Azzera la selezione: i dati precedenti non sono più validi per la nuova data.
+        MatchOptions.Clear();
+        SelectedMatchOption = null;
+        MatchIdText = string.Empty;
+
         try
         {
-            IsBusy = true;
-            ImportStatusText = "Carico partite di oggi...";
-            var previousSelectedMatchId = SelectedMatchOption?.MatchId;
-            var lookup = await _importService.GetTodayMatchesAsync();
+            IsLoadingMatches = true;
+            ImportStatusText = $"Carico partite del {requestDate:dd/MM/yyyy}...";
+            var lookup = await _importService.GetMatchesForDateAsync(requestDate, cts.Token);
 
-            MatchOptions.Clear();
-            SelectedMatchOption = null;
-            if (previousSelectedMatchId is int previousId &&
-                string.Equals(_matchIdText, previousId.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal))
+            // Stale-response guard: una richiesta più recente ha già preso il controllo.
+            if (!ReferenceEquals(_matchLoadCts, cts))
             {
-                MatchIdText = string.Empty;
+                return;
             }
 
             if (!lookup.Success)
@@ -259,20 +326,27 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 SelectedMatchOption = MatchOptions[0];
             }
 
-            var gameDay = string.IsNullOrWhiteSpace(lookup.GameDay)
-                ? string.Empty
-                : $" ({lookup.GameDay})";
             ImportStatusText = MatchOptions.Count == 0
-                ? $"Nessuna partita trovata{gameDay}."
-                : $"Partite caricate: {MatchOptions.Count}{gameDay}.";
+                ? $"Nessuna partita trovata per il {requestDate:dd/MM/yyyy}."
+                : $"Partite caricate: {MatchOptions.Count} ({requestDate:dd/MM/yyyy}).";
+        }
+        catch (OperationCanceledException)
+        {
+            // Cancellazione volontaria: nessun errore mostrato all'utente.
         }
         catch (Exception ex)
         {
-            ImportStatusText = $"Errore partite: {ex.Message}";
+            if (ReferenceEquals(_matchLoadCts, cts))
+            {
+                ImportStatusText = $"Errore partite: {ex.Message}";
+            }
         }
         finally
         {
-            IsBusy = false;
+            if (ReferenceEquals(_matchLoadCts, cts))
+            {
+                IsLoadingMatches = false;
+            }
         }
     }
 
@@ -499,5 +573,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         return true;
     }
+
+    private void RaisePropertyChanged(string propertyName) =>
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
 }

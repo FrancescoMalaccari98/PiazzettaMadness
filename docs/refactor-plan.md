@@ -517,9 +517,13 @@ Config/appsettings.example.json, .gitignore aggiornato.
 
 ---
 
-### Fase 1 — Selezione della data e caricamento partite
+### Fase 1 — Selezione della data e caricamento partite ✅ COMPLETATA (2026-06-18)
 
 **Obiettivo:** DatePicker in UI; partite per qualsiasi data con comportamento robusto.
+
+**Esito:** Build verde (0 errori, 1 warning preesistente). Test: 190 passed, 0 failed, 0 ignored
+(172 preesistenti + 18 nuovi). 5 file applicativi modificati, 2 file di test aggiunti.
+Nessuna modifica a Python, PHP, pipeline OCR, CH1–CH4, schema JSON, matching o backend ZIP.
 
 **File modificati:**
 

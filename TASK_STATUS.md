@@ -115,6 +115,22 @@ provider is part of the solution. Adobe and GLM-OCR are fully removed.
 - Original PDFs are not moved; temporary `Working` copies are cleaned.
 - `RuntimeFolderInitializer` creates only `Working`, `OutputJson`, `Logs`.
 
+## Refactoring Progress (docs/refactor-plan.md)
+
+- **Fase 0A** (baseline tecnica): completata.
+- **Fase 0B** (documentazione + struttura Claude Code): completata.
+- **Fase 1** (selezione data + caricamento partite): **completata 2026-06-18**.
+  - DatePicker in `MainWindow.xaml` con data predefinita = oggi (binding `SelectedDateValue`).
+  - `IOcrImportService.GetTodayMatchesAsync` rinominato in `GetMatchesForDateAsync(DateOnly date, …)`;
+    endpoint invariato `GET /matches/today?date=YYYY-MM-DD`.
+  - `MainViewModel`: `SelectedDate` (DateOnly, default oggi), ricaricamento al cambio data con
+    `CancellationToken`, cancellazione della richiesta precedente, stale-response guard,
+    `IsLoadingMatches`, azzeramento `SelectedMatchOption`/`MatchIdText`, gestione lista vuota/errore.
+  - `OcrApiOptions.MatchLookupDate` marcato `[Obsolete]` (non controlla più il flusso; rimozione in Fase 9).
+  - Test: `OcrImportServiceTests` (5) + `MainViewModelMatchLoadingTests` (13). Suite: 190 passed.
+  - Nessuna modifica a Python, PHP, pipeline OCR, CH1–CH4, schema JSON, matching, backend ZIP.
+- **Prossima fase:** Fase 2 (estrazione `AppComposition`) — in attesa di approvazione.
+
 ## Risky or Unfinished Areas
 
 1. PaddleOCR channels (3, 4) are implemented but not yet validated end-to-end on

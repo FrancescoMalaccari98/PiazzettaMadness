@@ -65,6 +65,7 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
@@ -74,20 +75,31 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <TextBlock Text="Match ID" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0" />
-                <TextBox Grid.Column="1" Text="{Binding MatchIdText, UpdateSourceTrigger=PropertyChanged}"
-                         VerticalAlignment="Center" Padding="4,2" />
-                <TextBlock Grid.Column="2" Text="Match Teams" FontWeight="SemiBold" VerticalAlignment="Center" Margin="14,0,8,0" />
-                <ComboBox Grid.Column="3" ItemsSource="{Binding MatchOptions}"
+
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Data partita" FontWeight="SemiBold"
+                           VerticalAlignment="Center" Margin="0,0,8,0" />
+                <DatePicker Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3"
+                            SelectedDate="{Binding SelectedDateValue, Mode=TwoWay}"
+                            VerticalAlignment="Center" HorizontalAlignment="Left" Width="160"
+                            IsEnabled="{Binding HasImportService}" />
+                <Button Grid.Row="0" Grid.Column="4" Content="Aggiorna" Width="82" Margin="8,0,0,0"
+                        Command="{Binding LoadMatchesCommand}" />
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Match ID" FontWeight="SemiBold"
+                           VerticalAlignment="Center" Margin="0,8,8,0" />
+                <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding MatchIdText, UpdateSourceTrigger=PropertyChanged}"
+                         VerticalAlignment="Center" Padding="4,2" Margin="0,8,0,0" />
+                <TextBlock Grid.Row="1" Grid.Column="2" Text="Match Teams" FontWeight="SemiBold"
+                           VerticalAlignment="Center" Margin="14,8,8,0" />
+                <ComboBox Grid.Row="1" Grid.Column="3" ItemsSource="{Binding MatchOptions}"
                           SelectedItem="{Binding SelectedMatchOption, Mode=TwoWay}"
                           DisplayMemberPath="DisplayName"
-                          VerticalAlignment="Center" Padding="4,2"
+                          VerticalAlignment="Center" Padding="4,2" Margin="0,8,0,0"
                           IsEnabled="{Binding HasImportService}" />
-                <Button Grid.Column="4" Content="Aggiorna" Width="82" Margin="8,0,0,0"
-                        Command="{Binding LoadMatchesCommand}" />
-                <Button Grid.Column="5" Content="Importa nel DB" Width="130" Margin="8,0,0,0"
+                <Button Grid.Row="1" Grid.Column="5" Content="Importa nel DB" Width="130" Margin="8,8,0,0"
                         Command="{Binding ImportToDbCommand}" />
-                <TextBlock Grid.Row="1" Grid.ColumnSpan="6" Text="{Binding ImportStatusText}" VerticalAlignment="Center"
+
+                <TextBlock Grid.Row="2" Grid.ColumnSpan="6" Text="{Binding ImportStatusText}" VerticalAlignment="Center"
                            Margin="0,8,0,0" TextWrapping="Wrap" Foreground="#57606A" FontSize="11" />
             </Grid>
         </Border>

@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -12,12 +13,10 @@ public sealed class OcrImportService : IOcrImportService
 {
     private readonly HttpClient _http;
     private readonly string _baseUrl;
-    private readonly string _matchLookupDate;
 
     public OcrImportService(OcrApiOptions options)
     {
         _baseUrl = options.BaseUrl.TrimEnd('/');
-        _matchLookupDate = options.MatchLookupDate.Trim();
         _http = new HttpClient();
         if (!string.IsNullOrWhiteSpace(options.Token))
         {
@@ -27,13 +26,17 @@ public sealed class OcrImportService : IOcrImportService
         _http.Timeout = TimeSpan.FromSeconds(60);
     }
 
-    public async Task<OcrMatchLookupResult> GetTodayMatchesAsync(CancellationToken cancellationToken = default)
+    // Costruttore testabile: HttpClient iniettato (es. con un handler fake nei test).
+    public OcrImportService(HttpClient httpClient, string baseUrl)
     {
-        var url = $"{_baseUrl}/matches/today";
-        if (!string.IsNullOrWhiteSpace(_matchLookupDate))
-        {
-            url = $"{url}?date={Uri.EscapeDataString(_matchLookupDate)}";
-        }
+        _http = httpClient;
+        _baseUrl = baseUrl.TrimEnd('/');
+    }
+
+    public async Task<OcrMatchLookupResult> GetMatchesForDateAsync(DateOnly date, CancellationToken cancellationToken = default)
+    {
+        var dateText = date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        var url = $"{_baseUrl}/matches/today?date={Uri.EscapeDataString(dateText)}";
 
         try
         {
@@ -60,8 +63,14 @@ public sealed class OcrImportService : IOcrImportService
 
             return parsed;
         }
-        catch (TaskCanceledException)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
+            // Cancellazione volontaria del chiamante (cambio rapido data): propaga, nessun errore.
+            throw;
+        }
+        catch (OperationCanceledException)
+        {
+            // Timeout interno di HttpClient: il token del chiamante non è stato cancellato.
             return new OcrMatchLookupResult { Success = false, ErrorMessage = "Timeout della richiesta" };
         }
         catch (Exception ex)

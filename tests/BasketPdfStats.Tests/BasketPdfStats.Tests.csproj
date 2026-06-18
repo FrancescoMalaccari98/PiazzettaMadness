@@ -20,6 +20,12 @@
 
   <ItemGroup>
     <Compile Include="..\..\src\BasketPdfStats.App\ViewModels\ProcessingResultViewModel.cs" Link="ViewModels\ProcessingResultViewModel.cs" />
+    <!-- ViewModel di App linkati per i test (App è net10.0-windows e non referenziabile; ICommand è cross-platform). -->
+    <Compile Include="..\..\src\BasketPdfStats.App\ViewModels\MainViewModel.cs" Link="ViewModels\MainViewModel.cs" />
+    <Compile Include="..\..\src\BasketPdfStats.App\ViewModels\AsyncRelayCommand.cs" Link="ViewModels\AsyncRelayCommand.cs" />
+    <Compile Include="..\..\src\BasketPdfStats.App\ViewModels\ProcessedFileRowViewModel.cs" Link="ViewModels\ProcessedFileRowViewModel.cs" />
+    <Compile Include="..\..\src\BasketPdfStats.App\Services\IFilePicker.cs" Link="Services\IFilePicker.cs" />
+    <Compile Include="..\..\src\BasketPdfStats.App\Services\ITeamMismatchConfirmationService.cs" Link="Services\ITeamMismatchConfirmationService.cs" />
   </ItemGroup>
 
   <ItemGroup>
