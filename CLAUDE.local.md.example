@@ -1,0 +1,45 @@
+# CLAUDE.local.md — esempio configurazione locale
+
+Copia questo file in `CLAUDE.local.md` e personalizzalo per la tua macchina.
+Non committare `CLAUDE.local.md` (è in `.gitignore`).
+
+## Percorsi locali
+
+```
+# Interprete Python per il venv Tesseract
+PYTHON_TESSERACT=C:\Users\<utente>\...\fiba_pdf_to_json_programma_v2\fiba_pdf_to_json\.venv\Scripts\python.exe
+
+# Interprete Python per il venv crop
+PYTHON_CROP=C:\Users\<utente>\...\Convertitore-PDF-JSON\.venv-crop\Scripts\python.exe
+
+# Interprete Python per il venv Paddle
+PYTHON_PADDLE=C:\Users\<utente>\...\Convertitore-PDF-JSON\.venv-paddle\Scripts\python.exe
+
+# Root runtime (default: cartella progetto\runtime)
+RUNTIME_ROOT=C:\Users\<utente>\...\Convertitore-PDF-JSON\runtime
+```
+
+## Preferenze personali
+
+```
+# Eseguire sempre i test prima di proporre modifiche? (yes/no)
+RUN_TESTS_BEFORE_CHANGES=no
+
+# Mostrare output verbose dei worker Python in console? (yes/no)
+PYTHON_VERBOSE=no
+```
+
+## Comandi specifici della macchina
+
+```powershell
+# Verifica Tesseract nel PATH
+tesseract --version
+
+# Verifica Python paddle
+.venv-paddle\Scripts\python.exe -c "import paddleocr; print(paddleocr.__version__)"
+```
+
+## Configurazione OCR API (solo sviluppo locale)
+
+Il token API è in `Config/appsettings.json` (NON committare quel file).
+Usa `Config/appsettings.example.json` come template.

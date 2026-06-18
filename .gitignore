@@ -57,6 +57,14 @@ Prompt_pianificazione.txt
 # Credenziali server — NON committare
 backend/config/database.php
 
+# Configurazione locale con segreti (token API, percorsi personali)
+Config/appsettings.json
+Config/appsettings.portable.json
+
+# Configurazione locale Claude Code
+CLAUDE.local.md
+.claude/settings.local.json
+
 .venv-paddle/
 .venv/
 venv/

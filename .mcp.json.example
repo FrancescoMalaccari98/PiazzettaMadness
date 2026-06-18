@@ -1,0 +1,5 @@
+{
+  "_comment": "Nessuna integrazione MCP attiva in questo progetto. Se ne viene aggiunta una, usare questo file come template e creare .mcp.json (non committare .mcp.json se contiene token).",
+  "mcpServers": {
+  }
+}
