@@ -170,6 +170,7 @@ public sealed class MainViewModelMatchLoadingTests
     public async Task ProcessPdf_command_disabled_while_loading_matches()
     {
         var vm = CreateViewModel(out var importService, out _);
+        await SelectMatchWithContext(vm, 7);
         vm.SelectedPdfPath = "C:\\tmp\\sample.pdf";
         Assert.True(vm.ProcessPdfCommand.CanExecute(null));
 
@@ -182,7 +183,74 @@ public sealed class MainViewModelMatchLoadingTests
         gate.SetResult(new OcrMatchLookupResult { Success = true });
         await load;
 
+        Assert.False(vm.IsLoadingMatches);
+    }
+
+    [Fact]
+    public async Task Selecting_match_loads_context()
+    {
+        var vm = CreateViewModel(out var importService, out _);
+
+        vm.SelectedMatchOption = new OcrMatchOption { MatchId = 42, DisplayName = "x" };
+        await vm.ActiveContextLoad!;
+
+        Assert.Equal(42, Assert.Single(importService.RequestedContextMatchIds));
+        Assert.NotNull(vm.SelectedMatchContext);
+        Assert.Equal(42, vm.SelectedMatchContext!.MatchId);
+    }
+
+    [Fact]
+    public void ProcessPdf_command_disabled_without_context()
+    {
+        var vm = CreateViewModel(out _, out _);
+        vm.SelectedPdfPath = "C:\\tmp\\sample.pdf";
+
+        Assert.Null(vm.SelectedMatchContext);
+        Assert.False(vm.ProcessPdfCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public async Task ProcessPdf_command_enabled_after_context_loaded()
+    {
+        var vm = CreateViewModel(out _, out _);
+        vm.SelectedPdfPath = "C:\\tmp\\sample.pdf";
+        Assert.False(vm.ProcessPdfCommand.CanExecute(null));
+
+        await SelectMatchWithContext(vm, 7);
+
+        Assert.NotNull(vm.SelectedMatchContext);
         Assert.True(vm.ProcessPdfCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public async Task Context_error_keeps_process_disabled()
+    {
+        var vm = CreateViewModel(out var importService, out _);
+        importService.ContextResult = _ => new OcrMatchContextResult
+        {
+            Success = false,
+            ErrorMessage = "Roster incompleto per la partita."
+        };
+        vm.SelectedPdfPath = "C:\\tmp\\sample.pdf";
+
+        vm.SelectedMatchOption = new OcrMatchOption { MatchId = 7, DisplayName = "x" };
+        await vm.ActiveContextLoad!;
+
+        Assert.Null(vm.SelectedMatchContext);
+        Assert.False(vm.ProcessPdfCommand.CanExecute(null));
+        Assert.Contains("Errore contesto", vm.ImportStatusText, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Clearing_match_clears_context()
+    {
+        var vm = CreateViewModel(out _, out _);
+        await SelectMatchWithContext(vm, 7);
+        Assert.NotNull(vm.SelectedMatchContext);
+
+        vm.SelectedMatchOption = null;
+
+        Assert.Null(vm.SelectedMatchContext);
     }
 
     [Fact]
@@ -231,15 +299,24 @@ public sealed class MainViewModelMatchLoadingTests
     private static OcrMatchOption Match(int id, string name) =>
         new() { MatchId = id, DisplayName = name };
 
+    private static async Task SelectMatchWithContext(MainViewModel vm, int matchId)
+    {
+        vm.SelectedMatchOption = new OcrMatchOption { MatchId = matchId, DisplayName = "m" };
+        await vm.ActiveContextLoad!;
+    }
+
     private sealed class FakeImportService : IOcrImportService
     {
         private readonly Queue<TaskCompletionSource<OcrMatchLookupResult>> _gates = new();
 
         public List<DateOnly> RequestedDates { get; } = [];
         public List<CancellationToken> ReceivedTokens { get; } = [];
+        public List<int> RequestedContextMatchIds { get; } = [];
         public bool HonorCancellation { get; set; } = true;
         public Func<DateOnly, OcrMatchLookupResult> DefaultResult { get; set; } =
             _ => new OcrMatchLookupResult { Success = true };
+        public Func<int, OcrMatchContextResult> ContextResult { get; set; } =
+            matchId => new OcrMatchContextResult { Success = true, Context = ValidContext(matchId) };
 
         public TaskCompletionSource<OcrMatchLookupResult> EnqueueGate()
         {
@@ -264,10 +341,33 @@ public sealed class MainViewModelMatchLoadingTests
             return DefaultResult(date);
         }
 
+        public Task<OcrMatchContextResult> GetMatchContextAsync(int matchId, CancellationToken cancellationToken = default)
+        {
+            RequestedContextMatchIds.Add(matchId);
+            return Task.FromResult(ContextResult(matchId));
+        }
+
         public Task<OcrImportResult> ImportAsync(
-            int matchId, ProcessingResult result, bool allowTeamMismatch = false,
+            int matchId, ImportPayload payload, bool allowTeamMismatch = false,
             CancellationToken cancellationToken = default) =>
             Task.FromResult(new OcrImportResult { Success = true, MatchId = matchId });
+
+        public static OcrMatchContext ValidContext(int matchId) => new()
+        {
+            MatchId = matchId,
+            HomeTeam = new OcrContextTeam
+            {
+                TeamId = 1,
+                Name = "Home",
+                Players = [new OcrRosterPlayer { PlayerId = 11, TeamId = 1, FirstName = "A", LastName = "Rossi", JerseyNumber = 4 }],
+            },
+            AwayTeam = new OcrContextTeam
+            {
+                TeamId = 2,
+                Name = "Away",
+                Players = [new OcrRosterPlayer { PlayerId = 21, TeamId = 2, FirstName = "B", LastName = "Bianchi", JerseyNumber = 5 }],
+            },
+        };
     }
 
     private sealed class FakePipeline : IPdfProcessingPipeline
@@ -275,9 +375,13 @@ public sealed class MainViewModelMatchLoadingTests
         public int ProcessCalls { get; private set; }
 
         public Task<ProcessingResult> ProcessPdfAsync(string pdfPath, CancellationToken cancellationToken = default) =>
-            ProcessPdfAsync(pdfPath, new OcrRunSelection(), cancellationToken);
+            ProcessPdfAsync(pdfPath, new OcrRunSelection(), null, cancellationToken);
 
-        public Task<ProcessingResult> ProcessPdfAsync(string pdfPath, OcrRunSelection selection, CancellationToken cancellationToken = default)
+        public Task<ProcessingResult> ProcessPdfAsync(
+            string pdfPath,
+            OcrRunSelection selection,
+            OcrMatchContext? matchContext = null,
+            CancellationToken cancellationToken = default)
         {
             ProcessCalls++;
             return Task.FromResult(new ProcessingResult());

@@ -76,14 +76,47 @@ Lo schema JSON di `ProcessingResult` è stabile. Non modificarlo senza:
 }
 ```
 
-## Campi pianificati (Fase 7)
+## Campi già aggiunti
 
-Da aggiungere dopo approvazione:
-- `processedFile.canonicalMatchId: int?`
-- `teams[].canonicalTeamId: int?`
-- `players[].canonicalPlayerId: int?`
-- `reconciliation.sideInversionApplied: bool`
-- `identityReview: IdentityReviewItem[]` (Fase 6)
+- `reconciliation.sideInversionApplied: bool` — **implementato in Fase 6**. True quando la
+  pipeline rileva e corregge un'inversione Home/Away rispetto al DB. Default `false`/assente.
+- `identityReview: IdentityReviewItem[]` — **implementato in Fase 7A**. Voci di revisione
+  identità (Side, Reason ∈ {ProbableMatch|Conflict|NumberNotFound|Unmatched|NotInPdf}, OcrJersey,
+  OcrName, CandidatePlayerId?, CandidateName?, ConfidenceScore). Campo transitorio sul risultato:
+  in Fase 8 si sposterà in IdentityResolutionResult/CanonicalGameResult.
+- Stato `CompletedWithReviewRequired` aggiunto a `FileProcessingStatus`: impostato quando ci sono
+  voci di revisione `Conflict` o `NotInPdf`.
+
+## Contratto import (Fase 8) — ImportPayload
+
+Il POST `/api-ocr/import/{matchId}` NON invia più il `ProcessingResult` grezzo: invia un
+`ImportPayload` con ID canonici DB già risolti da C#. Il JSON locale/diagnostico resta invariato
+(entityId OCR). Forma del payload:
+
+```json
+{
+  "matchId": 42,
+  "teams": [ { "side": "Home", "teamId": 5, "name": "...", "abbreviation": "..." } ],
+  "players": [
+    { "entityId": "player:Home:jersey:5", "side": "Home", "playerId": 101, "teamId": 5,
+      "number": "5", "starter": true, "didNotPlay": false }
+  ],
+  "stats": [ { "scope": "Player", "entityId": "player:Home:jersey:5", "statKey": "points", "value": 12 } ]
+}
+```
+
+- `players[].playerId`/`teamId` = ID canonici DB risolti da C# (`PlayerIdentityMatcher` + revisione manuale).
+- `stats[]` invariato: il PHP le collega per `entityId` ai giocatori del payload.
+- PHP verifica che ogni `playerId` appartenga al roster della partita; **422** con lista `invalid` se no.
+- Giocatori non risolti vengono esclusi dal payload (restano in `identityReview`).
+
+`samples/test_import_match1.json` illustra la struttura player/stat (pre-Fase 8, senza i campi
+canonici): resta come riferimento del layout, non è una fixture di test.
+
+## Campi pianificati (futuro)
+
+- `processedFile.canonicalMatchId: int?` / `teams[].canonicalTeamId: int?` /
+  `players[].canonicalPlayerId: int?` nel JSON locale (solo se servirà esporli anche localmente).
 
 ## Entity ID canonici
 

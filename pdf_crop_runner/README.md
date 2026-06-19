@@ -36,5 +36,5 @@ Known table rules include Home table first, Away table second, a fixed
 column-header row as top anchor, and `Squadra/Allenatore` plus `Totali` as bottom
 anchors. Player-row count is variable and must not define crop height.
 
-`pdf_crop_runner.prepare_crops` remains a low-level fixed-template helper. Active
-application preparation uses `pdf_crop_runner.calibrate_layout`.
+Active application preparation uses `pdf_crop_runner.calibrate_layout`. (The legacy
+`prepare_crops` helper was removed in Fase 9; calibration is the single source of truth.)

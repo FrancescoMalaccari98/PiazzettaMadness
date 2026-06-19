@@ -1,3 +1,5 @@
+using BasketPdfStats.Core.Identity;
+
 namespace BasketPdfStats.Core.Models;
 
 public sealed class ProcessingResult
@@ -11,4 +13,10 @@ public sealed class ProcessingResult
     public List<StatValue> Stats { get; set; } = [];
     public ValidationResult Validation { get; set; } = new();
     public ReconciliationMetadata? Reconciliation { get; set; }
+
+    /// <summary>
+    /// Voci di revisione identità (Fase 7A). Campo transitorio sul risultato OCR:
+    /// in Fase 8 si sposterà in IdentityResolutionResult/CanonicalGameResult.
+    /// </summary>
+    public List<IdentityReviewItem> IdentityReview { get; set; } = [];
 }

@@ -75,7 +75,7 @@ public sealed class AlreadyProcessedPdfSelectionServiceTests
         var source = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "src", "BasketPdfStats.App", "ViewModels", "MainViewModel.cs"));
 
         Assert.Contains("if (!await ShouldProcessAsync(SelectedPdfPath))", source);
-        Assert.Contains("await _pipeline.ProcessPdfAsync(SelectedPdfPath, selection)", source);
+        Assert.Contains("await _pipeline.ProcessPdfAsync(SelectedPdfPath, selection, SelectedMatchContext)", source);
         Assert.Contains("UseTesseract = true", source);
         Assert.Contains("UsePaddle = true", source);
         Assert.Contains("CheckTeamMismatchBeforeImport(matchOption, matchId)", source);

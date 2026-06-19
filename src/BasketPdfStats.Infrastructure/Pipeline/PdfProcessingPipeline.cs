@@ -1,5 +1,7 @@
 using System.Text.Json;
+using BasketPdfStats.Core.Database;
 using BasketPdfStats.Core.Enums;
+using BasketPdfStats.Core.Identity;
 using BasketPdfStats.Core.Models;
 using BasketPdfStats.Core.Ocr;
 using BasketPdfStats.Core.Pipeline;
@@ -20,6 +22,8 @@ public class PdfProcessingPipeline : IPdfProcessingPipeline
     private readonly DocumentPreparationStage? _documentPreparationStage;
     private readonly NormalizedOcrResultWriter _normalizedOcrResultWriter;
     private readonly NormalizedOcrReconciler _normalizedOcrReconciler;
+    private readonly TeamIdentityMatcher _teamIdentityMatcher = new();
+    private readonly IdentityReviewBuilder _identityReviewBuilder = new();
 
     public PdfProcessingPipeline(
         RuntimeOptions options,
@@ -40,15 +44,19 @@ public class PdfProcessingPipeline : IPdfProcessingPipeline
 
     public async Task<ProcessingResult> ProcessPdfAsync(string pdfPath, CancellationToken cancellationToken = default)
     {
-        return await ProcessPdfInternalAsync(pdfPath, null, cancellationToken);
+        return await ProcessPdfInternalAsync(pdfPath, null, null, cancellationToken);
     }
 
-    public async Task<ProcessingResult> ProcessPdfAsync(string pdfPath, OcrRunSelection selection, CancellationToken cancellationToken = default)
+    public async Task<ProcessingResult> ProcessPdfAsync(
+        string pdfPath,
+        OcrRunSelection selection,
+        OcrMatchContext? matchContext = null,
+        CancellationToken cancellationToken = default)
     {
-        return await ProcessPdfInternalAsync(pdfPath, selection, cancellationToken);
+        return await ProcessPdfInternalAsync(pdfPath, selection, matchContext, cancellationToken);
     }
 
-    private async Task<ProcessingResult> ProcessPdfInternalAsync(string pdfPath, OcrRunSelection? selection, CancellationToken cancellationToken)
+    private async Task<ProcessingResult> ProcessPdfInternalAsync(string pdfPath, OcrRunSelection? selection, OcrMatchContext? matchContext, CancellationToken cancellationToken)
     {
         RuntimeFolderInitializer.EnsureCreated(_options);
         var startedAt = DateTimeOffset.Now;
@@ -80,7 +88,8 @@ public class PdfProcessingPipeline : IPdfProcessingPipeline
                 PdfPath = sourcePath,
                 WorkingPath = workingPath,
                 OriginalFileName = fileName,
-                DocumentHash = documentHash
+                DocumentHash = documentHash,
+                MatchContext = matchContext
             };
             if (selection is not null && _runPlanBuilder is not null)
             {
@@ -113,6 +122,11 @@ public class PdfProcessingPipeline : IPdfProcessingPipeline
             }
 
             MergePrimaryResult(result, reconciledResult, engineResults);
+            ApplyTeamIdentity(result, matchContext);
+            if (matchContext is not null)
+            {
+                result.IdentityReview = _identityReviewBuilder.Build(result, matchContext);
+            }
             MergePreparationDiagnostics(result, request);
             result.ProcessedFile.Status = ResolveCompletedStatus(result);
             result.Validation.Status = result.ProcessedFile.Status;
@@ -280,6 +294,55 @@ public class PdfProcessingPipeline : IPdfProcessingPipeline
         };
     }
 
+    /// <summary>
+    /// Confronta le squadre lette dall'OCR con il contesto DB (dopo CH1/riconciliazione).
+    /// Inversione → riallineamento automatico + flag; mismatch → warning. No-op senza contesto.
+    /// </summary>
+    private void ApplyTeamIdentity(ProcessingResult result, OcrMatchContext? matchContext)
+    {
+        if (matchContext is null)
+        {
+            return;
+        }
+
+        var homeOcr = result.Teams.FirstOrDefault(t => string.Equals(t.Side, "Home", StringComparison.OrdinalIgnoreCase))?.Name;
+        var awayOcr = result.Teams.FirstOrDefault(t => string.Equals(t.Side, "Away", StringComparison.OrdinalIgnoreCase))?.Name;
+        var homeDb = matchContext.HomeTeam.Name;
+        var awayDb = matchContext.AwayTeam.Name;
+
+        // Servono entrambi i nomi OCR e DB per un confronto significativo.
+        if (string.IsNullOrWhiteSpace(homeOcr) || string.IsNullOrWhiteSpace(awayOcr) ||
+            string.IsNullOrWhiteSpace(homeDb) || string.IsNullOrWhiteSpace(awayDb))
+        {
+            return;
+        }
+
+        var match = _teamIdentityMatcher.Match(homeOcr, awayOcr, matchContext);
+        switch (match.Outcome)
+        {
+            case TeamMatchOutcome.Inverted:
+                SideInversion.Apply(result);
+                result.Reconciliation ??= new ReconciliationMetadata();
+                result.Reconciliation.SideInversionApplied = true;
+                result.Validation.Warnings.Add(new ValidationWarning
+                {
+                    RuleId = "team.sideInversionApplied",
+                    Severity = "Info",
+                    Message = $"Inversione Home/Away rilevata e corretta. Squadre DB: {homeDb} (Home) vs {awayDb} (Away)."
+                });
+                break;
+
+            case TeamMatchOutcome.Mismatch:
+                result.Validation.Warnings.Add(new ValidationWarning
+                {
+                    RuleId = "team.mismatch",
+                    Severity = "Warning",
+                    Message = $"Squadre OCR non corrispondono al DB. Attese: {homeDb} vs {awayDb}; rilevate: {homeOcr} vs {awayOcr}."
+                });
+                break;
+        }
+    }
+
     private static void MergePrimaryResult(ProcessingResult target, ProcessingResult primaryResult, IReadOnlyList<ProcessingResult> engineResults)
     {
         target.Game = primaryResult.Game;
@@ -344,6 +407,11 @@ public class PdfProcessingPipeline : IPdfProcessingPipeline
         if (result.Validation.Warnings.Any(x => string.Equals(x.Severity, "Error", StringComparison.OrdinalIgnoreCase)))
         {
             return FileProcessingStatus.CompletedNotValidated;
+        }
+
+        if (result.IdentityReview.Any(r => r.Reason is IdentityReviewReason.Conflict or IdentityReviewReason.NotInPdf))
+        {
+            return FileProcessingStatus.CompletedWithReviewRequired;
         }
 
         if (result.Validation.Warnings.Any(x => string.Equals(x.Severity, "Warning", StringComparison.OrdinalIgnoreCase)) ||

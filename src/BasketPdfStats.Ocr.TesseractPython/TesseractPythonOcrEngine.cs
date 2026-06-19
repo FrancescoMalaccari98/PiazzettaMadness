@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text;
+using System.Text.Json;
 using BasketPdfStats.Core.Enums;
 using BasketPdfStats.Core.Models;
 using BasketPdfStats.Core.Ocr;
@@ -58,18 +59,23 @@ public sealed class TesseractPythonOcrEngine : IOcrEngine
         }
 
         var rawOutputPath = TesseractFullPageArtifactPaths.RawOutputPath(_options, request);
-        Directory.CreateDirectory(Path.GetDirectoryName(rawOutputPath)!);
+        var outputDirectory = Path.GetDirectoryName(rawOutputPath)!;
+        Directory.CreateDirectory(outputDirectory);
         if (!string.IsNullOrWhiteSpace(_options.DebugOutputFolder))
         {
             Directory.CreateDirectory(_options.ResolvePath(_options.DebugOutputFolder));
         }
+
+        // Roster dinamico dal DB: scritto su file e passato a CH1 come supporto al parsing.
+        // Se assente, comportamento legacy (known_names.py lato Python).
+        var rosterJsonPath = TryWriteRosterContext(request, outputDirectory);
 
         PythonProcessResult? processResult = null;
         string? attemptedExecutables = null;
         foreach (var candidate in pythonCandidates)
         {
             attemptedExecutables = string.IsNullOrWhiteSpace(attemptedExecutables) ? candidate : attemptedExecutables + "; " + candidate;
-            var arguments = BuildArguments(inputPdf, rawOutputPath, request);
+            var arguments = BuildArguments(inputPdf, rawOutputPath, request, rosterJsonPath);
             processResult = await _runner.RunAsync(
                 candidate,
                 arguments,
@@ -195,7 +201,7 @@ public sealed class TesseractPythonOcrEngine : IOcrEngine
                !value.Contains(Path.AltDirectorySeparatorChar);
     }
 
-    public string BuildArguments(string inputPdf, string outputJson, OcrProcessingRequest request)
+    public string BuildArguments(string inputPdf, string outputJson, OcrProcessingRequest request, string? rosterJsonPath = null)
     {
         var args = new StringBuilder();
         args.Append("-m ");
@@ -209,6 +215,12 @@ public sealed class TesseractPythonOcrEngine : IOcrEngine
         if (!_options.UseNativeImages)
         {
             args.Append(" --no-native-images");
+        }
+
+        if (!string.IsNullOrWhiteSpace(rosterJsonPath))
+        {
+            args.Append(" --roster-json ");
+            args.Append(Quote(rosterJsonPath));
         }
 
         if (!string.IsNullOrWhiteSpace(_options.DebugOutputFolder))
@@ -231,6 +243,35 @@ public sealed class TesseractPythonOcrEngine : IOcrEngine
         }
 
         return args.ToString();
+    }
+
+    private static readonly JsonSerializerOptions RosterJsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
+
+    /// <summary>
+    /// Serializza il contesto partita (roster) su file per passarlo al worker via --roster-json.
+    /// Errori di scrittura non bloccano l'OCR: il worker userà il fallback legacy.
+    /// </summary>
+    private static string? TryWriteRosterContext(OcrProcessingRequest request, string outputDirectory)
+    {
+        if (request.MatchContext is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            var path = Path.Combine(outputDirectory, "roster-context.json");
+            var json = JsonSerializer.Serialize(request.MatchContext, RosterJsonOptions);
+            File.WriteAllText(path, json);
+            return path;
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     private IReadOnlyDictionary<string, string?> BuildEnvironment(string projectDirectory)

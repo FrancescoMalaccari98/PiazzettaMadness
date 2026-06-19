@@ -42,5 +42,6 @@ public sealed class ProcessingResultPresentationService
     private static bool ShouldPresent(ProcessingResult result) =>
         result.ProcessedFile.Status is FileProcessingStatus.CompletedValidated
             or FileProcessingStatus.CompletedWithWarnings
-            or FileProcessingStatus.CompletedNotValidated;
+            or FileProcessingStatus.CompletedNotValidated
+            or FileProcessingStatus.CompletedWithReviewRequired;
 }

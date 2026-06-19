@@ -78,4 +78,27 @@ public sealed class TesseractPythonOcrEngineTests
         Assert.Contains(Path.Combine("Dataset", "LayoutDebug", "sample game.abcdef123456"), args, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("--document-hash \"sha256:abcdef1234567890\"", args, StringComparison.Ordinal);
     }
+
+    [Fact]
+    public void Build_arguments_includes_roster_json_when_path_provided()
+    {
+        var engine = new TesseractPythonOcrEngine(new TesseractPythonOptions());
+        var request = new OcrProcessingRequest { OriginalFileName = "g.pdf", DocumentHash = "sha256:abc" };
+
+        var args = engine.BuildArguments("in.pdf", "raw.json", request, Path.Combine("work", "roster-context.json"));
+
+        Assert.Contains("--roster-json", args, StringComparison.Ordinal);
+        Assert.Contains("roster-context.json", args, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Build_arguments_omits_roster_json_when_path_absent()
+    {
+        var engine = new TesseractPythonOcrEngine(new TesseractPythonOptions());
+        var request = new OcrProcessingRequest { OriginalFileName = "g.pdf", DocumentHash = "sha256:abc" };
+
+        var args = engine.BuildArguments("in.pdf", "raw.json", request, rosterJsonPath: null);
+
+        Assert.DoesNotContain("--roster-json", args, StringComparison.Ordinal);
+    }
 }

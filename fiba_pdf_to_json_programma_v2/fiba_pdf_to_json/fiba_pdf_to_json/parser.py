@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import cv2
 import numpy as np
 
-from .known_names import KNOWN_PLAYERS, KNOWN_TEAMS, fuzzy_known_name, known_players_for_team, roster_jersey_for
+from . import roster_context as names
 from .layout import TableGrid, default_player_x_lines, grid_from_box
 from .normalizers import (
     clean_player_name,
@@ -148,8 +148,8 @@ def parse_score_line(doc: Dict[str, Any], text: str) -> None:
     t1 = clean_text(m.group("t1"))
     t2 = clean_text(m.group("t2"))
     # Correggi i nomi squadra se vicini a quelli degli esempi.
-    t1_known = fuzzy_known_name(t1, KNOWN_TEAMS, cutoff=0.78)
-    t2_known = fuzzy_known_name(t2, KNOWN_TEAMS, cutoff=0.78)
+    t1_known = names.fuzzy_known_name(t1, names.known_teams(), cutoff=0.78)
+    t2_known = names.fuzzy_known_name(t2, names.known_teams(), cutoff=0.78)
     t1 = t1_known or t1
     t2 = t2_known or t2
     p1 = parse_int(m.group("p1"))
@@ -204,7 +204,7 @@ def parse_team_title(clean_page: np.ndarray, table_box: Tuple[int, int, int, int
     elif text:
         team_name = text
     if team_name:
-        known = fuzzy_known_name(team_name, KNOWN_TEAMS, cutoff=0.78)
+        known = names.fuzzy_known_name(team_name, names.known_teams(), cutoff=0.78)
         if known:
             team_name = known
 
@@ -374,9 +374,9 @@ def row_to_player(row: Dict[str, OcrCell], doc: Dict[str, Any], team_name: str, 
     g = giocatore_template()
     g["numero"] = normalize_player_number(num_raw)
     name, cap = clean_player_name(name_raw)
-    _team_candidates = known_players_for_team(team_name) if team_name else []
-    _candidates = _team_candidates or KNOWN_PLAYERS
-    known_name = fuzzy_known_name(name or "", _candidates, cutoff=0.80)
+    _team_candidates = names.known_players_for_team(team_name) if team_name else []
+    _candidates = _team_candidates or names.known_players()
+    known_name = names.fuzzy_known_name(name or "", _candidates, cutoff=0.80)
     if known_name:
         name = known_name
     g["nome_completo"] = name
@@ -385,7 +385,7 @@ def row_to_player(row: Dict[str, OcrCell], doc: Dict[str, Any], team_name: str, 
 
     # Validate jersey against known roster and correct OCR misreads (e.g. *1 → 4).
     if known_name and team_name:
-        expected_jersey = roster_jersey_for(team_name, known_name)
+        expected_jersey = names.roster_jersey_for(team_name, known_name)
         if expected_jersey is not None:
             ocr_raw = g["numero"] or ""
             digits_ocr = re.sub(r"\D", "", ocr_raw)

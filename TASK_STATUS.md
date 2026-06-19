@@ -210,8 +210,13 @@ provider is part of the solution. Adobe and GLM-OCR are fully removed.
   - Controlli: presenza file, route index.php, marker Fase 8 in import.php, scansione segreti (pulita). NON tocca `backend/backend.zip`.
   - `backend/config/database.example.php` (placeholder) creato e incluso; `config/database.php` reale escluso.
   - `docs/backend-deploy-checklist.md`: checklist deploy + rollback Aruba. `release/backend.zip` in `.gitignore`.
-  - ⚠ `php -l` NON eseguito (PHP assente in locale) — da eseguire prima del deploy. Claude non pubblica su Aruba.
-- **Prossima fase:** Fase 9 (pulizia legacy approvata: known_names.py, fallback, prepare_crops.py, backend.zip, MatchLookupDate) — ogni elemento richiede approvazione separata.
+  - `php -l` su tutti i file PHP: **eseguito con esito positivo (2026-06-19)**; manifest aggiornato (`php -l: OK`), SHA-256 invariato. Claude non pubblica su Aruba.
+- **Fase 9** (pulizia legacy approvata, per-item): **in corso**.
+  - [x] `pdf_crop_runner/prepare_crops.py` rimosso (2026-06-19, approvato): 0 import verificati; README aggiornato. Build+test verdi.
+  - [ ] `MatchLookupDate`: non approvato ora (resta `[Obsolete]`).
+  - [ ] `known_names.py` + fallback `roster_context.py`: rinviati a dopo validazione Fase 10 su PDF reali.
+  - [ ] `backend/backend.zip`: rinviato a dopo deploy verificato di `release/backend.zip` su Aruba.
+- **Prossima fase:** Fase 10 (validazione end-to-end + benchmark CH3/CH4) — richiede ambiente OCR (venv + Tesseract + PDF), da eseguire in locale.
 
 ## Risky or Unfinished Areas
 

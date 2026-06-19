@@ -52,6 +52,28 @@ try {
         handle_today_matches(get_pdo());
     }
 
+    // GET /api-ocr/matches/{match_id}/context  — canonical match context + roster
+    if ($seg0 === 'matches' && $seg1 !== '' && $seg1 !== 'today' && ($parts[2] ?? '') === 'context') {
+        if ($method !== 'GET') {
+            send_error('Method not allowed. Use GET /api-ocr/matches/{match_id}/context', 405);
+        }
+
+        require_ocr_auth();
+
+        $match_id = filter_var($seg1, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+        if ($match_id === false) {
+            send_error('Invalid match_id. Expected: GET /api-ocr/matches/{match_id}/context', 400);
+        }
+
+        $context_endpoint = __DIR__ . '/endpoints/context.php';
+        if (!is_file($context_endpoint)) {
+            send_error('Match context endpoint file not found on server', 500);
+        }
+
+        require_once $context_endpoint;
+        handle_match_context(get_pdo(), (int)$match_id);
+    }
+
     // POST /api-ocr/import/{match_id}  — import a ProcessingResult into the DB
     if ($seg0 === 'import') {
         if ($method !== 'POST') {

@@ -85,26 +85,29 @@ function handle_import(PDO $pdo, int $match_id)
         ], 409);
     }
 
-    // ── 3. Build roster map: [team_id][jersey_number] => player_id ──
+    // ── 3. Build the set of valid (team_id, player_id) from the active roster ──
+    // C# already resolved the canonical playerId (PlayerIdentityMatcher + manual review).
+    // PHP only verifies membership; it does NOT do fuzzy matching.
     $stmt = $pdo->prepare(
-        'SELECT team_id, player_id, jersey_number
+        'SELECT team_id, player_id
          FROM team_rosters
          WHERE team_id IN (?, ?) AND is_active = 1'
     );
     $stmt->execute([$home_team_id, $away_team_id]);
 
-    $roster_map = [];
+    $valid_players = [];
     foreach ($stmt->fetchAll() as $r) {
-        $roster_map[(int)$r['team_id']][(int)$r['jersey_number']] = (int)$r['player_id'];
+        $valid_players[(int)$r['team_id']][(int)$r['player_id']] = true;
     }
 
-    // ── 4. Map OCR players → DB player IDs ──────────────────
+    // ── 4. Use canonical player IDs from the payload; verify against the roster ──
     $players_raw = $data['players'] ?? [];
     $stats_raw   = $data['stats']   ?? [];
 
     // entityId → ['team_id', 'player_id', 'jersey', 'is_starter', 'dnp']
     $entity_info = [];
     $warnings    = [];
+    $invalid     = [];
 
     foreach ($players_raw as $p) {
         $entity_id = $p['entityId'] ?? '';
@@ -124,14 +127,20 @@ function handle_import(PDO $pdo, int $match_id)
             continue;
         }
 
-        // Strip the starter marker (*) before jersey lookup
-        $jersey    = (int)str_replace('*', '', trim((string)($p['number'] ?? '')));
-        $player_id = $roster_map[$team_id][$jersey] ?? null;
-
-        if (!$player_id) {
-            $warnings[] = "entityId=$entity_id: jersey #$jersey not found in roster for team_id=$team_id — skipped";
+        $player_id = (int)($p['playerId'] ?? 0);
+        if ($player_id <= 0) {
+            $warnings[] = "entityId=$entity_id: missing canonical playerId — skipped";
             continue;
         }
+
+        // Reject canonical IDs that do not belong to this match's roster (no fuzzy fallback).
+        if (!isset($valid_players[$team_id][$player_id])) {
+            $invalid[] = ['entityId' => $entity_id, 'playerId' => $player_id, 'teamId' => $team_id];
+            continue;
+        }
+
+        // Jersey kept only for the jersey_number column (stripped of the starter marker).
+        $jersey = (int)str_replace('*', '', trim((string)($p['number'] ?? '')));
 
         $entity_info[$entity_id] = [
             'team_id'    => $team_id,
@@ -140,6 +149,14 @@ function handle_import(PDO $pdo, int $match_id)
             'is_starter' => (bool)($p['starter']   ?? false),
             'dnp'        => (bool)($p['didNotPlay'] ?? false),
         ];
+    }
+
+    // Canonical IDs not valid for this match → reject without writing anything.
+    if (!empty($invalid)) {
+        send_json([
+            'error'   => 'Invalid canonical player IDs for this match.',
+            'invalid' => $invalid,
+        ], 422);
     }
 
     // ── 5. Group stats by entityId ───────────────────────────

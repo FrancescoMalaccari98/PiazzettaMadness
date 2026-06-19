@@ -5,6 +5,11 @@ public sealed class ReconciliationMetadata
     public bool Enabled { get; set; }
     public List<string> Providers { get; set; } = [];
     public string Strategy { get; set; } = string.Empty;
+
+    /// <summary>
+    /// True se è stata rilevata e corretta un'inversione Home/Away rispetto al DB (Fase 6).
+    /// </summary>
+    public bool SideInversionApplied { get; set; }
 }
 
 public sealed class StatReconciliationMetadata

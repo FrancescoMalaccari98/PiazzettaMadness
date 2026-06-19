@@ -33,7 +33,7 @@ backend.zip
 
 ## Controlli prima della generazione (eseguiti dallo script)
 
-1. `php -l` su tutti i file PHP inclusi  ⚠ **richiede PHP installato** (non disponibile in locale: validare prima del deploy)
+1. `php -l` su tutti i file PHP inclusi — **eseguito con esito positivo il 2026-06-19** (PHP installato in locale; lo script lo riesegue automaticamente quando PHP è presente)
 2. Route pattern presenti in `index.php`: `health`, `matches/today`, `matches/{id}/context`, `import/{id}`
 3. Presenza di `endpoints/context.php`
 4. `endpoints/import.php` è la versione aggiornata (Fase 8: verifica canonica + 422)

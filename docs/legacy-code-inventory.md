@@ -123,25 +123,17 @@ Questo JSON viene scritto da C# (`TesseractFullPageOcrEngine`) in `runtime/Worki
 
 ## 4. Codice legacy / superseded
 
-### 4.1 `prepare_crops.py`
+### 4.1 `prepare_crops.py` — ✅ RIMOSSO (Fase 9, 2026-06-19)
 
-**Percorso:** `pdf_crop_runner/pdf_crop_runner/prepare_crops.py`
+**Percorso (era):** `pdf_crop_runner/pdf_crop_runner/prepare_crops.py`
 
-**Stato:** Legacy — superseded da `calibrate_layout.py`.
+**Stato:** Rimosso. Era legacy, superseded da `calibrate_layout.py`.
 
-**Verifiche eseguite:** ✓ `git grep -ni "prepare_crops"` su `*.cs`, `*.csproj`, `*.py`, `*.php`, `*.json`, `*.ps1`  
-**Risultato:** **0 riferimenti trovati** in file di codice sorgente e configurazione.
+**Verifica pre-rimozione:** `grep -i "prepare_crops"` su tutto il repo → riferimenti solo in docs e
+nel README di pdf_crop_runner; **nessun import** in codice Python/C#. `__init__.py` e
+`image_preparation.py` non lo referenziano. Rimozione sicura confermata e approvata.
 
-**Descrizione:** Helper per la generazione di crop fissi da template. Superseded dall'introduzione della calibrazione affine Y con anchor detection (`calibrate_layout.py`).
-
-**Verifica residua prima della Fase 9:**
-
-```powershell
-# Verificare che non esista riferimento in script o doc
-grep -r "prepare_crops" . --include="*.py" --include="*.md" --include="*.txt"
-```
-
-**Raccomandazione:** Rimuovere in Fase 9 dopo la verifica finale.
+**Aggiornamenti collegati:** rimosso il riferimento in `pdf_crop_runner/README.md`.
 
 ---
 

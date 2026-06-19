@@ -79,9 +79,52 @@ public sealed class OcrImportService : IOcrImportService
         }
     }
 
+    public async Task<OcrMatchContextResult> GetMatchContextAsync(int matchId, CancellationToken cancellationToken = default)
+    {
+        var url = $"{_baseUrl}/matches/{matchId}/context";
+
+        try
+        {
+            using var response = await _http.GetAsync(url, cancellationToken);
+            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorMsg = TryParseError(body) ?? $"HTTP {(int)response.StatusCode}";
+                return new OcrMatchContextResult { Success = false, ErrorMessage = errorMsg };
+            }
+
+            var context = JsonSerializer.Deserialize<OcrMatchContext>(body, JsonDefaults.Options);
+            if (context is null)
+            {
+                return new OcrMatchContextResult { Success = false, ErrorMessage = "Risposta non parsabile" };
+            }
+
+            // Difesa lato client: un roster vuoto non deve mai entrare nel flusso.
+            if (context.HomeTeam.Players.Count == 0 || context.AwayTeam.Players.Count == 0)
+            {
+                return new OcrMatchContextResult { Success = false, ErrorMessage = "Roster incompleto per la partita." };
+            }
+
+            return new OcrMatchContextResult { Success = true, Context = context };
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (OperationCanceledException)
+        {
+            return new OcrMatchContextResult { Success = false, ErrorMessage = "Timeout della richiesta" };
+        }
+        catch (Exception ex)
+        {
+            return new OcrMatchContextResult { Success = false, ErrorMessage = ex.Message };
+        }
+    }
+
     public async Task<OcrImportResult> ImportAsync(
         int matchId,
-        ProcessingResult result,
+        ImportPayload payload,
         bool allowTeamMismatch = false,
         CancellationToken cancellationToken = default)
     {
@@ -91,7 +134,7 @@ public sealed class OcrImportService : IOcrImportService
         {
             using var request = new HttpRequestMessage(HttpMethod.Post, url)
             {
-                Content = JsonContent.Create(result, options: JsonDefaults.Options)
+                Content = JsonContent.Create(payload, options: JsonDefaults.Options)
             };
             if (allowTeamMismatch)
             {

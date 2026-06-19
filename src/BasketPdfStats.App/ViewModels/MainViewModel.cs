@@ -6,6 +6,8 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using BasketPdfStats.App.Services;
 using BasketPdfStats.Core.Database;
+using BasketPdfStats.Core.Enums;
+using BasketPdfStats.Core.Identity;
 using BasketPdfStats.Core.Models;
 using BasketPdfStats.Core.Pipeline;
 using BasketPdfStats.Core.Presentation;
@@ -20,6 +22,10 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private readonly AlreadyProcessedPdfSelectionService? _alreadyProcessedPdfSelection;
     private readonly IOcrImportService? _importService;
     private readonly ITeamMismatchConfirmationService? _teamMismatchConfirmation;
+    private readonly IIdentityReviewService? _identityReviewService;
+    private readonly ImportPayloadBuilder _importPayloadBuilder = new();
+    private bool _reviewResolved = true;
+    private IReadOnlyDictionary<string, int>? _reviewOverrides;
     private string? _selectedPdfPath;
     private string _warningText = string.Empty;
     private string _outputJsonPath = string.Empty;
@@ -33,6 +39,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private DateOnly _selectedDate = DateOnly.FromDateTime(DateTime.Today);
     private CancellationTokenSource? _matchLoadCts;
     private Task? _activeMatchLoad;
+    private OcrMatchContext? _selectedMatchContext;
+    private Task? _activeContextLoad;
     private ProcessingResult? _lastResult;
 
     public MainViewModel(
@@ -41,7 +49,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
         IProcessingResultPresenter? resultPresenter = null,
         AlreadyProcessedPdfSelectionService? alreadyProcessedPdfSelection = null,
         IOcrImportService? importService = null,
-        ITeamMismatchConfirmationService? teamMismatchConfirmation = null)
+        ITeamMismatchConfirmationService? teamMismatchConfirmation = null,
+        IIdentityReviewService? identityReviewService = null)
     {
         _pipeline = pipeline;
         _filePicker = filePicker;
@@ -49,11 +58,13 @@ public sealed class MainViewModel : INotifyPropertyChanged
         _alreadyProcessedPdfSelection = alreadyProcessedPdfSelection;
         _importService = importService;
         _teamMismatchConfirmation = teamMismatchConfirmation;
+        _identityReviewService = identityReviewService;
         SelectPdfCommand = new AsyncRelayCommand(SelectPdfAsync);
         ProcessPdfCommand = new AsyncRelayCommand(
             ProcessSelectedPdfAsync,
-            () => !string.IsNullOrWhiteSpace(SelectedPdfPath) && !IsLoadingMatches);
+            () => !string.IsNullOrWhiteSpace(SelectedPdfPath) && !IsLoadingMatches && SelectedMatchContext is not null);
         LoadMatchesCommand = new AsyncRelayCommand(LoadMatchesForDateAsync, () => HasImportService);
+        ReviewIdentityCommand = new AsyncRelayCommand(ReviewIdentityAsync, CanReviewIdentity);
         ImportToDbCommand = new AsyncRelayCommand(ImportToDbAsync, CanImport);
     }
 
@@ -64,6 +75,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public AsyncRelayCommand SelectPdfCommand { get; }
     public AsyncRelayCommand ProcessPdfCommand { get; }
     public AsyncRelayCommand LoadMatchesCommand { get; }
+    public AsyncRelayCommand ReviewIdentityCommand { get; }
     public AsyncRelayCommand ImportToDbCommand { get; }
 
     public bool HasImportService => _importService is not null;
@@ -174,12 +186,41 @@ public sealed class MainViewModel : INotifyPropertyChanged
         get => _selectedMatchOption;
         set
         {
-            if (SetField(ref _selectedMatchOption, value) && value is not null)
+            if (SetField(ref _selectedMatchOption, value))
             {
-                MatchIdText = value.MatchId.ToString(CultureInfo.InvariantCulture);
+                if (value is not null)
+                {
+                    MatchIdText = value.MatchId.ToString(CultureInfo.InvariantCulture);
+                    _activeContextLoad = LoadMatchContextAsync(value.MatchId);
+                }
+                else
+                {
+                    SelectedMatchContext = null;
+                }
             }
         }
     }
+
+    /// <summary>
+    /// Contesto canonico della partita selezionata (squadre + roster dal DB).
+    /// Null finché non è caricato: senza contesto l'elaborazione è bloccata.
+    /// </summary>
+    public OcrMatchContext? SelectedMatchContext
+    {
+        get => _selectedMatchContext;
+        private set
+        {
+            if (SetField(ref _selectedMatchContext, value))
+            {
+                ProcessPdfCommand.RaiseCanExecuteChanged();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Task del caricamento contesto in corso. Esposto per i test (await deterministico).
+    /// </summary>
+    public Task? ActiveContextLoad => _activeContextLoad;
 
     public string ImportStatusText
     {
@@ -207,6 +248,12 @@ public sealed class MainViewModel : INotifyPropertyChanged
             return;
         }
 
+        if (SelectedMatchContext is null)
+        {
+            WarningText = "Carica prima il contesto della partita dal database (seleziona data e partita).";
+            return;
+        }
+
         if (!TryBuildSelection(out var selection))
         {
             return;
@@ -220,7 +267,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 return;
             }
 
-            var result = await _pipeline.ProcessPdfAsync(SelectedPdfPath, selection);
+            var result = await _pipeline.ProcessPdfAsync(SelectedPdfPath, selection, SelectedMatchContext);
             AddResult(result);
             StatusText = $"Completato: {result.ProcessedFile.Status}";
         });
@@ -267,12 +314,47 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private void AddResult(ProcessingResult result)
     {
         _lastResult = result;
+        // Se l'elaborazione richiede revisione, l'export resta bloccato finché non è risolta.
+        _reviewResolved = result.ProcessedFile.Status != FileProcessingStatus.CompletedWithReviewRequired;
+        _reviewOverrides = null;
         ProcessedFiles.Insert(0, new ProcessedFileRowViewModel(result.ProcessedFile));
         OutputJsonPath = result.ProcessedFile.OutputJsonPath ?? string.Empty;
         WarningText = BuildWarnings(result);
-        ImportStatusText = string.Empty;
+        ImportStatusText = _reviewResolved
+            ? string.Empty
+            : $"Revisione richiesta: {result.IdentityReview.Count(i => i.Reason is IdentityReviewReason.Conflict or IdentityReviewReason.NotInPdf)} conflitti obbligatori. Usa 'Revisiona'.";
+        ReviewIdentityCommand.RaiseCanExecuteChanged();
         ImportToDbCommand.RaiseCanExecuteChanged();
         _resultPresentation.TryPresent(result, AppendResultViewerStatus);
+    }
+
+    private bool CanReviewIdentity() =>
+        _identityReviewService is not null &&
+        _lastResult is not null &&
+        _lastResult.IdentityReview.Count > 0 &&
+        SelectedMatchContext is not null;
+
+    private Task ReviewIdentityAsync()
+    {
+        if (!CanReviewIdentity() || _lastResult is null || SelectedMatchContext is null || _identityReviewService is null)
+        {
+            return Task.CompletedTask;
+        }
+
+        var resolutions = _identityReviewService.ReviewAndConfirm(_lastResult.IdentityReview, SelectedMatchContext);
+        if (resolutions is not null)
+        {
+            _reviewOverrides = resolutions;
+            _reviewResolved = true;
+            ImportStatusText = "Revisione completata: export sbloccato.";
+        }
+        else
+        {
+            ImportStatusText = "Revisione annullata: export ancora bloccato.";
+        }
+
+        ImportToDbCommand.RaiseCanExecuteChanged();
+        return Task.CompletedTask;
     }
 
     public async Task LoadMatchesForDateAsync()
@@ -350,10 +432,57 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
     }
 
+    public async Task LoadMatchContextAsync(int matchId)
+    {
+        if (_importService is null)
+        {
+            return;
+        }
+
+        // Il contesto precedente non è più valido finché il nuovo non è caricato.
+        SelectedMatchContext = null;
+
+        OcrMatchContextResult result;
+        try
+        {
+            ImportStatusText = $"Carico contesto partita (match_id={matchId})...";
+            result = await _importService.GetMatchContextAsync(matchId);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+        catch (Exception ex)
+        {
+            if (SelectedMatchOption?.MatchId == matchId)
+            {
+                ImportStatusText = $"Errore contesto: {ex.Message}";
+            }
+            return;
+        }
+
+        // La selezione potrebbe essere cambiata durante l'attesa: applica solo se ancora corrente.
+        if (SelectedMatchOption?.MatchId != matchId)
+        {
+            return;
+        }
+
+        if (!result.Success || result.Context is null)
+        {
+            ImportStatusText = $"Errore contesto: {result.ErrorMessage}";
+            return;
+        }
+
+        SelectedMatchContext = result.Context;
+        var playerCount = result.Context.HomeTeam.Players.Count + result.Context.AwayTeam.Players.Count;
+        ImportStatusText = $"Contesto caricato: {result.Context.HomeTeam.Name} vs {result.Context.AwayTeam.Name} ({playerCount} giocatori).";
+    }
+
     private bool CanImport() =>
         _importService is not null &&
         _lastResult is not null &&
-        int.TryParse(_matchIdText, out var id) && id > 0;
+        int.TryParse(_matchIdText, out var id) && id > 0 &&
+        _reviewResolved;
 
     private async Task ImportToDbAsync()
     {
@@ -376,10 +505,17 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 return;
             }
 
+            if (SelectedMatchContext is null)
+            {
+                ImportStatusText = "Contesto partita non disponibile: impossibile costruire il payload canonico.";
+                return;
+            }
+
             ImportStatusText = $"Import in corso per {selectedMatchLabel}...";
+            var payload = _importPayloadBuilder.Build(matchId, _lastResult, SelectedMatchContext, _reviewOverrides);
             var importResult = await _importService.ImportAsync(
                 matchId,
-                _lastResult,
+                payload,
                 teamGuard.AllowTeamMismatch);
 
             if (importResult.Success)

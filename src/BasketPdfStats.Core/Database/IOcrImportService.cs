@@ -5,9 +5,10 @@ namespace BasketPdfStats.Core.Database;
 public interface IOcrImportService
 {
     Task<OcrMatchLookupResult> GetMatchesForDateAsync(DateOnly date, CancellationToken cancellationToken = default);
+    Task<OcrMatchContextResult> GetMatchContextAsync(int matchId, CancellationToken cancellationToken = default);
     Task<OcrImportResult> ImportAsync(
         int matchId,
-        ProcessingResult result,
+        ImportPayload payload,
         bool allowTeamMismatch = false,
         CancellationToken cancellationToken = default);
 }

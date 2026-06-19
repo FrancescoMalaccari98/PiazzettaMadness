@@ -830,7 +830,8 @@ commit, hash SHA-256, endpoint, file inclusi/esclusi, stato `php -l`). NON sovra
 import.php, scansione segreti (pulita). `backend/config/database.example.php` creato (placeholder,
 nessun segreto) e incluso come riferimento; `config/database.php` reale escluso. Checklist deploy +
 rollback in `docs/backend-deploy-checklist.md`. `release/backend.zip` aggiunto a `.gitignore`.
-⚠ `php -l` NON eseguito (PHP non disponibile in locale): da eseguire prima del deploy.
+`php -l` su tutti i file PHP: **eseguito con esito positivo (2026-06-19, PHP installato in locale)**;
+manifest aggiornato (`php -l: OK`), SHA-256 invariato (contenuto byte-identico).
 Claude non si connette/pubblica su Aruba.
 
 **Pacchetto:** .htaccess, index.php, config/database.example.php, endpoints/{matches,context,import}.php,
@@ -908,17 +909,17 @@ release/backend.zip
 
 ---
 
-### Fase 9 — Pulizia legacy approvata
+### Fase 9 — Pulizia legacy approvata (IN CORSO — per-item)
 
 **Prerequisiti:** Fase 5 validata; Fase 8 e 8B completate. Ogni elemento richiede approvazione separata.
 
 **Checklist:**
-- [ ] `known_names.py` — rimuovi dopo che Fase 5 è validata su samples/pdf/
-- [ ] fallback legacy in `parser.py` / `roster_context.py` — rimuovi
-- [ ] `pdf_crop_runner/prepare_crops.py` — rimuovi (zero riferimenti verificati)
-- [ ] `backend/backend.zip` — rimuovi dopo che `release/backend.zip` è verificato su Aruba
-- [ ] `MatchLookupDate` in `AppSettings` — rimuovi (marcato `[Obsolete]` dalla Fase 1)
-- [ ] `config/database.example.php` — aggiorna se necessario
+- [x] `pdf_crop_runner/prepare_crops.py` — **rimosso (2026-06-19, approvato)**. Zero import verificati; README aggiornato.
+- [ ] `MatchLookupDate` in `AppSettings` — non approvato in questo passaggio (resta `[Obsolete]`, non controlla il flusso).
+- [ ] `known_names.py` — DA RINVIARE: rimuovere solo dopo validazione Fase 5 su samples/pdf/ (Fase 10).
+- [ ] fallback legacy in `parser.py` / `roster_context.py` — DA RINVIARE con known_names.py.
+- [ ] `backend/backend.zip` — DA RINVIARE: rimuovere solo dopo deploy verificato di `release/backend.zip` su Aruba.
+- [ ] `config/database.example.php` — aggiorna se necessario.
 
 ---
 
