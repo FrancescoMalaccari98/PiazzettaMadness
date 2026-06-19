@@ -1,0 +1,25 @@
+﻿BasketPdfStats backend package manifest
+Generato:        2026-06-19 08:18:24 +02:00
+Commit Git:      dc8c948
+Fase:            8B
+Hash SHA-256:    DA23FEB4A9AA2CE73A49DA74A1D2F478DE47488242F628896FCA4053650F1649
+php -l:          OK
+
+Endpoint inclusi:
+  GET  /api-ocr/health
+  GET  /api-ocr/matches/today?date=YYYY-MM-DD
+  GET  /api-ocr/matches/{id}/context
+  POST /api-ocr/import/{id}
+
+File inclusi:
+  .htaccess
+  index.php
+  config/database.example.php
+  endpoints/matches.php
+  endpoints/context.php
+  endpoints/import.php
+  lib/auth.php
+  lib/helpers.php
+  lib/response.php
+
+Esclusi (sicurezza): config/database.php, token, .env, log, cache, backup, test, .git, .claude, backend.zip

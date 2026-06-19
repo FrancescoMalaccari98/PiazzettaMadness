@@ -6,6 +6,9 @@ TestResults/
 *.user
 *.suo
 
+# Pacchetto backend generato (Fase 8B) — artefatto binario, non committare
+release/backend.zip
+
 # VS Code local
 .vscode/*
 !.vscode/settings.json

@@ -590,9 +590,24 @@ FindRuntimeRoot) + `AlreadyProcessedPdfSelectionServiceTests` aggiornati (split:
 
 ---
 
-### Fase 3 — Endpoint e modello del contesto partita
+### Fase 3 — Endpoint e modello del contesto partita ✅ COMPLETATA (2026-06-18)
 
 **Obiettivo:** Roster completo dal DB disponibile in memoria prima dell'OCR.
+
+**Esito:** Build verde. Test: 203 passed, 0 failed, 0 ignored (+8 vs Fase 2).
+Endpoint PHP `GET /matches/{matchId}/context` creato (`backend/endpoints/context.php`) + routing in
+`backend/index.php`. Tabelle/colonne verificate sullo schema reale (`match_teams`, `teams`,
+`team_rosters.is_active/jersey_number`, `players.first_name/last_name`) — nessuna assunzione.
+Supporta entrambi gli schemi (`match_teams` e `matches.home_team_id`). Errori 404/409/500.
+Lato C#: modelli `OcrMatchContext`/`OcrContextTeam`/`OcrRosterPlayer`/`OcrMatchContextResult`,
+`GetMatchContextAsync` in interfaccia + `OcrImportService`. `MainViewModel`: `SelectedMatchContext`
+caricato alla selezione partita, ProcessButton disabilitato senza contesto.
+⚠ `php -l` non eseguibile (PHP non installato in locale): sintassi PHP verificata manualmente,
+da validare con `php -l` prima del deploy (Fase 8B).
+
+**Test:** `OcrImportServiceTests` (+3: roster completo, 404, roster vuoto),
+`MainViewModelMatchLoadingTests` (+5: contesto caricato alla selezione, ProcessPdf senza/con contesto,
+errore contesto, azzeramento alla deselezione).
 
 **File modificati:**
 1. `backend/endpoints/context.php` (NUOVO)
@@ -613,9 +628,20 @@ FindRuntimeRoot) + `AlreadyProcessedPdfSelectionServiceTests` aggiornati (split:
 
 ---
 
-### Fase 4 — PlayerIdentityMatcher
+### Fase 4 — PlayerIdentityMatcher ✅ COMPLETATA (2026-06-18)
 
 **Obiettivo:** Matching controllato jersey+nome su roster DB; nessuna discovery autonoma.
+
+**Esito:** Build verde. Test: 216 passed, 0 failed, 0 ignored (+13 vs Fase 3).
+Fase isolata: classi create e testate, **non ancora integrate nella pipeline** (integrazione in Fase 5).
+`NameNormalizer` (accenti, apostrofi/trattini→spazio, variante OCR 0→o/1→i/5→s/rn→m),
+`PlayerMatchResult` (enum CertainMatch/ProbableMatch/Conflict/NumberNotFound/Unmatched + value object),
+`PlayerIdentityMatcher` (parse jersey con strip '*', match per ordine nome/cognome e per sottoinsieme
+di token, distanza Levenshtein normalizzata, soglie 0.15/0.30 configurabili). Nome non leggibile +
+jersey univoco → ProbableMatch (NameMissing). Nessun dato scritto se incerto.
+
+**Test:** `PlayerIdentityMatcherTests` (13): certain, surname-only, starter marker, probable, conflict,
+not-found, unmatched, name-missing, substitution OCR, normalizzazione accenti/apostrofi, soglie.
 
 **File nuovi:**
 - `src/BasketPdfStats.Core/Identity/PlayerIdentityMatcher.cs`
@@ -629,9 +655,21 @@ FindRuntimeRoot) + `AlreadyProcessedPdfSelectionServiceTests` aggiornati (split:
 
 ---
 
-### Fase 5 — Passaggio del contesto canonico alla pipeline
+### Fase 5 — Passaggio del contesto canonico alla pipeline ✅ COMPLETATA (2026-06-18)
 
 **Obiettivo:** CH1 riceve il roster dinamico; matching finale sempre in C#.
+
+**Esito:** Build verde. Test C#: 220 passed, 0 failed (+4). Test Python: `py_compile` OK su 3 moduli +
+test funzionale `roster_context` (fallback legacy / roster dinamico / roster vuoto) OK + import di
+`parser`/`worker` nel venv reale OK. Modifiche **backward-compatible**: senza `--roster-json` il
+comportamento è identico (known_names via wrapper). `roster_context.py` dedicato (non inline in
+parser.py); `known_names.py` non modificato, usato come fallback con WARNING esplicito. Solo CH1
+riceve `--roster-json`; CH2–CH4 invariati. Il matching canonico resta in C# (PlayerIdentityMatcher, Fase 4).
+⚠ Esecuzione completa del worker su PDF reale NON eseguita (richiede ambiente integration + Tesseract):
+validazione end-to-end rinviata alla Fase 10.
+
+**Test:** C# `TesseractPythonOcrEngineTests` (+2 BuildArguments roster), `MultiEnginePipelineTests`
+(+2 threading MatchContext). Python: test funzionale roster_context.
 
 **File modificati:**
 1. `src/BasketPdfStats.Core/Models/OcrProcessingRequest.cs` — aggiunge `MatchContext: OcrMatchContext?`
@@ -650,9 +688,21 @@ FindRuntimeRoot) + `AlreadyProcessedPdfSelectionServiceTests` aggiornati (split:
 
 ---
 
-### Fase 6 — TeamIdentityMatcher e inversione home/away
+### Fase 6 — TeamIdentityMatcher e inversione home/away ✅ COMPLETATA (2026-06-18)
 
 **Obiettivo:** Rilevare inversione home/away dopo CH1; gestire mismatch con warning UI.
+
+**Esito:** Build verde. Test: 227 passed, 0 failed (+7). `TeamIdentityMatcher` (similarità media
+ordine corretto vs invertito, soglia 0.5) + `NameSimilarity` (Levenshtein normalizzata) +
+`SideInversion.Apply` (scambio lati/entityId/punteggio/parziali; slot Game invariati). Pipeline:
+dopo riconciliazione, se `MatchContext` presente confronta le squadre OCR (da CH1) con il DB →
+inversione = riallineamento automatico + `reconciliation.sideInversionApplied=true` + warning Info;
+mismatch = warning `team.mismatch` (non blocca). No-op senza contesto (backward-compatible).
+I warning fluiscono in `WarningText` (UI) via `BuildWarnings`; la conferma continua/annulla resta
+gestita dal guard esistente all'import. Campo JSON `reconciliation.sideInversionApplied` aggiunto.
+
+**Test:** `TeamIdentityMatcherTests` (4) + `SideInversionTests` (1) + `MultiEnginePipelineTests`
+(+2: riallineamento+flag su inversione, warning su mismatch).
 
 **Timing: dopo CH1, non pre-OCR.**
 
@@ -674,9 +724,21 @@ FindRuntimeRoot) + `AlreadyProcessedPdfSelectionServiceTests` aggiornati (split:
 
 ---
 
-### Fase 7A — Modello e raccolta delle revisioni
+### Fase 7A — Modello e raccolta delle revisioni ✅ COMPLETATA (2026-06-18)
 
 **Obiettivo:** Rappresentare le associazioni dubbie; nessuna UI ancora.
+
+**Esito:** Build verde. Test: 233 passed, 0 failed (+6). `IdentityReviewItem` (+enum
+`IdentityReviewReason`: ProbableMatch/Conflict/NumberNotFound/Unmatched/NotInPdf) e
+`IdentityReviewBuilder` (usa `PlayerIdentityMatcher` Fase 4 in sola lettura: confronta i giocatori
+OCR col roster DB per lato, rileva anche i giocatori DB assenti dal PDF = NotInPdf). Aggiunti
+`FileProcessingStatus.CompletedWithReviewRequired` e `ProcessingResult.IdentityReview` (campo
+transitorio, in Fase 8 → IdentityResolutionResult). Pipeline: se `MatchContext` presente, popola
+IdentityReview e imposta lo stato review-required su Conflict/NotInPdf. Il matcher **non scrive**
+canonicalPlayerId (quello è Fase 8). No-op senza contesto.
+
+**Test:** `IdentityReviewBuilderTests` (5: nessun item su certain, Conflict, NotInPdf, NumberNotFound,
+serializzazione) + `MultiEnginePipelineTests` (+1: stato review-required su conflitto).
 
 **File nuovi:**
 - `src/BasketPdfStats.Core/Identity/IdentityReviewItem.cs`
@@ -693,9 +755,21 @@ FindRuntimeRoot) + `AlreadyProcessedPdfSelectionServiceTests` aggiornati (split:
 
 ---
 
-### Fase 7B — Interfaccia di revisione manuale funzionante
+### Fase 7B — Interfaccia di revisione manuale funzionante ✅ COMPLETATA (2026-06-18)
 
 **Obiettivo:** UI funzionante (non solo scaffold) per la risoluzione dei conflitti.
+
+**Esito:** Build verde. Test: 240 passed, 0 failed (+7). UI WPF reale `IdentityReviewWindow`
+(DataGrid: lato, motivo, jersey/nome OCR, confidenza, ComboBox candidati del **solo lato corretto**,
+Conferma per riga, checkbox Risolto; footer con conflitti aperti + "Conferma ed esporta" abilitato
+solo se `CanExport`). Logica testabile in `IdentityReviewViewModel`/`IdentityReviewRowViewModel`:
+candidati per lato corretto, conferma Conflict richiede candidato, NotInPdf si conferma come assenza,
+export bloccato finché restano Conflict/NotInPdf aperti, ProbableMatch/NumberNotFound/Unmatched non
+bloccanti. `IIdentityReviewService` + `WpfIdentityReviewService`. `MainViewModel`: `ReviewIdentityCommand`,
+import bloccato su review-required finché la revisione non è confermata.
+
+**Test:** `IdentityReviewViewModelTests` (5: candidati lato corretto, blocco/sblocco export, NotInPdf,
+non-bloccanti, ConfirmCommand) + `MainViewModelReviewTests` (2: import bloccato/sbloccato dopo revisione).
 
 **File:**
 - `src/BasketPdfStats.App/Views/IdentityReviewWindow.xaml` (o panel in MainWindow)
@@ -707,9 +781,24 @@ FindRuntimeRoot) + `AlreadyProcessedPdfSelectionServiceTests` aggiornati (split:
 
 ---
 
-### Fase 8 — Risultato canonico, JSON e aggiornamento import PHP
+### Fase 8 — Risultato canonico, JSON e aggiornamento import PHP ✅ COMPLETATA (2026-06-18)
 
 **Obiettivo:** JSON finale con ID canonici DB; payload import aggiornato.
+
+**Approvazione:** schema approvato dall'utente — opzione "Solo ImportPayload" (JSON locale invariato)
++ contratto import.php aggiornato (verifica + 422). Build verde. Test: 246 passed, 0 failed (+6).
+
+**Esito:** Nuovi modelli `ImportPayload`/`ImportTeam`/`ImportPlayer` (Core.Models) con
+matchId/teamId/playerId canonici. `ImportPayloadBuilder` (Core.Identity) risolve i playerId via
+`PlayerIdentityMatcher` (match certi/probabili) e applica gli **override manuali** della revisione
+(entityId→playerId). `IOcrImportService.ImportAsync` invia `ImportPayload` invece di `ProcessingResult`.
+`IIdentityReviewService.ReviewAndConfirm` ritorna la mappa delle risoluzioni; `MainViewModel` la passa
+al builder. `import.php`: §3/§4 usano i playerId canonici e li **verificano** sul roster (HTTP 422
+con lista `invalid`), nessun fuzzy matching; §5–§7 (stats + UPSERT) invariati. JSON locale e snapshot
+di regressione invariati. ⚠ `php -l` non eseguibile localmente: da validare prima del deploy (Fase 8B).
+
+**Test:** `ImportPayloadBuilderTests` (4: ID canonici, esclusione non risolti, override manuale, stats)
++ `OcrImportServiceTests` (+2: POST payload, errore 422).
 
 **⚠ Questa fase modifica lo schema JSON. Richiede approvazione esplicita prima dell'implementazione.**
 
@@ -730,9 +819,22 @@ FindRuntimeRoot) + `AlreadyProcessedPdfSelectionServiceTests` aggiornati (split:
 
 ---
 
-### Fase 8B — Preparazione del pacchetto backend per Aruba
+### Fase 8B — Preparazione del pacchetto backend per Aruba ✅ COMPLETATA (2026-06-19)
 
 **Obiettivo:** Pacchetto `release/backend.zip` aggiornato, senza segreti, pronto per il deploy.
+
+**Esito:** Script riutilizzabile `tools/build-backend-package.ps1` genera `release/backend.zip`
+(voci con separatore `/`, compatibile Linux/Aruba) + `release/backend-manifest.txt` (timestamp,
+commit, hash SHA-256, endpoint, file inclusi/esclusi, stato `php -l`). NON sovrascrive
+`backend/backend.zip`. Controlli automatici: presenza file, route in index.php, marker Fase 8 in
+import.php, scansione segreti (pulita). `backend/config/database.example.php` creato (placeholder,
+nessun segreto) e incluso come riferimento; `config/database.php` reale escluso. Checklist deploy +
+rollback in `docs/backend-deploy-checklist.md`. `release/backend.zip` aggiunto a `.gitignore`.
+⚠ `php -l` NON eseguito (PHP non disponibile in locale): da eseguire prima del deploy.
+Claude non si connette/pubblica su Aruba.
+
+**Pacchetto:** .htaccess, index.php, config/database.example.php, endpoints/{matches,context,import}.php,
+lib/{auth,helpers,response}.php (9 file).
 
 **Prerequisiti:** Fase 3 e Fase 8 completate, testate e approvate.
 
