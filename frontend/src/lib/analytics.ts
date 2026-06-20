@@ -1,6 +1,6 @@
 // Sostituire G-XXXXXXXXXX con il Measurement ID reale da Google Analytics 4
 // (es. G-AB12CD34EF) quando disponibile.
-const GA_ID = "G-XXXXXXXXXX";
+const GA_ID = "G-D8D7S7EWWH";
 
 export function initGA(): void {
   if (document.getElementById("ga-script")) return; // già caricato

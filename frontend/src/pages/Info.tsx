@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { BadgeInfo, CalendarDays, Users, Timer, Trophy, Shield, Target, AlertTriangle, MessageSquare } from "lucide-react";
+import { BadgeInfo, CalendarDays, Timer, Shield, Target, AlertTriangle, MessageSquare } from "lucide-react";
 
 function Section({ icon: Icon, title, children }: { icon: React.ElementType; title: string; children: React.ReactNode }) {
   return (
@@ -41,6 +41,28 @@ export function Info() {
 
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
 
+          {/* ── CHI SIAMO ── */}
+          <section className="bg-zinc-900 border-[3px] border-brand-orange p-6 sm:p-10 relative overflow-hidden">
+            <div className="font-sans text-zinc-300 space-y-4 text-base sm:text-lg leading-relaxed">
+              <p>
+                Piazzetta Madness nasce tra una partitella e l'altra, tra una pausa acqua e una retina cambiata, nel campetto circondato dal verde, che per noi rappresenta il cuore del paese.
+              </p>
+              <p>
+                È un torneo di basket, sì, ma lo sport è solo il mezzo.
+                Il vero obiettivo è <strong className="text-white">stare insieme</strong>, riscoprire la bellezza dei gesti semplici e gentili dello sport.
+              </p>
+              <p>
+                Piazzetta Madness sono tre sere di estate vera: schiacciate, risate che risuonano fino a tardi, trash talking, tiri da tre, gente che urla <em className="text-brand-orange">"fallo!"</em> anche quando non c'è e una birra al bar con chi hai sfidato in campo poco prima.
+              </p>
+              <p className="text-zinc-400">
+                Tutto qui. Ma è tutto quello che serve.
+              </p>
+              <p>
+                Siamo un gruppo di amici che ha deciso di organizzare qualcosa per restituire un po' di quello che questo posto ci dà ogni giorno. Non ci interessa guadagnarci, ci interessa esserci, fare la nostra parte, non stare con le mani in mano e spenderci per creare qualcosa di bello a casa nostra.
+              </p>
+            </div>
+          </section>
+
           {/* ── INFORMAZIONI GENERALI ── */}
           <Section icon={CalendarDays} title="Informazioni Generali">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -56,21 +78,6 @@ export function Info() {
             <p><strong className="text-white">Formula:</strong> 8 squadre divise in 2 gironi da 4. Le prime due di ogni girone passano in semifinale.</p>
             <p><strong className="text-white">Accesso al campo:</strong> solo per giocatori e organizzatori. Il pubblico è il benvenuto, ma fuori dal rettangolo di gioco.</p>
             <p><strong className="text-white">Puntualità:</strong> ogni squadra deve presentarsi almeno <span className="text-brand-orange font-bold">15 minuti prima</span> della propria partita.</p>
-          </Section>
-
-          {/* ── ISCRIZIONE ── */}
-          <Section icon={Users} title="Iscrizione">
-            <div className="bg-zinc-950 border border-brand-orange/30 p-4 mb-2">
-              <p className="font-display text-xl text-brand-orange">Costo: €200 a squadra</p>
-            </div>
-            <p><strong className="text-white">Per iscriversi servono:</strong></p>
-            <ul className="list-disc pl-5 space-y-1 text-zinc-400">
-              <li>Modulo firmato da tutta la squadra</li>
-              <li>Documento d'identità di ogni giocatore</li>
-              <li>Modulo Privacy firmato da ogni partecipante</li>
-            </ul>
-            <p className="text-red-400"><strong>Rinuncia dopo il 21 giugno:</strong> perdita della quota + mora di €400.</p>
-            <p>Il roster è considerato <strong className="text-white">definitivo dal 5 Luglio</strong>: non saranno ammessi cambi o nuove iscrizioni di giocatori dopo tale data.</p>
           </Section>
 
           {/* ── FORMULA DEL TORNEO ── */}
@@ -145,21 +152,9 @@ export function Info() {
 
             <p><strong className="text-white">Cambi:</strong> liberi a palla ferma, davanti al tavolo e con autorizzazione dell'arbitro.</p>
 
+            <p><strong className="text-white">Divise:</strong> ogni squadra riceve un completino ufficiale (maglia e pantaloncini) e gioca sempre con lo stesso.</p>
+
             <p><strong className="text-white">Numero minimo:</strong> almeno <span className="text-brand-orange font-bold">5 giocatori in campo</span>. Se per espulsioni o infortuni si scende sotto, la partita viene interrotta e assegnata a tavolino (20-0).</p>
-          </Section>
-
-          {/* ── ARBITRAGGIO E DISCIPLINA ── */}
-          <Section icon={Shield} title="Arbitraggio e Disciplina">
-            <p><strong className="text-white">Arbitri:</strong> tutte le partite saranno dirette da ufficiali designati dall'organizzazione.</p>
-            <p><strong className="text-white">Falli tecnici e antisportivi:</strong> sanzionati secondo regolamento FIP. In caso di espulsione grave, l'organizzazione valuterà sospensioni per le gare successive.</p>
-            <p><strong className="text-white">Panchina:</strong> soggetta al regolamento tecnico; eventuali infrazioni potranno comportare sanzioni.</p>
-            <p><strong className="text-white">Pubblico:</strong> l'organizzazione si riserva il diritto di allontanare chiunque tenga comportamenti offensivi, provocatori o violenti. In caso di episodi gravi, la partita potrà essere interrotta.</p>
-          </Section>
-
-          {/* ── DIVISE ── */}
-          <Section icon={Users} title="Divise">
-            <p>Ogni squadra riceve un <strong className="text-white">completino ufficiale</strong> (maglia e pantaloncini).</p>
-            <p>Le squadre giocano sempre con lo stesso completino.</p>
           </Section>
 
           {/* ── 3 POINT CONTEST ── */}
@@ -176,38 +171,12 @@ export function Info() {
             <p><strong className="text-white">Finale:</strong> i 3 migliori punteggi accedono a una finale secca. In caso di parità: mini-sfida da 3 postazioni.</p>
           </Section>
 
-          {/* ── PREMI ── */}
-          <Section icon={Trophy} title="Premi">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="bg-zinc-950 border border-brand-yellow/30 p-4 flex items-center gap-3">
-                <span className="text-2xl">🥇</span>
-                <div><p className="text-white font-bold">1ª classificata</p><p className="text-zinc-500 text-sm">Trofeo + premi</p></div>
-              </div>
-              <div className="bg-zinc-950 border border-zinc-700 p-4 flex items-center gap-3">
-                <span className="text-2xl">🥈</span>
-                <div><p className="text-white font-bold">2ª classificata</p><p className="text-zinc-500 text-sm">Trofeo + premi</p></div>
-              </div>
-              <div className="bg-zinc-950 border border-zinc-700 p-4 flex items-center gap-3">
-                <span className="text-2xl">🥉</span>
-                <div><p className="text-white font-bold">3ª classificata</p><p className="text-zinc-500 text-sm">Trofeo + premi</p></div>
-              </div>
-              <div className="bg-zinc-950 border border-brand-orange/30 p-4 flex items-center gap-3">
-                <span className="text-2xl">🏀</span>
-                <div><p className="text-white font-bold">MVP del Torneo</p><p className="text-zinc-500 text-sm">Trofeo + premio</p></div>
-              </div>
-              <div className="bg-zinc-950 border border-brand-blue/30 p-4 flex items-center gap-3">
-                <span className="text-2xl">🛡️</span>
-                <div><p className="text-white font-bold">Best Defensive Player</p><p className="text-zinc-500 text-sm">Trofeo + premio</p></div>
-              </div>
-              <div className="bg-zinc-950 border border-brand-yellow/30 p-4 flex items-center gap-3">
-                <span className="text-2xl">🎯</span>
-                <div><p className="text-white font-bold">3 Point Contest</p><p className="text-zinc-500 text-sm">Trofeo + premio</p></div>
-              </div>
-              <div className="bg-zinc-950 border border-zinc-700 p-4 flex items-center gap-3 sm:col-span-2">
-                <span className="text-2xl">🏀</span>
-                <div><p className="text-white font-bold">Ultima classificata</p><p className="text-zinc-500 text-sm">Buono da €15 da CS Sport — esclusivamente per scarpe da basket</p></div>
-              </div>
-            </div>
+          {/* ── ARBITRAGGIO E DISCIPLINA ── */}
+          <Section icon={Shield} title="Arbitraggio e Disciplina">
+            <p><strong className="text-white">Arbitri:</strong> tutte le partite saranno dirette da ufficiali designati dall'organizzazione.</p>
+            <p><strong className="text-white">Falli tecnici e antisportivi:</strong> sanzionati secondo regolamento FIP. In caso di espulsione grave, l'organizzazione valuterà sospensioni per le gare successive.</p>
+            <p><strong className="text-white">Panchina:</strong> soggetta al regolamento tecnico; eventuali infrazioni potranno comportare sanzioni.</p>
+            <p><strong className="text-white">Pubblico:</strong> l'organizzazione si riserva il diritto di allontanare chiunque tenga comportamenti offensivi, provocatori o violenti. In caso di episodi gravi, la partita potrà essere interrotta.</p>
           </Section>
 
           {/* ── COMUNICAZIONI ── */}
