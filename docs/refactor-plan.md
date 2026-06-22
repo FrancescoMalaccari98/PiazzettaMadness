@@ -923,19 +923,30 @@ release/backend.zip
 
 ---
 
-### Fase 10 — Validazione end-to-end e benchmark CH3/CH4
+### Fase 10 — Validazione end-to-end e benchmark CH3/CH4 (STRUMENTI PRONTI — esecuzione locale)
 
-**Prerequisiti:** Fase 5 completata (pipeline usa roster DB).
+**Prerequisiti:** Fase 5 completata (pipeline usa roster DB). Ambiente OCR (venv + Tesseract) — locale.
 
-**Procedura:**
-1. Esegui pipeline completa su `samples/pdf/TABELLINO FINALE 1-2 POSTO.pdf`
-2. Confronta output CH1/CH2/CH3/CH4
-3. Misura: concordanze, conflitti, errori per canale
-4. Aggiorna `reconciliation.engineWeights` in appsettings.json con dati misurati
+**Strumenti preparati (2026-06-19):**
+- `tests/.../ChannelValidationHarnessTests.cs` — harness `[Integration]`: esegue la pipeline reale
+  (tutti i canali da appsettings.json via `AppComposition.Build`) su `samples/pdf/` e produce un report
+  per-canale (copertura, accordi, conflitti, tempi) da `OcrRuns` + `Stats[].Reconciliation.ProviderValues`.
+  Esce senza fallire se l'ambiente OCR è assente.
+- `tools/run-channel-validation.ps1` — wrapper che lancia l'harness e mostra il report.
+- `docs/ch3-ch4-validation.md` — procedura, lettura report, criteri di tuning pesi, gate per Fase 9.
+
+**Procedura (da eseguire in locale):**
+1. `.\tools\run-channel-validation.ps1`
+2. Leggere `TestResults/ChannelValidation/channel-validation-report.md`
+3. Tarare `reconciliation.engineWeights` in appsettings.json con i dati misurati; rilanciare.
 
 **Criteri di accettazione:** CH3 e CH4 migliorano (o non peggiorano) la qualità finale su almeno 3 PDF campione.
 
 **Decisione su CH4:** Rimuovere solo con benchmark negativi documentati.
+
+**Nota:** l'harness gira senza `MatchContext` (CH1 usa ancora il fallback known_names.py). Per validare
+il roster dinamico — prerequisito per rimuovere known_names.py — ripetere il flusso dall'app con una
+partita reale o estendere l'harness con un `OcrMatchContext` di prova.
 
 ---
 

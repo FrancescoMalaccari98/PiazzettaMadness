@@ -216,7 +216,14 @@ provider is part of the solution. Adobe and GLM-OCR are fully removed.
   - [ ] `MatchLookupDate`: non approvato ora (resta `[Obsolete]`).
   - [ ] `known_names.py` + fallback `roster_context.py`: rinviati a dopo validazione Fase 10 su PDF reali.
   - [ ] `backend/backend.zip`: rinviato a dopo deploy verificato di `release/backend.zip` su Aruba.
-- **Prossima fase:** Fase 10 (validazione end-to-end + benchmark CH3/CH4) — richiede ambiente OCR (venv + Tesseract + PDF), da eseguire in locale.
+- **Fase 10** (validazione end-to-end + benchmark CH3/CH4): **strumenti pronti (2026-06-19), esecuzione locale a carico utente**.
+  - `tests/.../ChannelValidationHarnessTests.cs` (`[Integration]`): pipeline reale su samples/pdf/ via `AppComposition.Build`,
+    report per-canale (copertura/accordi/conflitti/tempi) da `OcrRuns` + `Stats[].Reconciliation.ProviderValues`. Esce senza fallire se OCR assente.
+  - `tools/run-channel-validation.ps1` (wrapper) + `docs/ch3-ch4-validation.md` (procedura, lettura, tuning pesi, gate Fase 9).
+  - Output: `TestResults/ChannelValidation/channel-validation-report.{md,json}`.
+  - Build verde, 246 test non-integration (harness escluso perché Integration).
+  - ⚠ Esecuzione reale + tuning pesi + validazione roster dinamico (con MatchContext) restano da fare in locale.
+- **Refactoring**: tutte le fasi 0A–8B implementate; Fase 9 (per-item) e Fase 10 (validazione/tuning) in mano all'utente per le parti che richiedono ambiente OCR / deploy Aruba.
 
 ## Risky or Unfinished Areas
 
