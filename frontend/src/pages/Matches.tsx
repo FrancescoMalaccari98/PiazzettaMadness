@@ -869,29 +869,41 @@ export function Matches() {
                     {/* Box score completo (da API) */}
                     {matchDetail && !loadingDetail && (
                       <>
-                        {/* Info partita */}
-                        <div className="grid grid-cols-3 gap-2 mb-6 text-center">
-                          <div className="bg-zinc-900 border border-zinc-800 p-3">
-                            <p className="font-display text-[10px] uppercase tracking-widest text-zinc-500 mb-1">Gara</p>
-                            <p className="font-mono text-white font-bold">#{matchDetail.nGara}</p>
-                          </div>
-                          <div className="bg-zinc-900 border border-zinc-800 p-3">
-                            <p className="font-display text-[10px] uppercase tracking-widest text-zinc-500 mb-1">Spettatori</p>
-                            <p className="font-mono text-white font-bold">{matchDetail.spettatori}</p>
-                          </div>
-                          <div className="bg-zinc-900 border border-zinc-800 p-3">
-                            <p className="font-display text-[10px] uppercase tracking-widest text-zinc-500 mb-1">Durata</p>
-                            <p className="font-mono text-white font-bold">{matchDetail.durata}</p>
-                          </div>
-                        </div>
+                        {/* MVP della partita — miglior giocatore della squadra vincente per valutazione */}
+                        {(() => {
+                          const homeWon = matchDetail.totaleCasa > matchDetail.totaleTrasferta;
+                          const winningTeam = homeWon ? matchDetail.squadraCasa : matchDetail.squadraTrasferta;
+                          const mvp = [...winningTeam.giocatori].sort((a, b) => b.valutazione - a.valutazione)[0];
+                          if (!mvp) return null;
+                          const mvpSlug = getPlayerSlug(mvp.nome);
+                          return (
+                            <div className="bg-brand-blue/10 border-[3px] border-brand-blue p-4 mb-6 flex items-center gap-4">
+                              <div className="bg-brand-blue p-2.5 shrink-0">
+                                <Flame className="w-6 h-6 text-brand-bg" />
+                              </div>
+                              <div>
+                                <p className="font-display text-xs uppercase tracking-widest text-brand-blue mb-1">MVP della Partita</p>
+                                <p className="font-sans text-white text-lg font-bold">
+                                  {mvpSlug
+                                    ? <Link to={`/statistiche/${mvpSlug}`} className="hover:text-brand-orange transition-colors">{mvp.nome}</Link>
+                                    : mvp.nome}
+                                  <span className="text-zinc-500 text-sm font-normal ml-2">
+                                    {mvp.punti} pts · {mvp.valutazione} val · {winningTeam.nome}
+                                  </span>
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        })()}
 
-                        {/* Punteggi per quarto */}
+                        {/* Punteggi per quarto (solo se ci sono dati) */}
+                        {matchDetail.quartiCasa.length > 0 && (
                         <div className="mb-6 overflow-x-auto">
                           <table className="w-full text-xs text-center border border-zinc-800">
                             <thead>
                               <tr className="bg-zinc-900 border-b border-zinc-700">
                                 <th className="text-left px-3 py-2 font-display uppercase tracking-widest text-zinc-500 w-32">Squadra</th>
-                                {matchDetail.quartiCasa.map((_, i) => (
+                                {matchDetail.quartiCasa.map((_: number, i: number) => (
                                   <th key={i} className="px-3 py-2 font-display uppercase tracking-widest text-zinc-500">Q{i+1}</th>
                                 ))}
                                 <th className="px-3 py-2 font-display uppercase tracking-widest text-brand-orange">TOT</th>
@@ -900,49 +912,24 @@ export function Matches() {
                             <tbody>
                               <tr className="border-b border-zinc-800">
                                 <td className="text-left px-3 py-2 font-sans font-bold text-zinc-300 truncate"><TeamLink name={matchDetail.squadraCasa.nome} /></td>
-                                {matchDetail.quartiCasa.map((q, i) => <td key={i} className="px-3 py-2 font-mono text-zinc-400">{q}</td>)}
+                                {matchDetail.quartiCasa.map((q: number, i: number) => <td key={i} className="px-3 py-2 font-mono text-zinc-400">{q}</td>)}
                                 <td className="px-3 py-2 font-mono font-bold text-brand-orange">{matchDetail.totaleCasa}</td>
                               </tr>
                               <tr>
                                 <td className="text-left px-3 py-2 font-sans font-bold text-zinc-300 truncate"><TeamLink name={matchDetail.squadraTrasferta.nome} /></td>
-                                {matchDetail.quartiTrasferta.map((q, i) => <td key={i} className="px-3 py-2 font-mono text-zinc-400">{q}</td>)}
+                                {matchDetail.quartiTrasferta.map((q: number, i: number) => <td key={i} className="px-3 py-2 font-mono text-zinc-400">{q}</td>)}
                                 <td className="px-3 py-2 font-mono font-bold text-white">{matchDetail.totaleTrasferta}</td>
                               </tr>
                             </tbody>
                           </table>
                         </div>
+                        )}
 
                         {/* Tabella giocatori */}
                         <div className="space-y-6 mb-6">
                           <BoxScoreTable team={matchDetail.squadraCasa} getPlayerSlug={getPlayerSlug} />
                           <BoxScoreTable team={matchDetail.squadraTrasferta} getPlayerSlug={getPlayerSlug} />
                         </div>
-
-                        {/* Stats di squadra a confronto */}
-                        <div className="border border-zinc-800 overflow-hidden mb-6">
-                          <div className="bg-zinc-900 px-4 py-2 border-b border-zinc-800">
-                            <h5 className="font-display text-sm uppercase tracking-widest text-zinc-400">Stats di Squadra</h5>
-                          </div>
-                          {[
-                            ["Punti da Palle Perse", matchDetail.statsCasa.puntiDaPallePerse, matchDetail.statsTrasferta.puntiDaPallePerse],
-                            ["Punti in Area", matchDetail.statsCasa.puntiInArea, matchDetail.statsTrasferta.puntiInArea],
-                            ["Punti Contropiede", matchDetail.statsCasa.puntiContropiede, matchDetail.statsTrasferta.puntiContropiede],
-                            ["Punti Panchina", matchDetail.statsCasa.puntiPanchina, matchDetail.statsTrasferta.puntiPanchina],
-                            ["Points per Possession", matchDetail.statsCasa.pointsPerPossession, matchDetail.statsTrasferta.pointsPerPossession],
-                            ["Tempo in Vantaggio", matchDetail.statsCasa.tempoInVantaggio, matchDetail.statsTrasferta.tempoInVantaggio],
-                          ].map(([label, casa, trasf]) => (
-                            <div key={String(label)} className="flex items-center border-b border-zinc-800/50 last:border-0 px-4 py-2">
-                              <span className="font-mono text-sm font-bold text-brand-orange w-16 text-center">{casa}</span>
-                              <span className="flex-1 text-center font-display text-[10px] uppercase tracking-widest text-zinc-500">{label}</span>
-                              <span className="font-mono text-sm font-bold text-white w-16 text-center">{trasf}</span>
-                            </div>
-                          ))}
-                        </div>
-
-                        {/* Arbitri */}
-                        <p className="font-sans text-xs text-zinc-600 text-center">
-                          Arbitri: {matchDetail.arbitri.join(" · ")}
-                        </p>
                       </>
                     )}
 
