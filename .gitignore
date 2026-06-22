@@ -1,6 +1,7 @@
 node_modules/
 build/
 frontend/dist/
+frontend/frontend.zip
 coverage/
 .DS_Store
 *.log
