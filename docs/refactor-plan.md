@@ -948,6 +948,27 @@ release/backend.zip
 il roster dinamico — prerequisito per rimuovere known_names.py — ripetere il flusso dall'app con una
 partita reale o estendere l'harness con un `OcrMatchContext` di prova.
 
+**Fase 10C — analisi risultati (2026-06-22):** validazione eseguita su 5 PDF (tutti i canali Success,
+stato CompletedWithWarnings). Aggregato per provider: CH1 `ocr.tesseract.fullpage` cov 2187 / accordo
+85.9% (tutti i 309 conflitti); CH2 `ocr.tesseract.crop` cov 32 / 93.8%; CH3 `ocr.paddle.crop` cov 80 /
+100%; CH4 `ocr.paddle.row` cov 1816 / 99.8%. 2331 campi riconciliati, 2743 warnings (~1.18/campo).
+Dettaglio + caveat metodologico (accordo = vs reconciler, non ground truth) e proposta di tuning **non
+applicata** in `docs/ch3-ch4-validation.md`. Harness esteso con aggregato per provider, tempi medi e
+breakdown warnings per severità/categoria. `engineWeights` invariati: tuning rinviato all'analisi dei
+warning `math.*`.
+
+**Fase 10D — dettaglio warning matematici (2026-06-23):** harness esteso per collegare ogni warning
+`math.*` alle statistiche coinvolte (via `Validation.Warnings[].FieldIds` → `Stats[].FieldId`) ed
+estrarre, per ognuno: PDF, entità (giocatore/squadra + side), regola fallita, statistica, valore finale
+scelto dal reconciler, valori per provider, provider scelto/concordi, messaggio completo, severità,
+categoria, flag bloccante/diagnostico e collegamento a `FailedRules`. Il report markdown/JSON ora include
+una sezione `Dettaglio warning matematici` per-PDF + aggregata, oltre all'aggregato già presente.
+Harness rieseguito in locale (2026-06-23, 4m19s, tutti i canali Success): **4 warning `math.*` su 2331
+campi riconciliati**, tutti **non bloccanti** (2 `Info` rimbalzi squadra, 2 `Warning` gap estrazione
+punti/periodi; stato `CompletedWithWarnings`). Tutti su totali squadra/periodi, riconducibili a gap di
+estrazione non a selezione errata → **nessun tuning pesi raccomandato**. `engineWeights` e
+`appsettings.json` invariati. Build verde, 246 test non-integration verdi. Vedere `docs/ch3-ch4-validation.md`.
+
 ---
 
 ## 16. Matrice dei test per fase

@@ -223,6 +223,39 @@ provider is part of the solution. Adobe and GLM-OCR are fully removed.
   - Output: `TestResults/ChannelValidation/channel-validation-report.{md,json}`.
   - Build verde, 246 test non-integration (harness escluso perché Integration).
   - ⚠ Esecuzione reale + tuning pesi + validazione roster dinamico (con MatchContext) restano da fare in locale.
+  - **Config locale corretto (2026-06-22)**: `Config/appsettings.json` rigenerato dal portable ma con i percorsi reali dello sviluppo:
+    CH1/CH2 python = `fiba_pdf_to_json_programma_v2\fiba_pdf_to_json\.venv\Scripts\python.exe`, CH3/CH4 = `.venv-paddle\Scripts\python.exe`,
+    calibrazione = `.venv-crop\Scripts\python.exe`; `tesseractExecutableFolder`/`tessdataPrefix` vuoti (Tesseract dal PATH).
+    Causa del fallimento precedente: il portable puntava a un bundle inesistente (`tools\python-tesseract`, `tools\python-paddle`, `tools\tesseract`).
+    Pesi `engineWeights` e resto invariati; nessun segreto. `Config/appsettings.json` ignorato da git (riga .gitignore).
+- **Fase 10C** (analisi risultati validazione): **completata 2026-06-22**.
+  - Validazione eseguita in locale su 5 PDF (tutti i canali Success, stato CompletedWithWarnings).
+  - Aggregato per provider: CH1 cov 2187/accordo 85.9% (309 conflitti, tutti suoi); CH2 cov 32/93.8%; CH3 cov 80/100%; CH4 cov 1816/99.8%.
+    Tempi medi: CH1 ~11s, CH2 ~4.8s, CH3 ~6.5s, CH4 ~16s. 2331 campi riconciliati, 2743 warnings (~1.18/campo).
+  - Harness esteso (test): aggregato per provider, tempi medi per canale, breakdown warnings per severità/categoria (per PDF + aggregato).
+  - Analisi + caveat (accordo = vs reconciler, non ground truth) + proposta tuning **NON applicata** in `docs/ch3-ch4-validation.md`.
+  - `Config/appsettings.json` e `reconciliation.engineWeights` invariati. Build+test verdi (246). `TestResults/` non committato.
+  - Prossimo passo per il tuning: rilanciare l'harness per il breakdown `math.*` e mappare i FailedRules ai provider.
+- **Fase 10D** (dettaglio warning matematici): **completata 2026-06-23**.
+  - Harness `ChannelValidationHarnessTests` esteso: collega ogni warning `math.*` alle statistiche
+    coinvolte (`Validation.Warnings[].FieldIds` → `Stats[].FieldId`) ed estrae per ognuno PDF, entità
+    (giocatore/squadra + side), regola fallita, statistica, valore finale scelto, valori per provider,
+    provider scelto/concordi, messaggio completo, severità, categoria, flag bloccante/diagnostico e
+    collegamento a `FailedRules`. Nuovi record `MathWarningDetail`/`MathWarningStat`.
+  - Report markdown/JSON: aggiunta sezione `Dettaglio warning matematici` per-PDF + aggregata
+    (l'aggregato esistente per provider/tempi/severità è mantenuto invariato).
+  - Harness `[Integration]` **eseguito in locale (2026-06-23, 4m19s, tutti i canali Success)**:
+    confermati **4 warning `math.*` su 2331 campi riconciliati** (~0.17%), tutti **non bloccanti**
+    (3 su `SEMIFINALE 1`, 1 su `SPR-DEN`; stato `CompletedWithWarnings`). Dettaglio:
+    (1) `math.reboundsTotal` Info Miami Spritz 35 vs 29; (2) `math.pointsFormula` Warning Philadelphia
+    28 vs 26 (gap tiri realizzati squadra); (3) `math.periodSum` Warning Away 28 vs Q1+Q2=26 (crop
+    periodi parziali); (4) `math.reboundsTotal` Info Denver 2 vs 27 (probabile misread totale rimbalzi).
+  - Tutti i casi sono su **totali squadra/periodi** (non righe giocatore, solide al 99.8%) e riconducibili
+    a gap/ambiguità di estrazione, non a selezione errata del reconciler → **nessun tuning pesi raccomandato**.
+  - Documentazione: `docs/ch3-ch4-validation.md` (sezione 10D: tassonomia regole, 4 casi concreti,
+    valutazione bloccante/diagnostico, nessun tuning raccomandato) e `docs/refactor-plan.md` aggiornati.
+  - `Config/appsettings.json` e `reconciliation.engineWeights` invariati. Build verde, 246 test
+    non-integration verdi. `TestResults/` non committato.
 - **Refactoring**: tutte le fasi 0A–8B implementate; Fase 9 (per-item) e Fase 10 (validazione/tuning) in mano all'utente per le parti che richiedono ambiente OCR / deploy Aruba.
 
 ## Risky or Unfinished Areas
