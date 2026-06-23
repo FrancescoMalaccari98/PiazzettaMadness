@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "motion/react";
-import { Calendar, MapPin, Trophy, Users, ArrowUpRight, Swords } from "lucide-react";
+import { Calendar, MapPin, Trophy, Users, ArrowUpRight } from "lucide-react";
 
 const MAPS_URL = "https://maps.app.goo.gl/5kgGKRw5Hm3LJHbn9";
 
@@ -62,19 +62,39 @@ function CountdownUnit({ value, label, pulse = false }: { value: number; label: 
   );
 }
 
+type HomeMatch = {
+  id: string;
+  round: string;
+  date: string;
+  status: "COMPLETA" | "LIVE" | "IN PROGRAMMA";
+  team1: { name: string; score: number };
+  team2: { name: string; score: number };
+};
+
 export function Home() {
   const [kickoffState, setKickoffState] = useState<{ target: Date; show: boolean } | null>(null);
+  const [allMatches, setAllMatches] = useState<HomeMatch[]>([]);
 
   useEffect(() => {
     fetch(`${API}/api-web/partite`)
       .then(r => r.ok ? r.json() : null)
-      .then((matches: { date: string }[] | null) => {
+      .then((matches: HomeMatch[] | null) => {
         if (!matches?.length) return;
+        setAllMatches(matches);
         const first = matches.find(m => m.date);
         if (first) setKickoffState(getKickoffState(first.date));
       })
       .catch(() => {});
   }, []);
+
+  // Prossima partita da giocare (o la prima live)
+  const nextMatch = allMatches.find(m => m.status === "LIVE") ?? allMatches.find(m => m.status === "IN PROGRAMMA");
+
+  // Playoff: semifinali e finale
+  const semis = allMatches.filter(m => m.round.includes("Semifinale") || m.round.includes("Final Four"));
+  const sf1 = semis[0];
+  const sf2 = semis[1];
+  const finale = allMatches.find(m => m.round === "Finale" || m.round.includes("Finale 1"));
 
   const fallbackTarget = (() => {
     const now = new Date();
@@ -221,87 +241,69 @@ export function Home() {
               </div>
             </div>
 
-            {/* Block 3: Detail Info */}
-            <div className="md:col-span-5 bg-zinc-900 border-[4px] border-brand-yellow p-8 md:p-12 relative overflow-hidden group">
-              <Users className="w-12 h-12 text-brand-yellow mb-12 group-hover:scale-110 transition-transform" />
-              <h3 className="font-display text-3xl mb-4 text-white uppercase">5 VS 5 Format</h3>
-              <p className="font-sans text-zinc-400 text-lg">Match senza esclusione di colpi. Rotazioni veloci, fisicità al limite. Forma il tuo quintetto migliore.</p>
-            </div>
-
-            {/* Block 4: Prize */}
-            <div className="md:col-span-7 bg-zinc-900 border-[4px] border-zinc-700 p-8 md:p-12 relative overflow-hidden group hover:border-white transition-colors">
-              <div className="absolute top-0 right-0 w-1/3 h-full bg-zinc-800/30 border-l-[4px] border-zinc-700 group-hover:border-white transition-colors skew-x-12 translate-x-10"></div>
-              <Trophy className="w-12 h-12 text-white mb-12 group-hover:scale-110 transition-transform relative z-10" />
-              <h3 className="font-display text-3xl mb-4 text-white uppercase relative z-10">Gloria Eterna</h3>
-              <p className="font-sans text-zinc-400 text-lg relative z-10 md:w-3/4">Montepremi in palio e il diritto di vantarsi come i veri Re della Piazzetta fino alla successiva edizione del torneo.</p>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* Tournament Live Preview Section */}
-      <section className="py-24 border-y-[6px] border-zinc-800 bg-zinc-950 relative overflow-hidden">
-        <div className="absolute inset-0 bg-brand-blue/5"></div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6">
-            <div>
-              <h2 className="font-display text-3xl sm:text-5xl md:text-7xl uppercase flex items-center gap-3 sm:gap-4 text-white mb-4">
-                <Swords className="w-8 h-8 sm:w-12 sm:h-12 text-brand-orange shrink-0" /> Formato Torneo
-              </h2>
-              <p className="font-sans text-base sm:text-xl text-zinc-400 max-w-2xl">Dal girone all'italiana (tutti contro tutti) fino all'eliminazione diretta. Scopri le date e i super-match della Piazzetta Madness.</p>
-            </div>
-            <Link 
-              to="/match" 
-              className="bg-zinc-900 text-white border-[3px] border-zinc-700 px-6 py-3 font-display uppercase tracking-widest hover:border-brand-orange hover:bg-brand-orange hover:text-black transition-colors shrink-0"
-            >
-              Vedi Tabellone Completo
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Box 1: Girone Preview */}
-            <div className="border-[4px] border-brand-blue bg-zinc-900/50 p-8 hover:-translate-y-2 transition-transform shadow-[8px_8px_0_var(--color-brand-blue)] flex flex-col justify-between">
+            {/* Block 3: Fase a Gironi + prossima partita */}
+            <Link to="/match" className="md:col-span-5 bg-zinc-900/50 border-[4px] border-brand-blue p-8 flex flex-col justify-between group hover:-translate-y-1 transition-transform shadow-[8px_8px_0_var(--color-brand-blue)]">
               <div>
                 <Calendar className="text-brand-blue w-10 h-10 mb-6" />
-                <h3 className="font-display text-3xl uppercase text-white mb-2">1. Fase a Gironi</h3>
-                <p className="font-sans text-zinc-400 mb-8">Formato all'italiana: 6 squadre, un unico girone. Chi sopravvive accede alla fase finale. Ogni fischio è decisivo.</p>
+                <h3 className="font-display text-2xl sm:text-3xl uppercase text-white mb-2">1. Fase a Gironi</h3>
+                <p className="font-sans text-zinc-400">8 squadre, 2 gironi da 4. Le prime 2 di ogni girone passano ai playoff.</p>
               </div>
-              <div className="border-t border-zinc-800 pt-6 mt-auto">
-                <div className="flex justify-between items-center text-sm font-mono text-zinc-500 mb-2">
-                  <span>Match Clou:</span>
-                  <span>14 Ago</span>
+              {nextMatch && (
+                <div className="border-t border-zinc-800 pt-4 mt-6">
+                  <div className="flex justify-between items-center text-xs font-mono text-zinc-500 mb-2">
+                    <span>{nextMatch.status === "LIVE" ? "In corso" : "Prossima"}</span>
+                    <span>{nextMatch.date}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-2 font-sans font-bold text-sm sm:text-base uppercase">
+                    <span className="flex-1 text-left leading-tight text-zinc-200 truncate">{nextMatch.team1.name}</span>
+                    <span className="text-brand-orange shrink-0 px-1">VS</span>
+                    <span className="flex-1 text-right leading-tight text-zinc-200 truncate">{nextMatch.team2.name}</span>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between gap-2 font-sans font-bold text-sm sm:text-lg md:text-xl uppercase">
-                  <span className="flex-1 text-left leading-tight">Saluta Andonio Spurs</span>
-                  <span className="text-brand-orange shrink-0 px-1">VS</span>
-                  <span className="flex-1 text-right leading-tight">Miami Spritz</span>
-                </div>
-              </div>
-            </div>
+              )}
+            </Link>
 
-            {/* Box 2: Playoff Preview */}
-            <div className="border-[4px] border-brand-orange bg-zinc-900/50 p-8 hover:-translate-y-2 transition-transform shadow-[8px_8px_0_var(--color-brand-orange)] flex flex-col justify-between">
+            {/* Block 4: Playoff Bracket con squadre reali */}
+            <Link to="/match" className="md:col-span-7 bg-zinc-900/50 border-[4px] border-brand-orange p-8 flex flex-col justify-between group hover:-translate-y-1 transition-transform shadow-[8px_8px_0_var(--color-brand-orange)]">
               <div>
                 <Trophy className="text-brand-orange w-10 h-10 mb-6" />
-                <h3 className="font-display text-3xl uppercase text-white mb-2">2. Playoff Bracket</h3>
-                <p className="font-sans text-zinc-400 mb-8">Le migliori 4 si sfidano in semifinali e finale secca. Il tabellone si infiamma, niente seconde possibilità.</p>
+                <h3 className="font-display text-2xl sm:text-3xl uppercase text-white mb-2">2. Playoff Bracket</h3>
+                <p className="font-sans text-zinc-400 mb-6">Eliminazione diretta fino al campione.</p>
               </div>
-              <div className="flex items-center gap-4 mt-auto">
-                {/* Mini bracket illustration */}
-                <div className="flex-1 space-y-4">
-                  <div className="h-10 border-[2px] border-zinc-700 bg-zinc-950 flex items-center justify-center text-xs font-display text-zinc-500 uppercase">Semifinale</div>
-                  <div className="h-10 border-[2px] border-zinc-700 bg-zinc-950 flex items-center justify-center text-xs font-display text-zinc-500 uppercase">Semifinale</div>
+              <div className="flex items-center gap-3 mt-auto">
+                <div className="flex-1 min-w-0 space-y-2">
+                  <div className="h-8 border-[2px] border-zinc-700 bg-zinc-950 flex items-center justify-center px-2 overflow-hidden">
+                    <span className="text-[9px] font-display uppercase truncate block text-zinc-500">
+                      {sf1?.status === "COMPLETA"
+                        ? (sf1.team1.score > sf1.team2.score ? sf1.team1.name : sf1.team2.name)
+                        : "Semifinale 1"}
+                    </span>
+                  </div>
+                  <div className="h-8 border-[2px] border-zinc-700 bg-zinc-950 flex items-center justify-center px-2 overflow-hidden">
+                    <span className="text-[9px] font-display uppercase truncate block text-zinc-500">
+                      {sf2?.status === "COMPLETA"
+                        ? (sf2.team1.score > sf2.team2.score ? sf2.team1.name : sf2.team2.name)
+                        : "Semifinale 2"}
+                    </span>
+                  </div>
                 </div>
-                <div className="w-8 border-t-2 border-r-2 border-b-2 border-zinc-700 h-14 translate-x-2"></div>
-                <div className="flex-1">
-                  <div className="h-12 border-[2px] border-brand-yellow font-display uppercase tracking-widest text-brand-yellow bg-zinc-950 flex items-center justify-center">Finale</div>
+                <div className="w-5 border-t-2 border-r-2 border-b-2 border-zinc-700 h-10 shrink-0"></div>
+                <div className="flex-1 min-w-0">
+                  <div className="h-9 border-[2px] border-brand-yellow bg-zinc-950 flex items-center justify-center px-2 overflow-hidden">
+                    <span className="text-[10px] font-display uppercase tracking-widest truncate block text-brand-yellow">
+                      {finale?.status === "COMPLETA"
+                        ? (finale.team1.score > finale.team2.score ? finale.team1.name : finale.team2.name)
+                        : "Finale"}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
+            </Link>
+
           </div>
         </div>
       </section>
+
       
       {/* Visual Section */}
       <section className="py-32 relative overflow-hidden bg-brand-bg">

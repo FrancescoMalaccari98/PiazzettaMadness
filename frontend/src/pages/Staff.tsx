@@ -145,9 +145,6 @@ export function Staff() {
                 <h2 className="font-display text-3xl sm:text-4xl uppercase text-white tracking-wide">
                   {group.label}
                 </h2>
-                <span className="font-mono text-brand-yellow text-xs border border-zinc-700 px-2 py-1 shrink-0">
-                  {String(group.members.length).padStart(2, "0")}
-                </span>
                 <div className="flex-1 h-[3px] bg-zinc-800" />
               </div>
 

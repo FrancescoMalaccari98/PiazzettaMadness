@@ -52,7 +52,7 @@ export function Info() {
                 Il vero obiettivo è <strong className="text-white">stare insieme</strong>, riscoprire la bellezza dei gesti semplici e gentili dello sport.
               </p>
               <p>
-                Piazzetta Madness sono tre sere di estate vera: schiacciate, risate che risuonano fino a tardi, trash talking, tiri da tre, gente che urla <em className="text-brand-orange">"fallo!"</em> anche quando non c'è e una birra al bar con chi hai sfidato in campo poco prima.
+                Piazzetta Madness sono quattro sere di estate vera: schiacciate, risate che risuonano fino a tardi, trash talking, tiri da tre, gente che urla <em className="text-brand-orange">"fallo!"</em> anche quando non c'è e una birra al bar con chi hai sfidato in campo poco prima.
               </p>
               <p className="text-zinc-400">
                 Tutto qui. Ma è tutto quello che serve.

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "motion/react";
-import { Target, Trophy, ChevronDown } from "lucide-react";
+import { motion } from "motion/react";
+import { Target, Trophy } from "lucide-react";
 
 const API = import.meta.env.VITE_API_URL ?? "";
 
@@ -41,12 +41,76 @@ const POSITION_STYLES: Record<number, { badge: string; border: string; text: str
   3: { badge: "bg-amber-700 text-white", border: "border-amber-700", text: "text-amber-600" },
 };
 
-const MAX_STATION = 6; // 4×1pt + 1×2pt money ball
+const MAX_STATION = 6;
+
+function StationBars({ round }: { round: Round }) {
+  return (
+    <div className="flex items-center gap-1">
+      {round.stations.map((score, si) => (
+        <div key={si} className={`w-8 h-8 flex items-center justify-center font-mono text-xs font-bold border border-zinc-700 ${
+          score >= 5 ? "bg-brand-yellow/20 text-brand-yellow border-brand-yellow/40"
+          : score >= 3 ? "bg-brand-orange/10 text-brand-orange border-brand-orange/30"
+          : "bg-zinc-900 text-zinc-500"
+        }`}>
+          {score}
+        </div>
+      ))}
+      <div className="font-mono text-base font-black text-white ml-2 w-8 text-center">
+        {round.total}
+      </div>
+    </div>
+  );
+}
+
+function PlayerRow({ entry, pos, isCompleted }: { entry: Entry; pos: number; isCompleted: boolean }) {
+  const style = POSITION_STYLES[pos];
+
+  return (
+    <div className={`border-b border-zinc-800/60 last:border-0 ${pos <= 3 && isCompleted ? "bg-zinc-800/10" : ""}`}>
+      {/* Info giocatore */}
+      <div className="flex items-center gap-2 sm:gap-4 px-3 sm:px-5 py-3 sm:py-4">
+        <span className={`w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center font-display text-xs sm:text-sm font-bold shrink-0 ${
+          style ? style.badge : "text-zinc-600"
+        }`}>
+          {pos}
+        </span>
+
+        <div className="min-w-0 flex-1">
+          <p className={`font-sans font-bold text-xs sm:text-base uppercase truncate ${
+            style ? style.text : "text-zinc-300"
+          }`}>
+            {entry.player}
+          </p>
+          <p className="font-sans text-[10px] sm:text-xs text-zinc-500 truncate">{entry.team}</p>
+        </div>
+
+        <span className={`font-mono text-lg sm:text-2xl font-black tabular-nums shrink-0 ${
+          style ? style.text : "text-zinc-400"
+        }`}>
+          {entry.total_score}
+        </span>
+      </div>
+
+      {/* Dettaglio stazioni — sempre visibile */}
+      {entry.rounds.length > 0 && (
+        <div className="px-3 sm:px-5 pb-3 sm:pb-4 pt-0 space-y-2 sm:space-y-3">
+          {entry.rounds.map(round => (
+            <div key={round.round_number}>
+              <p className="font-display text-[9px] sm:text-[10px] uppercase tracking-widest text-zinc-500 mb-1.5 sm:mb-2">
+                {ROUND_LABELS[round.round_type] ?? round.round_type}
+              </p>
+              <StationBars round={round} />
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function ThreePointContest() {
   const [data, setData] = useState<ContestData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [expandedPlayer, setExpandedPlayer] = useState<string | null>(null);
 
   useEffect(() => {
     fetch(`${API}/api-web/three-point-contest`)
@@ -59,6 +123,11 @@ export function ThreePointContest() {
   const hasEntries = data && data.entries.length > 0;
   const isCompleted = data?.status === "Completed";
   const isLive = data?.status === "Live";
+
+  // Separa qualificazione da finalisti
+  const qualEntries = data?.entries.filter(e => !e.rounds.some(r => r.round_type === "Final" || r.round_type === "TieBreak")) ?? [];
+  const finalEntries = data?.entries.filter(e => e.rounds.some(r => r.round_type === "Final" || r.round_type === "TieBreak")) ?? [];
+  const hasFinals = finalEntries.length > 0;
 
   return (
     <div className="pt-32 pb-20 min-h-screen">
@@ -112,125 +181,45 @@ export function ThreePointContest() {
               <Podium entries={data.entries} />
             )}
 
-            {/* Classifica completa */}
+            {/* FINALE — separata dalla qualificazione */}
+            {hasFinals && (
+              <section>
+                <h2 className="font-display text-xl sm:text-2xl uppercase tracking-widest text-brand-yellow mb-6 flex items-center gap-3">
+                  <Trophy className="w-5 h-5 text-brand-yellow" /> Finale — Top 3
+                </h2>
+                <div className="border-[3px] border-brand-yellow bg-zinc-900 overflow-hidden">
+                  <div className="hidden sm:grid grid-cols-[auto_1fr_auto_auto] gap-4 items-center px-5 py-3 bg-zinc-950 border-b-2 border-brand-yellow/30 font-display text-xs uppercase tracking-widest text-zinc-500">
+                    <span className="w-8 text-center">#</span>
+                    <span>Giocatore</span>
+                    <span className="w-20 text-center">Squadra</span>
+                    <span className="w-12 text-center">Punti</span>
+                  </div>
+                  {finalEntries
+                    .sort((a, b) => (a.final_position ?? 99) - (b.final_position ?? 99))
+                    .map((entry, i) => (
+                      <PlayerRow key={entry.player} entry={entry} pos={entry.final_position ?? i + 1} isCompleted={isCompleted} />
+                    ))}
+                </div>
+              </section>
+            )}
+
+            {/* QUALIFICAZIONE */}
             <section>
               <h2 className="font-display text-xl sm:text-2xl uppercase tracking-widest text-zinc-500 mb-6 flex items-center gap-3">
-                <Target className="w-5 h-5 text-brand-orange" /> Classifica
+                <Target className="w-5 h-5 text-brand-orange" /> {hasFinals ? "Qualificazione" : "Classifica"}
               </h2>
-
               <div className="border-[3px] border-zinc-800 bg-zinc-900 overflow-hidden">
-                {/* Header tabella */}
-                <div className="hidden sm:grid grid-cols-[auto_1fr_auto_auto_auto] gap-4 items-center px-5 py-3 bg-zinc-950 border-b-2 border-zinc-800 font-display text-xs uppercase tracking-widest text-zinc-500">
+                <div className="hidden sm:grid grid-cols-[auto_1fr_auto_auto] gap-4 items-center px-5 py-3 bg-zinc-950 border-b-2 border-zinc-800 font-display text-xs uppercase tracking-widest text-zinc-500">
                   <span className="w-8 text-center">#</span>
                   <span>Giocatore</span>
-                  <span className="w-28 text-center">Squadra</span>
-                  <span className="w-16 text-center">Punti</span>
-                  <span className="w-8" />
+                  <span className="w-20 text-center">Squadra</span>
+                  <span className="w-12 text-center">Punti</span>
                 </div>
-
-                {data.entries.map((entry, i) => {
-                  const pos = entry.final_position ?? i + 1;
-                  const style = POSITION_STYLES[pos];
-                  const isExpanded = expandedPlayer === entry.player;
-
-                  return (
-                    <div key={entry.player} className="border-b border-zinc-800/60 last:border-0">
-                      <button
-                        onClick={() => setExpandedPlayer(isExpanded ? null : entry.player)}
-                        className={`w-full grid grid-cols-[auto_1fr_auto_auto] sm:grid-cols-[auto_1fr_auto_auto_auto] gap-3 sm:gap-4 items-center px-4 sm:px-5 py-4 hover:bg-zinc-800/30 transition-colors text-left ${
-                          pos <= 3 && isCompleted ? "bg-zinc-800/10" : ""
-                        }`}
-                      >
-                        {/* Posizione */}
-                        <span className={`w-8 h-8 flex items-center justify-center font-display text-sm font-bold shrink-0 ${
-                          style ? `${style.badge}` : "text-zinc-600"
-                        }`}>
-                          {pos}
-                        </span>
-
-                        {/* Nome + squadra (mobile: impilati) */}
-                        <div className="min-w-0">
-                          <p className={`font-sans font-bold text-sm sm:text-base uppercase truncate ${
-                            style ? style.text : "text-zinc-300"
-                          }`}>
-                            {entry.player}
-                          </p>
-                          <p className="font-sans text-xs text-zinc-500 truncate sm:hidden">{entry.team}</p>
-                        </div>
-
-                        {/* Squadra (desktop) */}
-                        <span className="hidden sm:block w-28 text-center font-sans text-xs text-zinc-500 uppercase truncate">
-                          {entry.team_short ?? entry.team}
-                        </span>
-
-                        {/* Punteggio */}
-                        <span className={`font-mono text-xl sm:text-2xl font-black tabular-nums w-16 text-center ${
-                          style ? style.text : "text-zinc-400"
-                        }`}>
-                          {entry.total_score}
-                        </span>
-
-                        {/* Expand */}
-                        {entry.rounds.length > 0 && (
-                          <motion.span
-                            animate={{ rotate: isExpanded ? 180 : 0 }}
-                            transition={{ duration: 0.2 }}
-                            className="hidden sm:block w-8 text-center"
-                          >
-                            <ChevronDown className={`w-5 h-5 ${isExpanded ? "text-brand-orange" : "text-zinc-600"}`} />
-                          </motion.span>
-                        )}
-                      </button>
-
-                      {/* Dettaglio round espanso */}
-                      <AnimatePresence initial={false}>
-                        {isExpanded && entry.rounds.length > 0 && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.2 }}
-                            className="overflow-hidden"
-                          >
-                            <div className="px-5 pb-4 pt-1 space-y-3 border-t border-zinc-800">
-                              {entry.rounds.map(round => (
-                                <div key={round.round_number}>
-                                  <p className="font-display text-xs uppercase tracking-widest text-zinc-500 mb-2">
-                                    {ROUND_LABELS[round.round_type] ?? round.round_type}
-                                  </p>
-                                  <div className="flex items-center gap-2">
-                                    {round.stations.map((score, si) => (
-                                      <div key={si} className="flex-1 max-w-[80px]">
-                                        <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden mb-1">
-                                          <div
-                                            className={`h-full rounded-full ${score >= 5 ? "bg-brand-yellow" : score >= 3 ? "bg-brand-orange" : "bg-zinc-600"}`}
-                                            style={{ width: `${(score / MAX_STATION) * 100}%` }}
-                                          />
-                                        </div>
-                                        <div className="flex items-center justify-between">
-                                          <span className="font-display text-[9px] uppercase text-zinc-600">S{si + 1}</span>
-                                          <span className={`font-mono text-xs font-bold ${
-                                            score >= 5 ? "text-brand-yellow" : score >= 3 ? "text-brand-orange" : "text-zinc-500"
-                                          }`}>
-                                            {score}
-                                          </span>
-                                        </div>
-                                      </div>
-                                    ))}
-                                    <div className="border-l border-zinc-700 pl-3 ml-1">
-                                      <span className="font-mono text-lg font-black text-white">{round.total}</span>
-                                      <span className="font-display text-[9px] uppercase text-zinc-600 block">TOT</span>
-                                    </div>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  );
-                })}
+                {(hasFinals ? qualEntries : data.entries)
+                  .sort((a, b) => b.total_score - a.total_score)
+                  .map((entry, i) => (
+                    <PlayerRow key={entry.player} entry={entry} pos={entry.final_position ?? i + 1} isCompleted={isCompleted} />
+                  ))}
               </div>
             </section>
 
@@ -239,18 +228,22 @@ export function ThreePointContest() {
               <h3 className="font-display text-lg uppercase text-zinc-400 mb-4 flex items-center gap-2">
                 <Target className="w-4 h-4" /> Come funziona
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm font-sans text-zinc-400">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm font-sans text-zinc-400">
                 <div className="bg-zinc-950 border border-zinc-800 p-4 text-center">
                   <p className="font-mono text-3xl text-brand-orange font-black mb-1">5</p>
                   <p>Postazioni dietro la linea dei 3 punti</p>
                 </div>
                 <div className="bg-zinc-950 border border-zinc-800 p-4 text-center">
                   <p className="font-mono text-3xl text-brand-yellow font-black mb-1">25</p>
-                  <p>Palloni totali (4 normali + 1 money ball per postazione)</p>
+                  <p>Palloni totali (4 da 1pt + 1 money ball da 2pt)</p>
                 </div>
                 <div className="bg-zinc-950 border border-zinc-800 p-4 text-center">
                   <p className="font-mono text-3xl text-white font-black mb-1">90"</p>
                   <p>Secondi per completare il percorso</p>
+                </div>
+                <div className="bg-zinc-950 border border-zinc-800 p-4 text-center">
+                  <p className="font-mono text-3xl text-brand-blue font-black mb-1">3</p>
+                  <p>I migliori vanno in finale. Parità: spareggio da 3 postazioni</p>
                 </div>
               </div>
             </div>
@@ -272,7 +265,7 @@ function Podium({ entries }: { entries: Entry[] }) {
   const heights = ["h-28 sm:h-36", "h-36 sm:h-48", "h-20 sm:h-28"];
 
   return (
-    <div className="flex items-end justify-center gap-3 sm:gap-5 mb-8">
+    <div className="flex items-end justify-center gap-2 sm:gap-5 mb-8">
       {podiumOrder.map((entry, i) => {
         if (!entry) return null;
         const pos = entry.final_position!;
@@ -285,16 +278,16 @@ function Podium({ entries }: { entries: Entry[] }) {
             transition={{ delay: i * 0.15, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
             className="flex flex-col items-center w-1/3 max-w-[200px]"
           >
-            <p className={`font-sans font-bold text-xs sm:text-sm uppercase text-center mb-2 leading-tight ${style.text}`}>
+            <p className={`font-sans font-bold text-[10px] sm:text-sm uppercase text-center mb-1 sm:mb-2 leading-tight break-words ${style.text}`}>
               {entry.player}
             </p>
-            <p className="font-sans text-[10px] text-zinc-500 uppercase mb-3 truncate">{entry.team}</p>
-            <div className={`w-full ${heights[i]} border-[3px] ${style.border} bg-zinc-900 flex flex-col items-center justify-center relative`}>
-              <span className={`font-display text-4xl sm:text-5xl font-black ${style.text}`}>
+            <p className="font-sans text-[9px] sm:text-[10px] text-zinc-500 uppercase mb-2 sm:mb-3 truncate max-w-full">{entry.team}</p>
+            <div className={`w-full ${heights[i]} border-[2px] sm:border-[3px] ${style.border} bg-zinc-900 flex flex-col items-center justify-center relative`}>
+              <span className={`font-display text-2xl sm:text-5xl font-black ${style.text}`}>
                 {entry.total_score}
               </span>
-              <span className="font-display text-xs uppercase tracking-widest text-zinc-500">pts</span>
-              <div className={`absolute -top-4 w-8 h-8 ${style.badge} flex items-center justify-center font-display text-sm font-black`}>
+              <span className="font-display text-[9px] sm:text-xs uppercase tracking-widest text-zinc-500">pts</span>
+              <div className={`absolute -top-3 sm:-top-4 w-6 h-6 sm:w-8 sm:h-8 ${style.badge} flex items-center justify-center font-display text-xs sm:text-sm font-black`}>
                 {pos}
               </div>
             </div>

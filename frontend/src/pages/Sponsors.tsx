@@ -130,7 +130,7 @@ export function Sponsors() {
         <div className="border-[4px] border-brand-orange bg-brand-orange/5 p-10 md:p-14 flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
           <div>
             <h3 className="font-display text-3xl md:text-4xl uppercase text-white mb-2">
-              Vuoi diventare sponsor?
+              Vuoi collaborare con noi?
             </h3>
             <p className="font-sans text-zinc-400 text-base max-w-md">
               Contattaci per scoprire i pacchetti disponibili e portare il tuo brand in campo.
