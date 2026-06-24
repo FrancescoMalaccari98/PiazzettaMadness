@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "motion/react";
 
 const API = import.meta.env.VITE_API_URL ?? "";
@@ -59,10 +59,14 @@ function formatClock(totalSec: number): string {
 export function Live() {
   const [data, setData] = useState<LiveData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [localClock, setLocalClock] = useState(0);
+  const [clockSeconds, setClockSeconds] = useState(0);
   const [clockRunning, setClockRunning] = useState(false);
+  const [clockPeriod, setClockPeriod] = useState(1);
+  const lastServerClock = useRef(-1);
 
-  // Polling — aggiorna lo stato senza ricaricare la pagina
+  // Polling ogni 5s — aggiorna tutto (punteggio, giocatori, falli).
+  // Per il clock: aggiorna solo se il server manda un valore diverso dal precedente.
+  // Se uguale, il tabellone non ha scritto → il countdown locale continua.
   useEffect(() => {
     let active = true;
     let timer: ReturnType<typeof setTimeout>;
@@ -72,15 +76,18 @@ export function Live() {
       try {
         const r = await fetch(`${API}/api-web/live`);
         if (r.ok) d = await r.json();
-      } catch {
-        // Errore di rete: resta "nessuna diretta"
-      }
+      } catch {}
       if (!active) return;
       setData(d);
       setLoading(false);
-      if (d.has_live) {
-        setLocalClock(d.clock_seconds ?? 0);
-        setClockRunning(!!d.clock_running && d.status === "Live");
+      if (d.has_live && d.clock_seconds !== undefined) {
+        const serverClock = d.clock_seconds;
+        if (serverClock !== lastServerClock.current) {
+          setClockSeconds(serverClock);
+          lastServerClock.current = serverClock;
+        }
+        setClockRunning(!!d.clock_running);
+        setClockPeriod(d.period ?? 1);
       } else {
         setClockRunning(false);
       }
@@ -91,11 +98,11 @@ export function Live() {
     return () => { active = false; clearTimeout(timer); };
   }, []);
 
-  // Orologio locale: scorre tra una chiamata e l'altra, si riallinea
-  // al valore del DB ad ogni polling. Si ferma se l'orologio non gira.
+  // Countdown locale: scorre 1s/1s tra un polling e l'altro.
+  // Si ferma se il cronometro non gira.
   useEffect(() => {
     if (!clockRunning) return;
-    const id = setInterval(() => setLocalClock(c => Math.max(0, c - 1)), 1000);
+    const id = setInterval(() => setClockSeconds(c => Math.max(0, c - 1)), 1000);
     return () => clearInterval(id);
   }, [clockRunning]);
 
@@ -126,8 +133,9 @@ export function Live() {
         ) : isLive && data?.home_team && data?.away_team ? (
           <LiveBoard
             data={data}
-            clock={formatClock(localClock)}
+            clock={formatClock(clockSeconds)}
             running={clockRunning}
+            period={clockPeriod}
           />
         ) : (
           <EmptyState message={data?.message} />
@@ -138,7 +146,7 @@ export function Live() {
 }
 
 // ── Tabellone live ───────────────────────────────────────────
-function LiveBoard({ data, clock, running }: { data: LiveData; clock: string; running: boolean }) {
+function LiveBoard({ data, clock, running, period }: { data: LiveData; clock: string; running: boolean; period?: number }) {
   const home = data.home_team!;
   const away = data.away_team!;
   const homeScore = data.home_score ?? home.score ?? 0;
@@ -174,7 +182,7 @@ function LiveBoard({ data, clock, running }: { data: LiveData; clock: string; ru
           {/* CENTRO: periodo + tempo */}
           <div className="flex flex-col items-center justify-center px-1 sm:px-4 min-w-[80px] sm:min-w-[140px]">
             <div className="font-display uppercase text-zinc-500 text-[10px] sm:text-sm tracking-widest mb-1">
-              {data.period ? `${data.period}° Tempo` : "—"}
+              {(period ?? data.period) ? `${period ?? data.period}° Tempo` : "—"}
             </div>
             <div className={`font-mono font-black tabular-nums text-2xl sm:text-5xl leading-none ${
               running ? "text-brand-yellow" : "text-zinc-400"

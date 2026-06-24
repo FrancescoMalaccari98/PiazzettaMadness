@@ -1,87 +1,117 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "motion/react";
-import { ExternalLink, Instagram } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 
 const API = import.meta.env.VITE_API_URL ?? "";
 
 type Sponsor = {
   id: number;
   nome: string;
-  url: string;
   logo: string;
-  ig?: string;
+  sito: string;
+  ig: string;
 };
 
-const defaultSponsors: Sponsor[] = [
-  { id: 1,  nome: "Sponsor 1",  url: "#", logo: "" },
-  { id: 2,  nome: "Sponsor 2",  url: "#", logo: "" },
-  { id: 3,  nome: "Sponsor 3",  url: "#", logo: "" },
-  { id: 4,  nome: "Sponsor 4",  url: "#", logo: "" },
-  { id: 5,  nome: "Sponsor 5",  url: "#", logo: "" },
-  { id: 6,  nome: "Sponsor 6",  url: "#", logo: "" },
-  { id: 7,  nome: "Sponsor 7",  url: "#", logo: "" },
-  { id: 8,  nome: "Sponsor 8",  url: "#", logo: "" },
-  { id: 9,  nome: "Sponsor 9",  url: "#", logo: "" },
-  { id: 10, nome: "Sponsor 10", url: "#", logo: "" },
-];
+const IgIcon = ({ size = 14 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+  </svg>
+);
 
 function SponsorCard({ sponsor }: { sponsor: Sponsor }) {
+  const hasSito = !!sponsor.sito;
+  const hasIg = !!sponsor.ig;
+  const hasLinks = hasSito || hasIg;
+
+  const Wrapper = hasSito ? "a" : "div";
+  const wrapperProps = hasSito ? {
+    href: sponsor.sito,
+    target: "_blank" as const,
+    rel: "noreferrer",
+  } : {};
+
   return (
-    <div className="group relative flex flex-col border-[3px] border-zinc-700 bg-zinc-900 hover:border-brand-orange hover:bg-zinc-800 transition-all duration-300 hover:-translate-y-1 hover:shadow-[6px_6px_0_var(--color-brand-orange)] overflow-hidden">
+    <div className="group flex flex-col border-[3px] border-zinc-700 bg-zinc-900 hover:border-brand-orange transition-all duration-300 hover:-translate-y-1 hover:shadow-[8px_8px_0_var(--color-brand-orange)] overflow-hidden">
 
-      {/* Logo / nome cliccabile */}
-      <a
-        href={sponsor.url}
-        target="_blank"
-        rel="noreferrer"
-        className="flex items-center justify-center h-36 md:h-44 p-6 flex-1"
+      {/* Logo */}
+      <Wrapper
+        {...wrapperProps}
+        className="flex items-center justify-center h-40 sm:h-48 p-6 relative cursor-pointer bg-zinc-400"
       >
-        {sponsor.logo ? (
-          <img
-            src={sponsor.logo}
-            alt={sponsor.nome}
-            className="max-h-[65%] max-w-[75%] object-contain filter brightness-0 invert opacity-60 group-hover:opacity-100 transition-opacity"
-          />
-        ) : (
-          <span className="font-display text-lg uppercase tracking-wide text-zinc-500 group-hover:text-white transition-colors text-center leading-tight">
-            {sponsor.nome}
-          </span>
+        <img
+          src={sponsor.logo}
+          alt={sponsor.nome}
+          className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
+          loading="lazy"
+        />
+        {hasSito && (
+          <ExternalLink className="absolute top-3 right-3 w-4 h-4 text-brand-orange opacity-0 group-hover:opacity-100 transition-opacity" />
         )}
-        <ExternalLink className="absolute top-2 right-2 w-3.5 h-3.5 text-brand-orange opacity-0 group-hover:opacity-100 transition-opacity" />
-      </a>
+      </Wrapper>
 
-      {/* Footer con nome + instagram se presente */}
-      {(sponsor.nome || sponsor.ig) && (
-        <div className="border-t border-zinc-800 px-4 py-2 flex items-center justify-between gap-2 bg-zinc-950/60">
-          <span className="font-display text-xs uppercase tracking-wide text-zinc-500 group-hover:text-zinc-300 transition-colors truncate">
-            {sponsor.nome}
-          </span>
-          {sponsor.ig && (
-            <a
-              href={`https://instagram.com/${sponsor.ig}`}
-              target="_blank"
-              rel="noreferrer"
-              onClick={e => e.stopPropagation()}
-              className="text-zinc-600 hover:text-brand-orange transition-colors shrink-0"
-              title={`@${sponsor.ig}`}
-            >
-              <Instagram size={14} />
-            </a>
-          )}
-        </div>
-      )}
+      {/* Footer: nome + link */}
+      <div className="border-t-[3px] border-zinc-800 px-4 py-3 bg-zinc-950/80">
+        <p className="font-display text-sm uppercase tracking-wide text-brand-orange truncate mb-1">
+          {sponsor.nome}
+        </p>
+
+        {hasLinks && (
+          <div className="flex items-center gap-4">
+            {hasSito && (
+              <a
+                href={sponsor.sito}
+                target="_blank"
+                rel="noreferrer"
+                onClick={e => e.stopPropagation()}
+                className="font-sans text-[10px] sm:text-xs uppercase tracking-wider text-zinc-400 hover:text-white transition-colors flex items-center gap-1.5"
+              >
+                <ExternalLink className="w-3 h-3" /> Sito ufficiale
+              </a>
+            )}
+            {hasIg && (
+              <a
+                href={sponsor.ig.startsWith("http") ? sponsor.ig : `https://instagram.com/${sponsor.ig}`}
+                target="_blank"
+                rel="noreferrer"
+                onClick={e => e.stopPropagation()}
+                className="text-zinc-400 hover:text-white transition-colors flex items-center gap-1.5"
+              >
+                <IgIcon size={13} />
+                <span className="font-sans text-[10px] sm:text-xs">Instagram</span>
+              </a>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
 export function Sponsors() {
-  const [sponsors, setSponsors] = useState<Sponsor[]>(defaultSponsors);
+  const [sponsors, setSponsors] = useState<Sponsor[]>([]);
 
   useEffect(() => {
-    fetch(`${API}/api-web/sponsor`)
-      .then(r => r.ok ? r.json() as Promise<Sponsor[]> : null)
-      .then(data => { if (data) setSponsors(data); })
-      .catch(() => {});
+    Promise.all([
+      fetch(`${API}/img/sponsor/list.php`).then(r => r.ok ? r.json() : null),
+      fetch(`${API}/api-web/sponsor-links`).then(r => r.ok ? r.json() : null),
+    ])
+    .then(([photos, links]) => {
+      if (!photos) return;
+      const linksMap: Record<string, { nome: string; sito: string; ig: string }> = links ?? {};
+      setSponsors(photos.map((s: { filename: string; url: string; nome: string }, i: number) => {
+        const link = linksMap[s.filename] ?? {};
+        return {
+          id: i + 1,
+          nome: link.nome || s.nome,
+          logo: s.url,
+          sito: link.sito || '',
+          ig: link.ig || '',
+        };
+      }));
+    })
+    .catch(() => {});
   }, []);
 
   return (
@@ -110,19 +140,26 @@ export function Sponsors() {
 
       {/* Griglia sponsor */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {sponsors.map((sponsor, i) => (
-            <motion.div
-              key={sponsor.id}
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true, margin: "-40px" }}
-              transition={{ delay: (i % 5) * 0.07, duration: 0.4, ease: "easeOut" }}
-            >
-              <SponsorCard sponsor={sponsor} />
-            </motion.div>
-          ))}
-        </div>
+        {sponsors.length === 0 ? (
+          <div className="text-center py-16">
+            <img src="/assets/logo.png" alt="" className="w-16 h-16 mx-auto mb-6 opacity-30" />
+            <p className="font-display text-2xl uppercase text-zinc-600">Sponsor in arrivo</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {sponsors.map((sponsor, i) => (
+              <motion.div
+                key={sponsor.id}
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true, margin: "-40px" }}
+                transition={{ delay: (i % 5) * 0.07, duration: 0.4, ease: "easeOut" }}
+              >
+                <SponsorCard sponsor={sponsor} />
+              </motion.div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* CTA */}
