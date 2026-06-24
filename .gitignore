@@ -2,6 +2,7 @@ node_modules/
 build/
 frontend/dist/
 frontend/frontend.zip
+backend.zip
 coverage/
 .DS_Store
 *.log
