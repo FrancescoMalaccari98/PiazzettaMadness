@@ -1,8 +1,9 @@
 # Validazione roster dinamico reale (Fase 10E)
 
 Obiettivo: dimostrare che la pipeline usa il **roster dinamico del DB** (`OcrMatchContext`) come fonte
-primaria di identità, e che `known_names.py` resta **solo fallback**. È il prerequisito di correttezza
-per rimuovere `known_names.py` (Fase 9 residua).
+primaria di identità. Era il prerequisito di correttezza per rimuovere `known_names.py`: gate superato
+e **`known_names.py` rimosso in Fase 9 (2026-06-26)**. Dopo la rimozione non esiste più alcun roster
+hardcoded di fallback: senza `OcrMatchContext`, CH1 non corregge nomi/numeri (le identità si risolvono in C#).
 
 > Va eseguita **in locale**: richiede i venv OCR + Tesseract e i PDF reali della partita. I dati DB
 > reali e i PDF **non vengono committati** (cartella `samples/private/` ignorata da git).
@@ -11,7 +12,7 @@ per rimuovere `known_names.py` (Fase 9 residua).
 
 | | Fase 10/10C/10D (`ChannelValidationHarnessTests`) | Fase 10E (`RosterContextValidationHarnessTests`) |
 |---|---|---|
-| MatchContext | **assente** → CH1 usa fallback `known_names.py` | **presente** (da `context.json`) → CH1 usa roster DB |
+| MatchContext | **assente** → CH1 senza roster (nessuna correzione nomi/numeri dopo Fase 9) | **presente** (da `context.json`) → CH1 usa roster DB |
 | Scopo | qualità canali / pesi / warning math | uso roster dinamico + matching identità per-squadra |
 | Input | `samples/pdf/*.pdf` | `samples/private/db-context/<match>/{context.json, pdfs/*.pdf}` |
 
@@ -84,10 +85,10 @@ Per ogni PDF della partita:
 - **context provided**: sì (OcrMatchContext passato alla pipeline);
 - **context source**: JSON fixture (`context.json`);
 - **matchId**, **home/away team** (+ teamId), **roster players per team**, **PDF processati**;
-- **CH1 roster source**: `dynamic-context` / `legacy-known-names` / `none` / `unknown` — dedotto dai log
-  stderr del worker CH1 (`Roster dinamico attivo` vs marker di fallback `known_names`), catturati in
+- **CH1 roster source**: `dynamic-context` / `roster-not-active` / `none` / `unknown` — dedotto dai log
+  stderr del worker CH1 (`Roster dinamico attivo` vs marker di roster non attivo), catturati in
   `OcrRun.Error`;
-- **fallback known_names.py used**: yes/no (stessi marker);
+- **roster non attivo**: yes/no (dopo Fase 9 non c'è fallback hardcoded: indica solo roster assente/invalido);
 - **matching giocatori** per lato: `certain` / `probable` / `conflict` / `numberNotFound` / `unmatched`
   + `notInPdf` (giocatori DB non trovati nel PDF), via `PlayerIdentityMatcher`;
 - **review required**: yes/no (`CompletedWithReviewRequired` o presenza di `Conflict`/`NotInPdf`);
@@ -105,24 +106,23 @@ Per ogni PDF della partita:
 3. `TesseractFullPageOcrEngine` (CH1) serializza il contesto in `roster-context.json` e passa
    `--roster-json <path>` al worker **solo se** MatchContext è presente.
 4. `worker.py` chiama `roster_context.load_and_activate(path)`: se il roster è valido logga
-   `Roster dinamico attivo: N squadre, M giocatori.`; altrimenti logga il fallback `known_names`.
-5. `parser.py` usa `roster_context.*` (teams/players/jersey/fuzzy): roster dinamico se attivo, altrimenti `known_names`.
+   `Roster dinamico attivo: N squadre, M giocatori.`; altrimenti logga `roster dinamico non attivo`.
+5. `parser.py` usa `roster_context.*` (teams/players/jersey/fuzzy): roster dinamico se attivo, altrimenti
+   nessuna correzione (dopo Fase 9 non c'è fallback hardcoded).
 6. Il matching canonico (riga OCR → `playerId` DB) avviene in **C#** (`PlayerIdentityMatcher`),
    non in Python: Python non emette `playerId` canonici.
 
-## Cosa manca prima di poter rimuovere `known_names.py`
+## Gate di rimozione `known_names.py` — SUPERATO (poi rimosso in Fase 9)
 
-`known_names.py` (e il fallback in `roster_context.py`) si rimuovono **solo dopo** che questo harness,
-eseguito con `context.json` reale, mostra su ≥1 partita reale (idealmente i 5 PDF della stessa gara):
+I criteri per la rimozione, verificati con `context.json` reale su ≥1 partita (i 5 PDF della stessa gara):
 
-1. `CH1 roster source = dynamic-context` su **tutti** i PDF (mai `legacy-known-names`);
-2. `fallback known_names used = no` ovunque;
-3. matching identità per-squadra corretto: `crossTeamLeak = 0`, niente `playerId` inventati;
-4. risultati equivalenti o migliori rispetto al fallback (meno `conflict`/`unmatched`/`notInPdf`
-   ingiustificati) — confronto con la run senza contesto della Fase 10C.
+1. `CH1 roster source = dynamic-context` su **tutti** i PDF; ✓
+2. roster non attivo / fallback usato = no ovunque; ✓
+3. matching identità per-squadra corretto: `crossTeamLeak = 0`, niente `playerId` inventati; ✓
+4. risultati equivalenti o migliori (nessun `conflict`/`unmatched`/`notInPdf` ingiustificato). ✓
 
-Finché questi punti non sono verificati con dati reali, `known_names.py` **resta** come fallback
-(vincolo di progetto). Questa Fase 10E fornisce lo strumento; l'esecuzione con i dati DB reali è a
+Gate superato → `known_names.py` e il fallback legacy **rimossi in Fase 9** (vedi sotto). La sezione
+seguente documenta i criteri storici. Nota di contesto pre-rimozione: questa Fase 10E ha fornito lo strumento; l'esecuzione con i dati DB reali è a
 carico dell'utente in locale.
 
 ## Risultati esecuzione reale (2026-06-24)

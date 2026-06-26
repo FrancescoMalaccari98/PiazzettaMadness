@@ -1,8 +1,9 @@
 # Validazione end-to-end CH3/CH4 (Fase 10)
 
 Obiettivo: misurare la qualità di ogni canale OCR su PDF reali e tarare
-`reconciliation.engineWeights` con dati misurati (non a sensazione). È anche il prerequisito
-per rimuovere `known_names.py` (Fase 9 residua).
+`reconciliation.engineWeights` con dati misurati (non a sensazione). La validazione del roster dinamico
+(prerequisito per rimuovere `known_names.py`) è stata estratta in Fase 10E: gate superato e
+`known_names.py` **rimosso in Fase 9** (vedi `docs/roster-context-validation.md`).
 
 > Va eseguita **in locale**: richiede i venv OCR e Tesseract, non disponibili nell'ambiente di sviluppo assistito.
 
@@ -204,15 +205,14 @@ da decidere DOPO aver visto il breakdown `math.*` ed eventualmente un controllo 
 con `FailedRules` ai provider che li hanno forniti, e (idealmente) confrontare 1 PDF con i valori reali.
 Solo allora il tuning sarà basato su correttezza e non su accordo circolare.
 
-## Gate per la Fase 9 residua
+## Gate per la Fase 9 residua — SUPERATO
 
-`known_names.py` può essere rimosso (insieme al fallback in `roster_context.py`) solo **dopo** che la
-validazione, eseguita **con `--roster-json` attivo** (cioè con un `MatchContext` reale caricato dal DB),
-mostra che il roster dinamico produce risultati equivalenti o migliori rispetto al fallback hardcoded.
+`known_names.py` (e il fallback in `roster_context.py`) è stato **rimosso in Fase 9 (2026-06-26)** dopo
+che la validazione **con `--roster-json` attivo** (`MatchContext` reale dal DB) ha mostrato il roster
+dinamico attivo su tutti i PDF, senza fallback, con matching corretto.
 
 > Nota: questo harness (`ChannelValidationHarnessTests`) esegue la pipeline **senza** `MatchContext`,
-> quindi CH1 usa ancora il fallback `known_names.py`. La validazione del roster dinamico è stata estratta
-> in un harness dedicato — **`RosterContextValidationHarnessTests`** (Fase 10E) — che carica un
-> `context.json` reale e passa l'`OcrMatchContext` alla pipeline. Vedere
-> [docs/roster-context-validation.md](roster-context-validation.md) per la procedura e il gate completo
-> di rimozione di `known_names.py`.
+> quindi CH1 ora gira **senza roster** (nessuna correzione nomi/numeri: non esiste più fallback hardcoded).
+> La validazione del roster dinamico è nell'harness dedicato **`RosterContextValidationHarnessTests`**
+> (Fase 10E), che carica un `context.json` reale e passa l'`OcrMatchContext` alla pipeline. Vedere
+> [docs/roster-context-validation.md](roster-context-validation.md) per procedura ed esito.

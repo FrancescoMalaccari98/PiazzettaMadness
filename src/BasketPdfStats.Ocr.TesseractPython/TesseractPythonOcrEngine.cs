@@ -67,7 +67,8 @@ public sealed class TesseractPythonOcrEngine : IOcrEngine
         }
 
         // Roster dinamico dal DB: scritto su file e passato a CH1 come supporto al parsing.
-        // Se assente, comportamento legacy (known_names.py lato Python).
+        // Se assente, CH1 procede senza roster (nessun fallback hardcoded dopo Fase 9):
+        // le identità si risolvono comunque in C# (PlayerIdentityMatcher).
         var rosterJsonPath = TryWriteRosterContext(request, outputDirectory);
 
         PythonProcessResult? processResult = null;

@@ -10,8 +10,8 @@ Nota: le verifiche contrassegnate con ✓ sono state eseguite realmente. Le altr
 | Stato | Count | Note |
 |-------|-------|------|
 | Attivo | 18 | Non toccare |
-| Attivo — da sostituire (Fase 5) | 1 | `known_names.py` |
-| Legacy / superseded | 2 | `prepare_crops.py`, `backend/backend.zip` |
+| Rimosso (Fase 9) | 2 | `prepare_crops.py`, `known_names.py` |
+| Legacy / superseded | 1 | `backend/backend.zip` |
 | Già rimosso — verificato parzialmente | 2 | Adobe OCR, GLM-OCR |
 | Da verificare prima della Fase 9 | 3 | `prepare_crops` riferimenti, `import.php` divergenza Aruba, `.htaccess` Aruba |
 | Sicurezza — azione immediata | 1 | Token API in git |
@@ -43,13 +43,17 @@ Nota: le verifiche contrassegnate con ✓ sono state eseguite realmente. Le altr
 
 ---
 
-## 3. Componente da sostituire
+## 3. Componente sostituito
 
-### 3.1 `known_names.py` — attivo ora, da disabilitare in Fase 5 e rimuovere in Fase 9
+### 3.1 `known_names.py` — RIMOSSO in Fase 9 (2026-06-26)
 
-**Percorso:** `fiba_pdf_to_json_programma_v2/fiba_pdf_to_json/fiba_pdf_to_json/known_names.py`
+**Percorso (eliminato):** `fiba_pdf_to_json_programma_v2/fiba_pdf_to_json/fiba_pdf_to_json/known_names.py`
 
-**Stato attuale:** Attivo in CH1. Usato durante il parsing PDF per il fuzzy matching di nomi e numeri di maglia.
+**Stato attuale:** **Rimosso.** Sostituito da `roster_context.py` (roster dinamico dal DB via
+`--roster-json`). Il fallback legacy in `roster_context.py` è stato eliminato e la logica fuzzy generica
+(`fuzzy_known_name`/`_norm`) è stata spostata in `roster_context.py`. Gate Fase 10E superato prima della
+rimozione (dynamic-context su tutti i PDF, fallback non usato, matching 80/80 certain, crossTeamLeak 0).
+La sezione sotto è conservata come storico dell'analisi pre-rimozione.
 
 **Analisi struttura (verificata):**
 
@@ -90,7 +94,8 @@ Siti di uso in parser.py:
    - Fuzzy matching sul roster dinamico
    - **Non produrre ID canonici** — solo supporto al parsing
 
-2. `parser.py` usa `roster_context.py` quando `--roster-json` è presente; usa `known_names.py` come fallback (con log `WARNING: using legacy known_names.py`)
+2. `parser.py` usa `roster_context.py` quando `--roster-json` è presente. (Fase 5: fallback a
+   `known_names.py`; Fase 9: fallback **rimosso** — senza roster attivo il parser non corregge nomi/numeri.)
 
 3. **Non spostare le funzioni inline in `parser.py`**: il componente dedicato è obbligatorio.
 
@@ -115,9 +120,9 @@ Siti di uso in parser.py:
 
 Questo JSON viene scritto da C# (`TesseractFullPageOcrEngine`) in `runtime/Working/` da `OcrMatchContext`.
 
-**Fase 9:** eliminare `known_names.py`, eliminare il fallback, rimuovere tutti i riferimenti nei test.
-
-**Rischio:** Medio se Fase 5 non è validata su samples/. Non rimuovere prima della validazione.
+**Fase 9 (completata 2026-06-26):** `known_names.py` eliminato, fallback eliminato da `roster_context.py`,
+riferimenti nel codice/test rimossi. Logica fuzzy generica spostata in `roster_context.py`. Build verde,
+246 test non-integration verdi, smoke test Python OK.
 
 ---
 

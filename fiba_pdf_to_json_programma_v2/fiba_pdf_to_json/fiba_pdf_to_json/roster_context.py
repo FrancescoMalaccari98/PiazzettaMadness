@@ -1,14 +1,15 @@
 """Roster dinamico dal DB come supporto al parsing CH1.
 
 Quando il worker riceve ``--roster-json``, questo modulo carica il roster canonico
-(scritto da C# a partire da OcrMatchContext) e fornisce le stesse funzioni di
-``known_names`` (lista squadre, lista giocatori, jersey atteso, fuzzy match).
+(scritto da C# a partire da OcrMatchContext) e fornisce le funzioni di supporto al
+parser (lista squadre, lista giocatori, jersey atteso, fuzzy match).
 
-Regole:
+Regole (dopo Fase 9 — rimozione di ``known_names.py``):
+  - Il DB è l'unica fonte di identità: NON esiste più un roster hardcoded di fallback.
   - Il roster dinamico NON crea identità canoniche: è solo supporto al parsing.
   - Il matching canonico delle identità avviene in C# (PlayerIdentityMatcher).
-  - Se nessun roster è attivo, si usa il fallback legacy ``known_names`` con un
-    avviso esplicito (rimozione del fallback pianificata in Fase 9).
+  - Se nessun roster è attivo, le funzioni restituiscono liste vuote / ``None``: il
+    parser procede senza correzione di nomi/numeri (le identità si risolvono in C#).
 
 Formato JSON atteso (camelCase, prodotto da C#):
     {
@@ -22,16 +23,15 @@ Formato JSON atteso (camelCase, prodotto da C#):
 """
 from __future__ import annotations
 
+import difflib
 import json
 import logging
+import re
 from typing import Iterable, Optional
-
-from . import known_names as _legacy
 
 LOGGER = logging.getLogger(__name__)
 
 _active: "Optional[RosterContext]" = None
-_warned_legacy = False
 
 
 class RosterContext:
@@ -85,21 +85,25 @@ class RosterContext:
 
 
 def load_and_activate(path: str) -> bool:
-    """Carica il roster dal file JSON e lo rende attivo. Ritorna True se attivato."""
+    """Carica il roster dal file JSON e lo rende attivo. Ritorna True se attivato.
+
+    Nessun fallback hardcoded: se il file è assente/vuoto/invalido, il roster resta
+    inattivo e il parser procede senza correzione nomi/numeri.
+    """
     global _active
     try:
         with open(path, "r", encoding="utf-8") as handle:
             data = json.load(handle)
         context = RosterContext.from_json(data)
         if not context.teams or not context.players:
-            LOGGER.warning("Roster JSON vuoto o incompleto (%s): uso fallback known_names.", path)
+            LOGGER.warning("Roster JSON vuoto o incompleto (%s): roster dinamico non attivo.", path)
             _active = None
             return False
         _active = context
         LOGGER.info("Roster dinamico attivo: %d squadre, %d giocatori.", len(context.teams), len(context.players))
         return True
     except Exception as exc:  # il roster è un supporto: non far fallire l'OCR
-        LOGGER.warning("Impossibile caricare il roster JSON (%s): %s. Uso fallback known_names.", path, exc)
+        LOGGER.warning("Impossibile caricare il roster JSON (%s): %s. Roster dinamico non attivo.", path, exc)
         _active = None
         return False
 
@@ -113,45 +117,41 @@ def has_active_roster() -> bool:
     return _active is not None
 
 
-def _warn_legacy_once() -> None:
-    global _warned_legacy
-    if not _warned_legacy:
-        LOGGER.warning(
-            "Roster dinamico non attivo: uso known_names.py (legacy, rimozione pianificata in Fase 9)."
-        )
-        _warned_legacy = True
-
-
 def known_teams() -> list[str]:
-    if _active is not None:
-        return _active.teams
-    _warn_legacy_once()
-    return _legacy.KNOWN_TEAMS
+    return _active.teams if _active is not None else []
 
 
 def known_players() -> list[str]:
-    if _active is not None:
-        return _active.players
-    _warn_legacy_once()
-    return _legacy.KNOWN_PLAYERS
+    return _active.players if _active is not None else []
 
 
 def roster_jersey_for(team_name: str, player_name: str) -> Optional[str]:
-    if _active is not None:
-        return _active.roster_jersey_for(team_name, player_name)
-    return _legacy.roster_jersey_for(team_name, player_name)
+    return _active.roster_jersey_for(team_name, player_name) if _active is not None else None
 
 
 def known_players_for_team(team_name: str) -> list[str]:
-    if _active is not None:
-        return _active.known_players_for_team(team_name)
-    return _legacy.known_players_for_team(team_name)
+    return _active.known_players_for_team(team_name) if _active is not None else []
+
+
+def _norm(s: str) -> str:
+    s = re.sub(r"\(\s*C\s*\)", "", s or "", flags=re.I)
+    s = s.lower()
+    s = re.sub(r"[^a-z0-9àèéìòù]+", " ", s)
+    return re.sub(r"\s+", " ", s).strip()
 
 
 def fuzzy_known_name(value: str, candidates: Iterable[str], *, cutoff: float = 0.84) -> Optional[str]:
-    """Fuzzy match generico: stessa implementazione per roster dinamico e legacy.
+    """Fuzzy match generico: trova il candidato più vicino a ``value``, o None.
 
-    Le ``candidates`` provengono già da ``known_teams()`` / ``known_players()`` /
-    ``known_players_for_team()``, che selezionano la sorgente corretta.
+    Le ``candidates`` provengono da ``known_teams()`` / ``known_players()`` /
+    ``known_players_for_team()`` (roster dinamico attivo) — vuote se nessun roster
+    è attivo, nel qual caso ritorna sempre None.
     """
-    return _legacy.fuzzy_known_name(value, candidates, cutoff=cutoff)
+    value_n = _norm(value)
+    if not value_n:
+        return None
+    lookup = {_norm(c): c for c in candidates}
+    best = difflib.get_close_matches(value_n, list(lookup.keys()), n=1, cutoff=cutoff)
+    if best:
+        return lookup[best[0]]
+    return None

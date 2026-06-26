@@ -916,10 +916,12 @@ release/backend.zip
 **Checklist:**
 - [x] `pdf_crop_runner/prepare_crops.py` — **rimosso (2026-06-19, approvato)**. Zero import verificati; README aggiornato.
 - [ ] `MatchLookupDate` in `AppSettings` — non approvato in questo passaggio (resta `[Obsolete]`, non controlla il flusso).
-- [ ] `known_names.py` — DA RINVIARE: rimuovere solo dopo la validazione **Fase 10E** (roster dinamico
-  reale con `RosterContextValidationHarnessTests` + `context.json` DB) che dimostri `dynamic-context` su
-  tutti i PDF, nessun fallback, `crossTeamLeak=0`, nessun `playerId` inventato. Vedere `docs/roster-context-validation.md`.
-- [ ] fallback legacy in `parser.py` / `roster_context.py` — DA RINVIARE con known_names.py.
+- [x] `known_names.py` — **rimosso (2026-06-26, approvato)** dopo gate Fase 10E superato (dynamic-context
+  su tutti i PDF, fallback non usato, matching 80/80 certain, `crossTeamLeak=0`, nessun `playerId` inventato).
+  Vedere `docs/roster-context-validation.md`.
+- [x] fallback legacy in `roster_context.py` — **rimosso (2026-06-26)**. La logica fuzzy generica
+  (`fuzzy_known_name`/`_norm`) è stata spostata in `roster_context.py`; `parser.py` invariato (usa già
+  `roster_context`). Senza roster attivo le funzioni ritornano vuoto/None (degradazione pulita, nessun crash).
 - [ ] `backend/backend.zip` — DA RINVIARE: rimuovere solo dopo deploy verificato di `release/backend.zip` su Aruba.
 - [ ] `config/database.example.php` — aggiorna se necessario.
 
@@ -946,9 +948,9 @@ release/backend.zip
 
 **Decisione su CH4:** Rimuovere solo con benchmark negativi documentati.
 
-**Nota:** l'harness gira senza `MatchContext` (CH1 usa ancora il fallback known_names.py). Per validare
-il roster dinamico — prerequisito per rimuovere known_names.py — ripetere il flusso dall'app con una
-partita reale o estendere l'harness con un `OcrMatchContext` di prova.
+**Nota:** `ChannelValidationHarnessTests` gira senza `MatchContext` (CH1 senza roster: dopo Fase 9 non
+c'è più fallback hardcoded, quindi nessuna correzione nomi/numeri). La validazione del roster dinamico è
+in `RosterContextValidationHarnessTests` (Fase 10E, gate superato → `known_names.py` rimosso in Fase 9).
 
 **Fase 10C — analisi risultati (2026-06-22):** validazione eseguita su 5 PDF (tutti i canali Success,
 stato CompletedWithWarnings). Aggregato per provider: CH1 `ocr.tesseract.fullpage` cov 2187 / accordo
@@ -989,6 +991,17 @@ rimozione `known_names.py`). Nessuna modifica a CH1–CH4, schema JSON, `engineW
 = 0**. **Gate per rimuovere `known_names.py`: 4 criteri soddisfatti** su questa partita; la rimozione resta
 azione Fase 9 con approvazione esplicita (raccomandato validare ≥1 altra partita). Report in `TestResults/`
 (non committato). Build verde, 246 test non-integration verdi.
+
+**Fase 9 — rimozione `known_names.py` (completata 2026-06-26, approvazione esplicita utente):**
+eliminato `fiba_pdf_to_json/known_names.py` (conteneva 8 squadre + 64 giocatori hardcoded, dati personali).
+Rimosso il fallback legacy da `roster_context.py` (`from . import known_names`, `_warn_legacy_once`); la
+logica fuzzy generica (`fuzzy_known_name`/`_norm`) è stata **spostata** in `roster_context.py` (non persa).
+`parser.py` invariato (già su `roster_context`). Senza roster attivo le funzioni ritornano liste vuote/None:
+il parser procede senza correzione nomi/numeri (degradazione pulita; identità risolte in C#). Aggiornati
+commento in `TesseractPythonOcrEngine.cs`, help di `worker.py`, harness (`legacy-known-names`→`roster-not-active`),
+README worker, regole `.claude`, `database/05-import-contract.md`, `legacy-code-inventory.md`. Non toccati
+`MatchLookupDate`, `backend/backend.zip` (altri item Fase 9, gating separato). Build verde, 246 test
+non-integration verdi, smoke test Python OK. Nessuna modifica a schema JSON, `engineWeights`, `appsettings.json`, backend PHP.
 
 ---
 

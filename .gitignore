@@ -54,6 +54,10 @@ runtime/Debug/*
 !samples/
 !samples/pdf/
 
+# Dati DB privati e PDF reali della validazione roster dinamico (Fase 10E): MAI committare.
+# Contengono identità canoniche reali (matchId, teamId, playerId, nomi giocatori) e PDF di gara.
+samples/private/
+
 # Planning prompts
 Prompt_pianificazione.txt
 
@@ -67,6 +71,11 @@ Config/appsettings.portable.json
 # Configurazione locale Claude Code
 CLAUDE.local.md
 .claude/settings.local.json
+
+# Dump SQL del DB con dati reali (Fase 10E): non committare i nuovi dump.
+# NB: NON rimuove dal tracking i dump .sql già committati (git ignora questa regola
+# per i file già tracciati). Serve solo a impedire che NUOVI dump vengano aggiunti.
+database/*.sql
 
 .venv-paddle/
 .venv/

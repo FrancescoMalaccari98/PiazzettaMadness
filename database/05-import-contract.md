@@ -60,7 +60,8 @@ Dal `match`: `home_team_id` per `side="Home"`, `away_team_id` per `side="Away"`.
    si crea un giocatore "fantasma".
 
 > Coerente con la decisione: identità giocatore via **roster edizione + maglia**,
-> non per nome. Riusa la logica `known_names.py`/roster già nell'OCR.
+> non per nome. Riusa il roster dinamico del DB (`roster_context.py` / `OcrMatchContext`);
+> `known_names.py` è stato rimosso in Fase 9.
 
 ---
 
@@ -162,11 +163,11 @@ Re-import dello stesso PDF: nuovo `stats_version`, upsert sovrascrive le righe
 
 ---
 
-## 8.bis Risoluzione squadra/giocatore: riuso dall'OCR
-La logica di normalizzazione nomi e l'anagrafica nota sono già in
-`fiba_pdf_to_json/known_names.py` (8 squadre, 64 giocatori, `KNOWN_ROSTER`,
-`roster_jersey_for()`): la stessa tabella va usata per **seed** di
-`teams`/`players`/`team_rosters`, così il lookup per maglia combacia.
+## 8.bis Risoluzione squadra/giocatore
+Il DB è l'unica fonte di identità: `teams`/`players`/`team_rosters` sono il roster canonico.
+L'OCR riceve il roster della partita via `--roster-json` (`roster_context.py` / `OcrMatchContext`)
+e il lookup per maglia combacia con il DB. L'anagrafica hardcoded (`known_names.py`) è stata
+**rimossa in Fase 9**: non esiste più alcuna tabella di nomi nel codice del worker.
 
 ---
 

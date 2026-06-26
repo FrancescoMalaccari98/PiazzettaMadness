@@ -28,10 +28,11 @@ namespace BasketPdfStats.Tests;
 public sealed class RosterContextValidationHarnessTests
 {
     // Marker emessi da roster_context.py su stderr (catturati in OcrRun.Error di CH1).
+    // Dopo Fase 9 non esiste più un fallback hardcoded (known_names.py rimosso): senza roster
+    // attivo CH1 procede senza correzione nomi/numeri. Questi marker indicano "roster non attivo".
     private const string DynamicActiveMarker = "Roster dinamico attivo";
-    private static readonly string[] FallbackMarkers =
+    private static readonly string[] RosterInactiveMarkers =
     [
-        "uso fallback known_names",
         "Roster dinamico non attivo",
         "Impossibile caricare il roster JSON",
         "Roster JSON vuoto o incompleto"
@@ -164,9 +165,9 @@ public sealed class RosterContextValidationHarnessTests
         {
             rosterSource = "dynamic-context";
         }
-        else if (FallbackMarkers.Any(m => ch1Stderr.Contains(m, StringComparison.OrdinalIgnoreCase)))
+        else if (RosterInactiveMarkers.Any(m => ch1Stderr.Contains(m, StringComparison.OrdinalIgnoreCase)))
         {
-            rosterSource = "legacy-known-names";
+            rosterSource = "roster-not-active";
         }
         else
         {
@@ -174,7 +175,7 @@ public sealed class RosterContextValidationHarnessTests
             rosterSource = "unknown";
         }
 
-        var fallbackUsed = FallbackMarkers.Any(m => ch1Stderr.Contains(m, StringComparison.OrdinalIgnoreCase));
+        var rosterInactive = RosterInactiveMarkers.Any(m => ch1Stderr.Contains(m, StringComparison.OrdinalIgnoreCase));
 
         var home = MatchSide(result, "Home", context.HomeTeam);
         var away = MatchSide(result, "Away", context.AwayTeam);
@@ -201,7 +202,7 @@ public sealed class RosterContextValidationHarnessTests
             ocrHome,
             ocrAway,
             rosterSource,
-            fallbackUsed,
+            rosterInactive,
             reviewRequired,
             inventedPlayerId,
             home,
@@ -252,7 +253,7 @@ public sealed class RosterContextValidationHarnessTests
     private void WriteConsole(PdfRosterReport r)
     {
         _output.WriteLine($"  status={r.Status}; ocrPlayers Home={r.OcrPlayersHome}/Away={r.OcrPlayersAway}");
-        _output.WriteLine($"  CH1 roster source={r.Ch1RosterSource}; fallback known_names used={(r.FallbackUsed ? "yes" : "no")}; review required={(r.ReviewRequired ? "yes" : "no")}; invented playerId={(r.InventedPlayerId ? "YES (!)" : "no")}");
+        _output.WriteLine($"  CH1 roster source={r.Ch1RosterSource}; roster not active={(r.RosterInactive ? "yes" : "no")}; review required={(r.ReviewRequired ? "yes" : "no")}; invented playerId={(r.InventedPlayerId ? "YES (!)" : "no")}");
         _output.WriteLine($"  [Home] {Describe(r.Home)}");
         _output.WriteLine($"  [Away] {Describe(r.Away)}");
         if (!string.IsNullOrWhiteSpace(r.Ch1StderrSnippet))
@@ -285,11 +286,11 @@ public sealed class RosterContextValidationHarnessTests
             md.AppendLine($"- Home: {m.HomeTeam} (teamId={m.HomeTeamId}, roster={m.HomeRoster}) — Away: {m.AwayTeam} (teamId={m.AwayTeamId}, roster={m.AwayRoster})");
             md.AppendLine($"- PDF processati: {m.Pdfs.Count}");
             md.AppendLine();
-            md.AppendLine("| PDF | Stato | CH1 roster source | Fallback known_names | Review required | playerId inventato |");
+            md.AppendLine("| PDF | Stato | CH1 roster source | Roster non attivo | Review required | playerId inventato |");
             md.AppendLine("|---|---|---|---|---|---|");
             foreach (var p in m.Pdfs)
             {
-                md.AppendLine($"| {p.PdfName} | {p.Status} | {p.Ch1RosterSource} | {(p.FallbackUsed ? "yes" : "no")} | {(p.ReviewRequired ? "yes" : "no")} | {(p.InventedPlayerId ? "YES (!)" : "no")} |");
+                md.AppendLine($"| {p.PdfName} | {p.Status} | {p.Ch1RosterSource} | {(p.RosterInactive ? "yes" : "no")} | {(p.ReviewRequired ? "yes" : "no")} | {(p.InventedPlayerId ? "YES (!)" : "no")} |");
             }
             md.AppendLine();
             md.AppendLine("Matching identità per lato (roster della squadra corretta):");
@@ -318,20 +319,21 @@ public sealed class RosterContextValidationHarnessTests
     {
         var all = reports.SelectMany(m => m.Pdfs).ToArray();
         var dynamicAll = all.Length > 0 && all.All(p => p.Ch1RosterSource == "dynamic-context");
-        var anyFallback = all.Any(p => p.FallbackUsed);
+        var anyInactive = all.Any(p => p.RosterInactive);
         var anyInvented = all.Any(p => p.InventedPlayerId);
         var anyCrossLeak = all.Any(p => p.Home.CrossTeamLeak > 0 || p.Away.CrossTeamLeak > 0);
 
         md.AppendLine("## Verdetto");
         md.AppendLine();
         md.AppendLine($"- CH1 usa il roster dinamico su tutti i PDF: **{(dynamicAll ? "sì" : "no")}**");
-        md.AppendLine($"- Fallback known_names.py usato in almeno un PDF: **{(anyFallback ? "sì" : "no")}**");
+        md.AppendLine($"- Roster non attivo in almeno un PDF (dopo Fase 9 non c'è fallback hardcoded): **{(anyInactive ? "sì" : "no")}**");
         md.AppendLine($"- playerId inventato da Python: **{(anyInvented ? "SÌ (anomalia)" : "no")}**");
         md.AppendLine($"- Cross-team leak nel matching (candidato di squadra sbagliata): **{(anyCrossLeak ? "SÌ (anomalia)" : "no")}** — il matching usa il roster per-squadra.");
         md.AppendLine();
         md.AppendLine("> Nota: la sorgente roster CH1 è dedotta dai log stderr del worker (`Roster dinamico attivo` vs " +
-                      "marker di fallback `known_names`), catturati in `OcrRun.Error`. `dynamic-context` = roster DB attivo; " +
-                      "`legacy-known-names` = fallback; `none` = CH1 non riuscito; `unknown` = nessun marker loggato.");
+                      "marker di roster non attivo), catturati in `OcrRun.Error`. `dynamic-context` = roster DB attivo; " +
+                      "`roster-not-active` = roster assente/invalido (nessun fallback hardcoded dopo Fase 9); " +
+                      "`none` = CH1 non riuscito; `unknown` = nessun marker loggato.");
     }
 
     private static RosterContextFixture? LoadFixture(string contextPath)
@@ -373,7 +375,7 @@ public sealed class RosterContextValidationHarnessTests
 
         var line = text.Split('\n')
             .FirstOrDefault(l => l.Contains("Roster dinamico", StringComparison.OrdinalIgnoreCase)
-                                 || l.Contains("known_names", StringComparison.OrdinalIgnoreCase));
+                                 || l.Contains("Roster JSON", StringComparison.OrdinalIgnoreCase));
         line ??= text;
         line = line.Trim();
         return line.Length > 200 ? line[..200] : line;
@@ -485,7 +487,7 @@ public sealed class RosterContextValidationHarnessTests
         int OcrPlayersHome,
         int OcrPlayersAway,
         string Ch1RosterSource,
-        bool FallbackUsed,
+        bool RosterInactive,
         bool ReviewRequired,
         bool InventedPlayerId,
         SideMatchCounts Home,

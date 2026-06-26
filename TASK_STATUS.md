@@ -214,7 +214,10 @@ provider is part of the solution. Adobe and GLM-OCR are fully removed.
 - **Fase 9** (pulizia legacy approvata, per-item): **in corso**.
   - [x] `pdf_crop_runner/prepare_crops.py` rimosso (2026-06-19, approvato): 0 import verificati; README aggiornato. Build+test verdi.
   - [ ] `MatchLookupDate`: non approvato ora (resta `[Obsolete]`).
-  - [ ] `known_names.py` + fallback `roster_context.py`: rinviati a dopo validazione Fase 10 su PDF reali.
+  - [x] `known_names.py` + fallback `roster_context.py` **rimossi (2026-06-26, approvazione esplicita)** dopo
+    gate Fase 10E superato. Logica fuzzy generica spostata in `roster_context.py`; `parser.py` invariato;
+    degradazione pulita senza roster (liste vuote/None). Aggiornati C#/worker/harness/README/regole/doc.
+    Build verde, 246 test non-integration verdi, smoke test Python OK. Vedi voce Fase 9 dettaglio sotto.
   - [ ] `backend/backend.zip`: rinviato a dopo deploy verificato di `release/backend.zip` su Aruba.
 - **Fase 10** (validazione end-to-end + benchmark CH3/CH4): **strumenti pronti (2026-06-19), esecuzione locale a carico utente**.
   - `tests/.../ChannelValidationHarnessTests.cs` (`[Integration]`): pipeline reale su samples/pdf/ via `AppComposition.Build`,
@@ -278,10 +281,23 @@ provider is part of the solution. Adobe and GLM-OCR are fully removed.
     (log worker: "Roster dinamico attivo: 2 squadre, 16 giocatori."), review required = no, **playerId
     inventato = no**, matching **8/8 certain per lato** (80/80 aggregato), 0 conflict/probable/numberNotFound/
     unmatched/notInPdf, **crossTeamLeak = 0**. Report in `TestResults/RosterContextValidation/` (non committato).
-  - **Gate rimozione `known_names.py`: 4 criteri soddisfatti** su questa partita. La rimozione effettiva
-    resta azione **Fase 9** con approvazione esplicita (non fatta); raccomandato validare ≥1 altra partita.
-  - `known_names.py` resta **solo fallback** (non rimosso). Build verde, 246 test non-integration verdi.
-- **Refactoring**: tutte le fasi 0A–8B implementate; Fase 9 (per-item) e Fase 10 (validazione/tuning) in mano all'utente per le parti che richiedono ambiente OCR / deploy Aruba.
+  - **Gate rimozione `known_names.py`: 4 criteri soddisfatti** su questa partita (poi rimosso in Fase 9).
+- **Fase 9 — rimozione `known_names.py`** (completata 2026-06-26, approvazione esplicita utente):
+  - Eliminato `fiba_pdf_to_json/known_names.py` (8 squadre + 64 giocatori hardcoded, dati personali reali).
+  - `roster_context.py`: rimosso `from . import known_names as _legacy` e tutto il fallback legacy
+    (`_warn_legacy_once`, `_warned_legacy`); la logica fuzzy generica (`fuzzy_known_name`/`_norm`) è stata
+    **spostata** qui (non persa). Senza roster attivo: `known_teams()/known_players()/...` → `[]`/`None`,
+    il parser procede senza correzione nomi/numeri (degradazione pulita; identità risolte in C#).
+  - `parser.py` invariato (già su `roster_context`). Aggiornati commento `TesseractPythonOcrEngine.cs`,
+    help `worker.py`, harness (`legacy-known-names`→`roster-not-active`, `FallbackUsed`→`RosterInactive`),
+    README worker, `.claude/rules/python-worker.md`, `.claude/skills/fix-extraction-issue`,
+    `database/05-import-contract.md`, `docs/legacy-code-inventory.md`, `docs/refactor-plan.md`.
+  - **Non toccati** `MatchLookupDate` e `backend/backend.zip` (altri item Fase 9, gating separato).
+  - Verifiche: build verde, 246 test non-integration verdi, smoke test Python (degradazione + roster attivo) OK.
+    Nessuna modifica a schema JSON, `engineWeights`, `Config/appsettings.json`, backend PHP. Nessun commit.
+- **Refactoring**: tutte le fasi 0A–8B implementate; Fase 9 (per-item: `prepare_crops.py` + `known_names.py`
+  rimossi; `MatchLookupDate`/`backend.zip` rinviati) e Fase 10 (validazione/tuning) in mano all'utente per le
+  parti che richiedono ambiente OCR / deploy Aruba.
 
 ## Risky or Unfinished Areas
 

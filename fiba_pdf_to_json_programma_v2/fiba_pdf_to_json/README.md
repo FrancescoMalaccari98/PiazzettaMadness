@@ -132,7 +132,7 @@ Nella cartella `sample_output/` trovi esempi prodotti sui quattro PDF forniti.
 - `ocr.py`: preprocessing immagini, OCR Tesseract e lettura colonne/celle;
 - `parser.py`: parsing header, squadre, giocatori, totali e comparative;
 - `normalizers.py`: conversioni numeriche, percentuali, minuti, nomi file;
-- `known_names.py`: dizionari/fuzzy matching per nomi squadra e giocatori degli esempi;
+- `roster_context.py`: roster dinamico dal DB (via `--roster-json`) + fuzzy matching nomi/squadre, supporto al parsing (sostituisce `known_names.py`, rimosso in Fase 9);
 - `schema.py`: template JSON finale;
 - `cli.py`: interfaccia comando;
 - `worker.py`: conversione isolata di un PDF.
@@ -144,8 +144,10 @@ Per adattare il programma a variazioni di layout, parti da:
 - `layout.default_player_x_lines()` per il profilo colonne;
 - `parser.PLAYER_COLUMNS` e `parser.COLUMN_KINDS` per mapping colonne e tipo OCR;
 - `parse_header_regions()` per le coordinate dell'header;
-- `_ocr_comparative_table()` e `parse_comparatives()` per le tabelle comparative;
-- `known_names.py` per aggiungere nuove squadre o nuovi giocatori ricorrenti.
+- `_ocr_comparative_table()` e `parse_comparatives()` per le tabelle comparative.
+
+I nomi di squadre/giocatori non sono più hardcoded: provengono dal DB tramite `--roster-json`
+(`roster_context.py`). Per aggiungere una partita, fornisci il roster dal DB, non un file di nomi.
 
 ## Errori e warning
 

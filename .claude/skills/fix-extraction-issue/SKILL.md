@@ -33,7 +33,7 @@ Analizza un errore di estrazione OCR (valore mancante, errato o non associato co
 - Non modificare le soglie di `PlayerIdentityMatcher` senza misurarle su campioni
 - Non modificare `pdf-structure/layout-map.default.json` senza verificare l'impatto su calibrazione
 - Non modificare `StatsValidationService` senza analizzare le formule matematiche
-- Non aggiungere `known_names.py` o simili workaround: il problema deve essere risolto sistematicamente
+- Non reintrodurre `known_names.py` o liste di nomi/roster hardcoded (rimosso in Fase 9): il roster viene dal DB via `roster_context.py`; il problema va risolto sistematicamente
 
 ## Output atteso
 

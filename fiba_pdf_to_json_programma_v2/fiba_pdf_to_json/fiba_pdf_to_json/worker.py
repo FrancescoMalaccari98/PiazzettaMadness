@@ -19,7 +19,7 @@ def main() -> int:
     p.add_argument("--layout-debug-dir", default=None)
     p.add_argument("--document-hash", default="")
     p.add_argument("--evidence-output", default="", help="Optional path for evidence_records.json (ocr.tesseract.fullpage).")
-    p.add_argument("--roster-json", default="", help="Optional path to the canonical match roster JSON (DB). Enables dynamic roster instead of known_names.")
+    p.add_argument("--roster-json", default="", help="Optional path to the canonical match roster JSON (DB). Enables the dynamic roster used as parsing support.")
     args = p.parse_args()
     logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO, format="%(levelname)s %(name)s: %(message)s")
     if args.roster_json.strip():

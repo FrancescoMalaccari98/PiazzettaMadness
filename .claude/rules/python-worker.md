@@ -96,9 +96,11 @@ Se modifichi il schema Python, aggiorna il modello C# in modo sincrono.
 
 ## Roster context (da Fase 4)
 
-I worker accetteranno un argomento `--roster-json <path>` contenente il roster del DB.
-Il formato sarà definito in `OcrMatchContext` (C#) e serializzato in JSON temporaneo.
-Non usare `known_names.py` quando `--roster-json` è disponibile.
+CH1 accetta `--roster-json <path>` con il roster del DB (formato `OcrMatchContext` serializzato da C#).
+`roster_context.py` è l'unica fonte dei nomi/numeri di supporto al parsing: `known_names.py` è stato
+**rimosso in Fase 9**, non esiste più alcun roster hardcoded di fallback. Senza `--roster-json` il
+parser procede senza correzione nomi/numeri (le identità si risolvono in C#). Non reintrodurre liste
+di nomi hardcoded.
 
 ## Timeout
 
