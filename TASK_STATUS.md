@@ -256,6 +256,31 @@ provider is part of the solution. Adobe and GLM-OCR are fully removed.
     valutazione bloccante/diagnostico, nessun tuning raccomandato) e `docs/refactor-plan.md` aggiornati.
   - `Config/appsettings.json` e `reconciliation.engineWeights` invariati. Build verde, 246 test
     non-integration verdi. `TestResults/` non committato.
+- **Fase 10E** (validazione roster dinamico reale): **strumento pronto 2026-06-24, esecuzione locale a carico utente**.
+  - Nuovo harness `tests/.../RosterContextValidationHarnessTests.cs` (`[Integration]`): carica
+    `context.json` (fixture DB, superset di `OcrMatchContext`) e processa i PDF della stessa partita
+    **passando l'`OcrMatchContext`** alla pipeline (a differenza di `ChannelValidationHarnessTests`,
+    che gira senza contesto). Esce in SKIP con istruzioni se mancano fixture/PDF/ambiente OCR.
+  - Report `TestResults/RosterContextValidation/roster-context-report.{md,json}`: context provided/source,
+    matchId, home/away (+teamId), roster per squadra, PDF processati, **CH1 roster source**
+    (`dynamic-context`/`legacy-known-names`/`none`/`unknown`, dedotto dai log stderr del worker CH1),
+    fallback `known_names` usato, matching identità per lato (certain/probable/conflict/numberNotFound/
+    unmatched/notInPdf), review required, **nessun `playerId` inventato da Python**, **matching per-squadra
+    non combinato** (`crossTeamLeak=0`).
+  - Dati privati: `samples/private/db-context/aurora-lynx-nebula-bears-08-lug-2030/{context.json, pdfs/}`.
+    `.gitignore` aggiornato (`samples/private/`); fornito `context.template.json` (placeholder, niente dati inventati).
+  - Doc dedicata `docs/roster-context-validation.md` (formato context.json, dati DB richiesti, gate
+    rimozione `known_names.py`); `docs/ch3-ch4-validation.md` e `docs/refactor-plan.md` aggiornati.
+  - **Eseguito in locale (2026-06-24, 3m47s, harness passato)** su matchId 63 Aurora Lynx (Home, teamId 46)
+    vs Nebula Bears (Away, teamId 47), 2026-07-08 20:30 Girone A, roster 8+8, 5 PDF reali. `context.json`
+    costruito dal dump DB reale (nessun dato inventato; PDF/context in `samples/private/`, ignorati).
+  - Risultato su tutti e 5 i PDF: **CH1 roster source = dynamic-context**, **fallback known_names = no**
+    (log worker: "Roster dinamico attivo: 2 squadre, 16 giocatori."), review required = no, **playerId
+    inventato = no**, matching **8/8 certain per lato** (80/80 aggregato), 0 conflict/probable/numberNotFound/
+    unmatched/notInPdf, **crossTeamLeak = 0**. Report in `TestResults/RosterContextValidation/` (non committato).
+  - **Gate rimozione `known_names.py`: 4 criteri soddisfatti** su questa partita. La rimozione effettiva
+    resta azione **Fase 9** con approvazione esplicita (non fatta); raccomandato validare ≥1 altra partita.
+  - `known_names.py` resta **solo fallback** (non rimosso). Build verde, 246 test non-integration verdi.
 - **Refactoring**: tutte le fasi 0A–8B implementate; Fase 9 (per-item) e Fase 10 (validazione/tuning) in mano all'utente per le parti che richiedono ambiente OCR / deploy Aruba.
 
 ## Risky or Unfinished Areas

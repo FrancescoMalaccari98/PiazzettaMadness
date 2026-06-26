@@ -916,7 +916,9 @@ release/backend.zip
 **Checklist:**
 - [x] `pdf_crop_runner/prepare_crops.py` — **rimosso (2026-06-19, approvato)**. Zero import verificati; README aggiornato.
 - [ ] `MatchLookupDate` in `AppSettings` — non approvato in questo passaggio (resta `[Obsolete]`, non controlla il flusso).
-- [ ] `known_names.py` — DA RINVIARE: rimuovere solo dopo validazione Fase 5 su samples/pdf/ (Fase 10).
+- [ ] `known_names.py` — DA RINVIARE: rimuovere solo dopo la validazione **Fase 10E** (roster dinamico
+  reale con `RosterContextValidationHarnessTests` + `context.json` DB) che dimostri `dynamic-context` su
+  tutti i PDF, nessun fallback, `crossTeamLeak=0`, nessun `playerId` inventato. Vedere `docs/roster-context-validation.md`.
 - [ ] fallback legacy in `parser.py` / `roster_context.py` — DA RINVIARE con known_names.py.
 - [ ] `backend/backend.zip` — DA RINVIARE: rimuovere solo dopo deploy verificato di `release/backend.zip` su Aruba.
 - [ ] `config/database.example.php` — aggiorna se necessario.
@@ -968,6 +970,25 @@ campi riconciliati**, tutti **non bloccanti** (2 `Info` rimbalzi squadra, 2 `War
 punti/periodi; stato `CompletedWithWarnings`). Tutti su totali squadra/periodi, riconducibili a gap di
 estrazione non a selezione errata → **nessun tuning pesi raccomandato**. `engineWeights` e
 `appsettings.json` invariati. Build verde, 246 test non-integration verdi. Vedere `docs/ch3-ch4-validation.md`.
+
+**Fase 10E — validazione roster dinamico reale (strumento pronto 2026-06-24, esecuzione locale a carico utente):**
+nuovo harness `RosterContextValidationHarnessTests` (`[Integration]`): carica `context.json` (fixture DB,
+superset di `OcrMatchContext`) e processa i PDF della stessa partita **passando l'`OcrMatchContext`** alla
+pipeline. Verifica per ogni PDF: context provided/source, matchId, home/away (+teamId), roster per squadra,
+PDF processati, **CH1 roster source** (`dynamic-context`/`legacy-known-names`/`none`, dedotto dai log
+stderr del worker), fallback `known_names` usato sì/no, matching identità per lato
+(certain/probable/conflict/numberNotFound/unmatched/notInPdf via `PlayerIdentityMatcher`), review required,
+**nessun `playerId` inventato da Python**, **matching per-squadra non combinato** (`crossTeamLeak=0`).
+Dati reali e PDF in `samples/private/` (gitignored, mai committati); `.gitignore` aggiornato; fornito
+`context.template.json`. Doc dedicata `docs/roster-context-validation.md` (formato context.json, gate
+rimozione `known_names.py`). Nessuna modifica a CH1–CH4, schema JSON, `engineWeights`, `appsettings.json`, backend.
+
+**Eseguito in locale (2026-06-24, 3m47s, passato)** su matchId 63 Aurora Lynx vs Nebula Bears (roster 8+8,
+5 PDF reali, context.json da dump DB). Su tutti e 5 i PDF: **CH1 = dynamic-context**, **fallback known_names
+= no**, review = no, **playerId inventato = no**, matching **8/8 certain per lato** (80/80), **crossTeamLeak
+= 0**. **Gate per rimuovere `known_names.py`: 4 criteri soddisfatti** su questa partita; la rimozione resta
+azione Fase 9 con approvazione esplicita (raccomandato validare ≥1 altra partita). Report in `TestResults/`
+(non committato). Build verde, 246 test non-integration verdi.
 
 ---
 

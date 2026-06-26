@@ -206,11 +206,13 @@ Solo allora il tuning sarà basato su correttezza e non su accordo circolare.
 
 ## Gate per la Fase 9 residua
 
-`known_names.py` può essere rimosso (insieme al fallback in `roster_context.py`) solo **dopo** che questa
+`known_names.py` può essere rimosso (insieme al fallback in `roster_context.py`) solo **dopo** che la
 validazione, eseguita **con `--roster-json` attivo** (cioè con un `MatchContext` reale caricato dal DB),
 mostra che il roster dinamico produce risultati equivalenti o migliori rispetto al fallback hardcoded.
 
-> Nota: l'harness attuale esegue la pipeline **senza** `MatchContext` (nessuna selezione partita), quindi
-> CH1 usa ancora il fallback `known_names.py`. Per validare il roster dinamico, ripetere il flusso
-> dall'app (data → partita → contesto → PDF) oppure estendere l'harness per iniettare un `OcrMatchContext`
-> di prova prima di rimuovere `known_names.py`.
+> Nota: questo harness (`ChannelValidationHarnessTests`) esegue la pipeline **senza** `MatchContext`,
+> quindi CH1 usa ancora il fallback `known_names.py`. La validazione del roster dinamico è stata estratta
+> in un harness dedicato — **`RosterContextValidationHarnessTests`** (Fase 10E) — che carica un
+> `context.json` reale e passa l'`OcrMatchContext` alla pipeline. Vedere
+> [docs/roster-context-validation.md](roster-context-validation.md) per la procedura e il gate completo
+> di rimozione di `known_names.py`.
