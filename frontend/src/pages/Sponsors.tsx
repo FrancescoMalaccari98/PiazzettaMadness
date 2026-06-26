@@ -93,25 +93,10 @@ export function Sponsors() {
   const [sponsors, setSponsors] = useState<Sponsor[]>([]);
 
   useEffect(() => {
-    Promise.all([
-      fetch(`${API}/img/sponsor/list.php`).then(r => r.ok ? r.json() : null),
-      fetch(`${API}/api-web/sponsor-links`).then(r => r.ok ? r.json() : null),
-    ])
-    .then(([photos, links]) => {
-      if (!photos) return;
-      const linksMap: Record<string, { nome: string; sito: string; ig: string }> = links ?? {};
-      setSponsors(photos.map((s: { filename: string; url: string; nome: string }, i: number) => {
-        const link = linksMap[s.filename] ?? {};
-        return {
-          id: i + 1,
-          nome: link.nome || s.nome,
-          logo: s.url,
-          sito: link.sito || '',
-          ig: link.ig || '',
-        };
-      }));
-    })
-    .catch(() => {});
+    fetch(`${API}/api-web/sponsor`)
+      .then(r => r.ok ? r.json() as Promise<Sponsor[]> : null)
+      .then(data => { if (data) setSponsors(data); })
+      .catch(() => {});
   }, []);
 
   return (

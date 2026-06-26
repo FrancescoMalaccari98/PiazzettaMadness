@@ -184,10 +184,10 @@ try {
         require_once __DIR__ . '/endpoints/three_point_contest.php';
         handle_three_point_contest(get_pdo());
 
-    // ── /sponsor-links ─────────────────────────────────────
-    } elseif ($seg0 === 'sponsor-links') {
+    // ── /sponsor ────────────────────────────────────────────
+    } elseif ($seg0 === 'sponsor') {
         require_once __DIR__ . '/endpoints/sponsors.php';
-        handle_sponsor_links(get_pdo());
+        handle_sponsors(get_pdo());
 
     // ── /staff ──────────────────────────────────────────────
     } elseif ($seg0 === 'staff') {

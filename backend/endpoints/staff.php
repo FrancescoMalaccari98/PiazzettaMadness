@@ -25,7 +25,7 @@ function handle_staff(PDO $pdo): void {
             'ruolo'     => $r['ruolo'],
             'categoria' => $r['categoria'],
             'bio'       => $r['bio'],
-            'foto'      => $r['foto'],
+            'foto'      => $r['foto'] ? ('/img/staff/' . $r['foto']) : '',
             'ig'        => $r['ig'],
         ];
     }

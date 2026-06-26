@@ -2,14 +2,14 @@
 // ============================================================
 // api/endpoints/sponsors.php
 //
-// GET /api-web/sponsor-links → link sito e instagram per sponsor
+// GET /api-web/sponsor → lista sponsor con foto, nome, sito, instagram
 // ============================================================
 
-function handle_sponsor_links(PDO $pdo): void {
+function handle_sponsors(PDO $pdo): void {
     require_method('GET');
 
     $stmt = $pdo->query("
-        SELECT filename, nome, sito, instagram
+        SELECT id, filename, nome, sito, instagram
         FROM sponsor_links
         ORDER BY id ASC
     ");
@@ -17,8 +17,11 @@ function handle_sponsor_links(PDO $pdo): void {
 
     $result = [];
     foreach ($rows as $r) {
-        $result[$r['filename']] = [
+        if (!$r['filename']) continue;
+        $result[] = [
+            'id'   => (int)$r['id'],
             'nome' => $r['nome'] ?? '',
+            'logo' => '/img/sponsor/' . $r['filename'],
             'sito' => $r['sito'] ?? '',
             'ig'   => $r['instagram'] ?? '',
         ];

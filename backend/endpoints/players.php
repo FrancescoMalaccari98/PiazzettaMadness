@@ -98,7 +98,7 @@ function row_to_player(array $r): array {
         'name'       => trim($r['first_name'] . ' ' . $r['last_name']),
         'team'       => $r['team_name'],
         'number'     => $r['jersey_number'] !== null ? (int)$r['jersey_number'] : null,
-        'photo'      => $r['photo_path'] ?: null,
+        'photo'      => $r['photo_path'] ? ('/img/giocatori/' . $r['photo_path']) : null,
         'pts'        => avg((int)$r['total_points'],    $gp),
         'ast'        => avg((int)$r['total_assists'],   $gp),
         'reb'        => avg((int)$r['total_reb'],       $gp),
