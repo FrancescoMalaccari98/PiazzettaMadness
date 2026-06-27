@@ -14,7 +14,7 @@ public partial class MainWindow : System.Windows.Window
 
         var root = AppComposition.FindRuntimeRoot();
         var settings = AppSettingsLoader.Load(Path.Combine(root, "Config", "appsettings.json"));
-        var composition = AppComposition.Build(settings, root);
+        var composition = AppComposition.Build(settings, root, new WpfTeamMismatchProcessingDecider());
 
         var alreadyProcessedPdfSelection = new AlreadyProcessedPdfSelectionService(
             composition.AlreadyProcessedPdfDetector,

@@ -25,7 +25,7 @@ public sealed class AppComposition
     public required IOcrImportService? ImportService { get; init; }
     public required IAlreadyProcessedPdfDetector AlreadyProcessedPdfDetector { get; init; }
 
-    public static AppComposition Build(AppSettings settings, string projectRoot)
+    public static AppComposition Build(AppSettings settings, string projectRoot, ITeamMismatchProcessingDecider? teamMismatchDecider = null)
     {
         var preparation = CreateDocumentPreparation(settings, projectRoot);
         var engineWeights = EngineWeightOptions.FromJsonElement(settings.Reconciliation);
@@ -34,7 +34,8 @@ public sealed class AppComposition
             CreateEngines(settings, projectRoot),
             preparation.RunPlanBuilder,
             preparation.Stage,
-            normalizedOcrReconciler: new NormalizedOcrReconciler(weights: engineWeights));
+            normalizedOcrReconciler: new NormalizedOcrReconciler(weights: engineWeights),
+            teamMismatchDecider: teamMismatchDecider);
 
         var importService = string.IsNullOrWhiteSpace(settings.OcrApi.BaseUrl)
             ? null

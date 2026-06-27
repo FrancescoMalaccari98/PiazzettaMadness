@@ -17,4 +17,11 @@ public sealed class OcrProcessingRequest
     /// canonico delle identità avviene comunque in C#. Null = comportamento legacy.
     /// </summary>
     public OcrMatchContext? MatchContext { get; set; }
+
+    /// <summary>
+    /// Impostato dalla pipeline quando l'utente sceglie di interrompere l'elaborazione perché le
+    /// squadre del PDF non corrispondono al match selezionato (decisione dopo CH1). Transitorio:
+    /// non fa parte del JSON di output.
+    /// </summary>
+    public bool TeamMismatchAborted { get; set; }
 }

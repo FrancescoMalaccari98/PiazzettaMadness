@@ -1,113 +1,432 @@
 <Window x:Class="BasketPdfStats.App.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Basket PDF Stats" Height="690" Width="1040"
-        MinHeight="540" MinWidth="880">
-    <Grid Margin="16">
+        Title="Basket PDF Stats" Height="800" Width="1180"
+        MinHeight="680" MinWidth="1000"
+        Background="{StaticResource WindowBrush}">
+
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </Window.Resources>
+
+    <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="150" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <DockPanel Grid.Row="0" LastChildFill="True">
-            <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
-                <Button Content="Seleziona PDF" Width="130" Margin="0,0,8,0" Command="{Binding SelectPdfCommand}" />
-                <Button Content="Elabora PDF" Width="120" Command="{Binding ProcessPdfCommand}" />
-            </StackPanel>
-            <StackPanel VerticalAlignment="Center">
-                <TextBlock Text="{Binding StatusText}" TextAlignment="Right" />
-                <TextBlock Text="{Binding ResultWindowStatusText}" Foreground="#57606A" FontSize="11" TextAlignment="Right" TextWrapping="Wrap" />
-            </StackPanel>
-        </DockPanel>
-
-        <Border Grid.Row="1" BorderBrush="#D0D7DE" BorderThickness="1" Margin="0,14,0,12" Padding="10" CornerRadius="4">
+        <!-- ===== Intestazione: titolo + stato generale ===== -->
+        <Border Grid.Row="0" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource BorderBrushSoft}"
+                BorderThickness="0,0,0,1" Padding="20,12">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="120" />
                     <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <TextBlock Text="PDF selezionato" FontWeight="SemiBold" VerticalAlignment="Center" />
-                <TextBox Grid.Column="1" IsReadOnly="True" Text="{Binding SelectedPdfPath}" BorderThickness="0" VerticalAlignment="Center" />
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="Basket PDF Stats" FontSize="19" FontWeight="Bold"
+                               Foreground="{StaticResource TextStrongBrush}" />
+                    <TextBlock Text="Da PDF FIBA Live Stats a JSON normalizzato — flusso: data → partita → PDF → elabora → revisiona/importa"
+                               Style="{StaticResource MutedText}" Margin="0,2,0,0" />
+                </StackPanel>
+                <Border Grid.Column="1" Style="{StaticResource StatusBadge}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Stato: " FontWeight="SemiBold" Foreground="{StaticResource AccentBrushDark}" />
+                        <TextBlock Text="{Binding WorkflowStatus}" FontWeight="SemiBold"
+                                   Foreground="{StaticResource AccentBrushDark}" />
+                    </StackPanel>
+                </Border>
             </Grid>
         </Border>
 
-        <ListView Grid.Row="2" ItemsSource="{Binding ProcessedFiles}">
-            <ListView.View>
-                <GridView>
-                    <GridViewColumn Header="File" Width="250" DisplayMemberBinding="{Binding FileName}" />
-                    <GridViewColumn Header="Stato" Width="170" DisplayMemberBinding="{Binding Status}" />
-                    <GridViewColumn Header="Hash" Width="150" DisplayMemberBinding="{Binding ShortHash}" />
-                    <GridViewColumn Header="JSON" Width="420" DisplayMemberBinding="{Binding OutputJsonPath}" />
-                </GridView>
-            </ListView.View>
-        </ListView>
+        <!-- ===== Barra di avanzamento ===== -->
+        <ProgressBar Grid.Row="1" Height="4" IsIndeterminate="{Binding IsBusy}"
+                     Background="{StaticResource WindowBrush}" BorderThickness="0" Foreground="{StaticResource AccentBrush}" />
 
-        <Grid Grid.Row="3" Margin="0,12,0,0">
+        <!-- ===== Corpo: schede Elaborazione / Risultati Telecronaca ===== -->
+        <TabControl Grid.Row="2" Margin="10" Background="Transparent" BorderThickness="0"
+                    SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}">
+
+        <TabItem Header="Elaborazione">
+        <Grid Margin="6">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="440" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            <GroupBox Header="Warning / Errori" Margin="0,0,8,0">
-                <TextBox Text="{Binding WarningText}" IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" BorderThickness="0" />
-            </GroupBox>
-            <GroupBox Grid.Column="1" Header="Percorso JSON generato" Margin="8,0,0,0">
-                <TextBox Text="{Binding OutputJsonPath}" IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" BorderThickness="0" />
-            </GroupBox>
-        </Grid>
 
-        <!-- Import nel DB -->
-        <Border Grid.Row="4" BorderBrush="#D0D7DE" BorderThickness="1" Margin="0,12,0,0" Padding="10" CornerRadius="4">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="90" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" MinWidth="260" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
+            <!-- ===================== Colonna sinistra ===================== -->
+            <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" Margin="0,0,16,0">
+                <StackPanel>
 
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="Data partita" FontWeight="SemiBold"
-                           VerticalAlignment="Center" Margin="0,0,8,0" />
-                <DatePicker Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3"
-                            SelectedDate="{Binding SelectedDateValue, Mode=TwoWay}"
-                            VerticalAlignment="Center" HorizontalAlignment="Left" Width="160"
-                            IsEnabled="{Binding HasImportService}" />
-                <Button Grid.Row="0" Grid.Column="4" Content="Aggiorna" Width="82" Margin="8,0,0,0"
-                        Command="{Binding LoadMatchesCommand}" />
+                    <!-- ===== Passo 1: Seleziona partita ===== -->
+                    <Border Style="{StaticResource SectionCard}">
+                        <StackPanel>
+                            <TextBlock Text="1. Seleziona partita" Style="{StaticResource SectionTitle}" />
 
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="Match ID" FontWeight="SemiBold"
-                           VerticalAlignment="Center" Margin="0,8,8,0" />
-                <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding MatchIdText, UpdateSourceTrigger=PropertyChanged}"
-                         VerticalAlignment="Center" Padding="4,2" Margin="0,8,0,0" />
-                <TextBlock Grid.Row="1" Grid.Column="2" Text="Match Teams" FontWeight="SemiBold"
-                           VerticalAlignment="Center" Margin="14,8,8,0" />
-                <ComboBox Grid.Row="1" Grid.Column="3" ItemsSource="{Binding MatchOptions}"
-                          SelectedItem="{Binding SelectedMatchOption, Mode=TwoWay}"
-                          DisplayMemberPath="DisplayName"
-                          VerticalAlignment="Center" Padding="4,2" Margin="0,8,0,0"
-                          IsEnabled="{Binding HasImportService}" />
-                <StackPanel Grid.Row="1" Grid.Column="5" Orientation="Horizontal" Margin="8,8,0,0">
-                    <Button Content="Revisiona" Width="90" Margin="0,0,8,0"
-                            Command="{Binding ReviewIdentityCommand}" />
-                    <Button Content="Importa nel DB" Width="130"
-                            Command="{Binding ImportToDbCommand}" />
+                            <Border Background="#FFF4E5" BorderBrush="#F0C36D" BorderThickness="1" CornerRadius="5"
+                                    Padding="10,6" Margin="0,0,0,10"
+                                    Visibility="{Binding BackendStatusHint, Converter={StaticResource StringToVis}}">
+                                <TextBlock Text="{Binding BackendStatusHint}" TextWrapping="Wrap"
+                                           Foreground="#8A5A00" FontSize="11.5" />
+                            </Border>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Data partita" Style="{StaticResource FieldLabel}" Margin="0,0,10,0" />
+                                <DatePicker Grid.Column="1" SelectedDate="{Binding SelectedDateValue, Mode=TwoWay}"
+                                            VerticalAlignment="Center" />
+                                <Button Grid.Column="2" Content="Carica match" Style="{StaticResource PrimaryButton}"
+                                        Margin="10,0,0,0" Command="{Binding LoadMatchesCommand}" />
+                            </Grid>
+
+                            <TextBlock Text="Match disponibili" Style="{StaticResource FieldLabel}" Margin="0,12,0,4" />
+                            <ComboBox ItemsSource="{Binding MatchOptions}"
+                                      SelectedItem="{Binding SelectedMatchOption, Mode=TwoWay}"
+                                      DisplayMemberPath="DisplayName" Padding="6,4"
+                                      IsEnabled="{Binding HasImportService}" />
+
+                            <!-- Riepilogo del match selezionato -->
+                            <Border Margin="0,12,0,0" Background="#F7F9FB" BorderBrush="{StaticResource BorderBrushSoft}"
+                                    BorderThickness="1" CornerRadius="5" Padding="12"
+                                    Visibility="{Binding HasSelectedMatch, Converter={StaticResource BoolToVis}}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Match ID" Style="{StaticResource FieldLabel}" Margin="0,0,12,4" />
+                                    <TextBox   Grid.Row="0" Grid.Column="1" Text="{Binding MatchIdText, Mode=OneWay}"
+                                               IsReadOnly="True" BorderThickness="0" Background="Transparent"
+                                               Foreground="{StaticResource TextStrongBrush}" Margin="0,0,0,4" />
+
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Squadre" Style="{StaticResource FieldLabel}" Margin="0,0,12,4" />
+                                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedMatchTeams}"
+                                               TextWrapping="Wrap" VerticalAlignment="Center" Margin="0,0,0,4" />
+
+                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Orario" Style="{StaticResource FieldLabel}" Margin="0,0,12,4" />
+                                    <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedMatchTime}"
+                                               VerticalAlignment="Center" Margin="0,0,0,4" />
+
+                                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Fase / Turno" Style="{StaticResource FieldLabel}" Margin="0,0,12,0" />
+                                    <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedMatchPhase}"
+                                               TextWrapping="Wrap" VerticalAlignment="Center" />
+                                </Grid>
+                            </Border>
+
+                            <TextBlock Text="{Binding ImportStatusText}" Style="{StaticResource MutedText}" Margin="0,10,0,0" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- ===== Passo 2: Seleziona PDF ===== -->
+                    <Border Style="{StaticResource SectionCard}">
+                        <StackPanel>
+                            <TextBlock Text="2. Seleziona PDF" Style="{StaticResource SectionTitle}" />
+
+                            <Button Content="Seleziona PDF" Style="{StaticResource ActionButton}"
+                                    HorizontalAlignment="Left" Command="{Binding SelectPdfCommand}" />
+
+                            <TextBlock Text="PDF selezionato" Style="{StaticResource FieldLabel}" Margin="0,12,0,4" />
+                            <Border Background="#F7F9FB" BorderBrush="{StaticResource BorderBrushSoft}" BorderThickness="1"
+                                    CornerRadius="5" Padding="8,6">
+                                <TextBox Text="{Binding SelectedPdfPath, Mode=OneWay}" IsReadOnly="True"
+                                         BorderThickness="0" Background="Transparent" TextWrapping="Wrap"
+                                         Foreground="{StaticResource TextStrongBrush}" />
+                            </Border>
+
+                            <Button Content="Elabora PDF" Style="{StaticResource PrimaryButton}"
+                                    HorizontalAlignment="Left" Margin="0,12,0,0" Command="{Binding ProcessPdfCommand}" />
+                            <TextBlock Text="{Binding ProcessHint}" Style="{StaticResource MutedText}" Margin="0,6,0,0" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- ===== Passo 4: Azioni finali ===== -->
+                    <Border Style="{StaticResource SectionCard}" Margin="0,0,0,4">
+                        <StackPanel>
+                            <TextBlock Text="4. Revisione e import" Style="{StaticResource SectionTitle}" />
+                            <StackPanel Orientation="Horizontal">
+                                <Button Content="Revisiona" Style="{StaticResource ActionButton}"
+                                        Margin="0,0,10,0" Command="{Binding ReviewIdentityCommand}" />
+                                <Button Content="Importa nel DB" Style="{StaticResource PrimaryButton}"
+                                        Command="{Binding ImportToDbCommand}" />
+                            </StackPanel>
+                            <TextBlock Text="{Binding ImportStatusText}" Style="{StaticResource MutedText}" Margin="0,10,0,0" />
+                        </StackPanel>
+                    </Border>
+
                 </StackPanel>
+            </ScrollViewer>
 
-                <TextBlock Grid.Row="2" Grid.ColumnSpan="6" Text="{Binding ImportStatusText}" VerticalAlignment="Center"
-                           Margin="0,8,0,0" TextWrapping="Wrap" Foreground="#57606A" FontSize="11" />
-            </Grid>
-        </Border>
+            <!-- ===================== Colonna destra: risultati ===================== -->
+            <Border Grid.Column="1" Style="{StaticResource SectionCard}" Margin="0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
 
-        <ProgressBar Grid.Row="5" Height="8" Margin="0,8,0,0" IsIndeterminate="{Binding IsBusy}" />
+                    <TextBlock Grid.Row="0" Text="3. Risultato elaborazione" Style="{StaticResource SectionTitle}" />
+
+                    <Border Grid.Row="1" Background="#F1F6F1" BorderBrush="#CDE2CD" BorderThickness="1" CornerRadius="5"
+                            Padding="10,8" Margin="0,0,0,10"
+                            Visibility="{Binding ProcessingSummary, Converter={StaticResource StringToVis}}">
+                        <TextBlock Text="{Binding ProcessingSummary}" TextWrapping="Wrap"
+                                   Foreground="{StaticResource TextStrongBrush}" />
+                    </Border>
+
+                    <ListView Grid.Row="2" ItemsSource="{Binding ProcessedFiles}" BorderBrush="{StaticResource BorderBrushSoft}">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Header="File" Width="230" DisplayMemberBinding="{Binding FileName}" />
+                                <GridViewColumn Header="Stato" Width="180" DisplayMemberBinding="{Binding Status}" />
+                                <GridViewColumn Header="Hash" Width="130" DisplayMemberBinding="{Binding ShortHash}" />
+                                <GridViewColumn Header="JSON" Width="320" DisplayMemberBinding="{Binding OutputJsonPath}" />
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+
+                    <Grid Grid.Row="3" Margin="0,12,0,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <GroupBox Grid.Row="0" Header="Warning / Errori">
+                            <TextBox Text="{Binding WarningText}" IsReadOnly="True" TextWrapping="Wrap"
+                                     Height="120" VerticalScrollBarVisibility="Auto" BorderThickness="0"
+                                     Background="Transparent" />
+                        </GroupBox>
+
+                        <GroupBox Grid.Row="1" Header="Percorso JSON generato" Margin="0,10,0,0">
+                            <TextBox Text="{Binding OutputJsonPath}" IsReadOnly="True" TextWrapping="Wrap"
+                                     VerticalScrollBarVisibility="Auto" BorderThickness="0" Background="Transparent" />
+                        </GroupBox>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+        </TabItem>
+
+        <!-- ===================== Tab: Risultati Telecronaca ===================== -->
+        <TabItem Header="Risultati Telecronaca">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="6">
+                <Grid Visibility="{Binding HasTelecronaca, Converter={StaticResource BoolToVis}}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Banner di stato -->
+                    <Border Grid.Row="0" CornerRadius="6" Padding="12,8" Margin="0,0,0,10">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Background" Value="#F1F6F1" />
+                                <Setter Property="BorderBrush" Value="#CDE2CD" />
+                                <Setter Property="BorderThickness" Value="1" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Telecronaca.StatusKind}" Value="Review">
+                                        <Setter Property="Background" Value="#FFF4E5" />
+                                        <Setter Property="BorderBrush" Value="#F0C36D" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Telecronaca.StatusKind}" Value="Error">
+                                        <Setter Property="Background" Value="#FBE9E7" />
+                                        <Setter Property="BorderBrush" Value="#E0A0A0" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <StackPanel>
+                            <TextBlock Text="{Binding Telecronaca.StatusText}" FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextStrongBrush}" />
+                            <TextBlock Text="{Binding Telecronaca.MismatchMessage}" TextWrapping="Wrap" Margin="0,4,0,0"
+                                       Foreground="#8A3A2E"
+                                       Visibility="{Binding Telecronaca.MismatchMessage, Converter={StaticResource StringToVis}}" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Header partita: punteggio grande -->
+                    <StackPanel Grid.Row="1" Margin="0,0,0,10">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <TextBlock Text="{Binding Telecronaca.HomeTeam}" FontSize="18" FontWeight="SemiBold"
+                                       VerticalAlignment="Center" Foreground="{StaticResource TextStrongBrush}" />
+                            <TextBlock Text="{Binding Telecronaca.HomeScore}" FontSize="30" FontWeight="Bold" Margin="16,0,8,0" />
+                            <TextBlock Text="-" FontSize="24" VerticalAlignment="Center" Foreground="{StaticResource TextMutedBrush}" />
+                            <TextBlock Text="{Binding Telecronaca.AwayScore}" FontSize="30" FontWeight="Bold" Margin="8,0,16,0" />
+                            <TextBlock Text="{Binding Telecronaca.AwayTeam}" FontSize="18" FontWeight="SemiBold"
+                                       VerticalAlignment="Center" Foreground="{StaticResource TextStrongBrush}" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,4,0,0">
+                            <TextBlock Text="{Binding Telecronaca.DateTimeText}" Style="{StaticResource MutedText}" />
+                            <TextBlock Text=" · " Style="{StaticResource MutedText}"
+                                       Visibility="{Binding Telecronaca.PhaseText, Converter={StaticResource StringToVis}}" />
+                            <TextBlock Text="{Binding Telecronaca.PhaseText}" Style="{StaticResource MutedText}" />
+                            <TextBlock Text=" · Match " Style="{StaticResource MutedText}" />
+                            <TextBlock Text="{Binding Telecronaca.MatchIdText}" Style="{StaticResource MutedText}" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- In evidenza + Spunti telecronaca -->
+                    <Grid Grid.Row="2" Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Border Grid.Column="0" Style="{StaticResource SectionCard}" Margin="0,0,8,0"
+                                Visibility="{Binding Telecronaca.HasHighlights, Converter={StaticResource BoolToVis}}">
+                            <StackPanel>
+                                <TextBlock Text="In evidenza" Style="{StaticResource SectionTitle}" />
+                                <ItemsControl ItemsSource="{Binding Telecronaca.Highlights}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding}" Margin="0,2" Foreground="{StaticResource TextStrongBrush}" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Grid.Column="1" Style="{StaticResource SectionCard}" Margin="8,0,0,0"
+                                Visibility="{Binding Telecronaca.HasNotes, Converter={StaticResource BoolToVis}}">
+                            <StackPanel>
+                                <TextBlock Text="Spunti telecronaca" Style="{StaticResource SectionTitle}" />
+                                <ItemsControl ItemsSource="{Binding Telecronaca.Notes}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding}" Margin="0,2" TextWrapping="Wrap"
+                                                       Foreground="{StaticResource TextStrongBrush}" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <!-- Due squadre affiancate -->
+                    <Grid Grid.Row="3" Visibility="{Binding Telecronaca.HasPlayers, Converter={StaticResource BoolToVis}}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Border Grid.Column="0" Style="{StaticResource SectionCard}" Margin="0,0,8,0">
+                            <DockPanel>
+                                <TextBlock DockPanel.Dock="Top" Text="{Binding Telecronaca.HomeTeam}"
+                                           Style="{StaticResource SectionTitle}" />
+                                <DataGrid ItemsSource="{Binding Telecronaca.HomePlayers}"
+                                          SelectedItem="{Binding Telecronaca.SelectedHomePlayer, Mode=TwoWay}"
+                                          Style="{StaticResource PlayerGrid}">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="#" Binding="{Binding Number}" SortMemberPath="NumberSort" Width="38" />
+                                        <DataGridTemplateColumn Header="Giocatore" Width="*" SortMemberPath="DisplayName">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="{Binding DisplayName}" />
+                                                        <TextBlock Text="  N.E." Foreground="#9AA1A8" FontSize="10" VerticalAlignment="Center"
+                                                                   Visibility="{Binding NeLabel, Converter={StaticResource StringToVis}}" />
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                        <DataGridTextColumn Header="PTS" Binding="{Binding Points}" SortMemberPath="PointsSort" Width="48" />
+                                        <DataGridTextColumn Header="2PT(%)" Binding="{Binding Two}" SortMemberPath="TwoMadeSort" Width="78" />
+                                        <DataGridTextColumn Header="3PT(%)" Binding="{Binding Three}" SortMemberPath="ThreeMadeSort" Width="78" />
+                                        <DataGridTextColumn Header="FT(%)" Binding="{Binding Ft}" SortMemberPath="FtMadeSort" Width="72" />
+                                        <DataGridTextColumn Header="REB" Binding="{Binding Rebounds}" SortMemberPath="ReboundsSort" Width="44" />
+                                        <DataGridTextColumn Header="AST" Binding="{Binding Assists}" SortMemberPath="AssistsSort" Width="44" />
+                                        <DataGridTextColumn Header="STL" Binding="{Binding Steals}" SortMemberPath="StealsSort" Width="44" />
+                                        <DataGridTextColumn Header="FAL" Binding="{Binding Fouls}" SortMemberPath="FoulsSort" Width="44" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </DockPanel>
+                        </Border>
+
+                        <Border Grid.Column="1" Style="{StaticResource SectionCard}" Margin="8,0,0,0">
+                            <DockPanel>
+                                <TextBlock DockPanel.Dock="Top" Text="{Binding Telecronaca.AwayTeam}"
+                                           Style="{StaticResource SectionTitle}" />
+                                <DataGrid ItemsSource="{Binding Telecronaca.AwayPlayers}"
+                                          SelectedItem="{Binding Telecronaca.SelectedAwayPlayer, Mode=TwoWay}"
+                                          Style="{StaticResource PlayerGrid}">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="#" Binding="{Binding Number}" SortMemberPath="NumberSort" Width="38" />
+                                        <DataGridTemplateColumn Header="Giocatore" Width="*" SortMemberPath="DisplayName">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBlock Text="{Binding DisplayName}" />
+                                                        <TextBlock Text="  N.E." Foreground="#9AA1A8" FontSize="10" VerticalAlignment="Center"
+                                                                   Visibility="{Binding NeLabel, Converter={StaticResource StringToVis}}" />
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                        <DataGridTextColumn Header="PTS" Binding="{Binding Points}" SortMemberPath="PointsSort" Width="48" />
+                                        <DataGridTextColumn Header="2PT(%)" Binding="{Binding Two}" SortMemberPath="TwoMadeSort" Width="78" />
+                                        <DataGridTextColumn Header="3PT(%)" Binding="{Binding Three}" SortMemberPath="ThreeMadeSort" Width="78" />
+                                        <DataGridTextColumn Header="FT(%)" Binding="{Binding Ft}" SortMemberPath="FtMadeSort" Width="72" />
+                                        <DataGridTextColumn Header="REB" Binding="{Binding Rebounds}" SortMemberPath="ReboundsSort" Width="44" />
+                                        <DataGridTextColumn Header="AST" Binding="{Binding Assists}" SortMemberPath="AssistsSort" Width="44" />
+                                        <DataGridTextColumn Header="STL" Binding="{Binding Steals}" SortMemberPath="StealsSort" Width="44" />
+                                        <DataGridTextColumn Header="FAL" Binding="{Binding Fouls}" SortMemberPath="FoulsSort" Width="44" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </DockPanel>
+                        </Border>
+                    </Grid>
+
+                    <!-- Dettaglio giocatore selezionato -->
+                    <Border Grid.Row="4" Style="{StaticResource SectionCard}" Margin="0,10,0,0"
+                            Visibility="{Binding Telecronaca.HasSelectedPlayer, Converter={StaticResource BoolToVis}}">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Dettaglio: " Style="{StaticResource SectionTitle}" />
+                                <TextBlock Text="{Binding Telecronaca.SelectedPlayer.DisplayName}" Style="{StaticResource SectionTitle}" />
+                                <TextBlock Text="  #" Style="{StaticResource SectionTitle}" />
+                                <TextBlock Text="{Binding Telecronaca.SelectedPlayer.Number}" Style="{StaticResource SectionTitle}" />
+                                <TextBlock Text="  N.E." Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Center"
+                                           Visibility="{Binding Telecronaca.SelectedPlayer.NeLabel, Converter={StaticResource StringToVis}}" />
+                            </StackPanel>
+                            <WrapPanel>
+                                <TextBlock Margin="0,0,20,6"><Run Text="Minuti: " FontWeight="SemiBold" /><Run Text="{Binding Telecronaca.SelectedPlayer.Minutes, Mode=OneWay}" /></TextBlock>
+                                <TextBlock Margin="0,0,20,6"><Run Text="Punti: " FontWeight="SemiBold" /><Run Text="{Binding Telecronaca.SelectedPlayer.Points, Mode=OneWay}" /></TextBlock>
+                                <TextBlock Margin="0,0,20,6"><Run Text="2PT: " FontWeight="SemiBold" /><Run Text="{Binding Telecronaca.SelectedPlayer.TwoDetail, Mode=OneWay}" /></TextBlock>
+                                <TextBlock Margin="0,0,20,6"><Run Text="3PT: " FontWeight="SemiBold" /><Run Text="{Binding Telecronaca.SelectedPlayer.ThreeDetail, Mode=OneWay}" /></TextBlock>
+                                <TextBlock Margin="0,0,20,6"><Run Text="TL: " FontWeight="SemiBold" /><Run Text="{Binding Telecronaca.SelectedPlayer.FtDetail, Mode=OneWay}" /></TextBlock>
+                                <TextBlock Margin="0,0,20,6"><Run Text="Rimb. off: " FontWeight="SemiBold" /><Run Text="{Binding Telecronaca.SelectedPlayer.ReboundsOffensive, Mode=OneWay}" /></TextBlock>
+                                <TextBlock Margin="0,0,20,6"><Run Text="Rimb. dif: " FontWeight="SemiBold" /><Run Text="{Binding Telecronaca.SelectedPlayer.ReboundsDefensive, Mode=OneWay}" /></TextBlock>
+                                <TextBlock Margin="0,0,20,6"><Run Text="Rimb. tot: " FontWeight="SemiBold" /><Run Text="{Binding Telecronaca.SelectedPlayer.ReboundsTotal, Mode=OneWay}" /></TextBlock>
+                                <TextBlock Margin="0,0,20,6"><Run Text="Assist: " FontWeight="SemiBold" /><Run Text="{Binding Telecronaca.SelectedPlayer.Assists, Mode=OneWay}" /></TextBlock>
+                                <TextBlock Margin="0,0,20,6"><Run Text="Recuperi: " FontWeight="SemiBold" /><Run Text="{Binding Telecronaca.SelectedPlayer.Steals, Mode=OneWay}" /></TextBlock>
+                                <TextBlock Margin="0,0,20,6"><Run Text="Stoppate: " FontWeight="SemiBold" /><Run Text="{Binding Telecronaca.SelectedPlayer.Blocks, Mode=OneWay}" /></TextBlock>
+                                <TextBlock Margin="0,0,20,6"><Run Text="Palle perse: " FontWeight="SemiBold" /><Run Text="{Binding Telecronaca.SelectedPlayer.Turnovers, Mode=OneWay}" /></TextBlock>
+                                <TextBlock Margin="0,0,20,6"><Run Text="Falli fatti: " FontWeight="SemiBold" /><Run Text="{Binding Telecronaca.SelectedPlayer.Fouls, Mode=OneWay}" /></TextBlock>
+                                <TextBlock Margin="0,0,20,6"><Run Text="Falli subiti: " FontWeight="SemiBold" /><Run Text="{Binding Telecronaca.SelectedPlayer.FoulsDrawn, Mode=OneWay}" /></TextBlock>
+                                <TextBlock Margin="0,0,20,6"><Run Text="+/-: " FontWeight="SemiBold" /><Run Text="{Binding Telecronaca.SelectedPlayer.PlusMinus, Mode=OneWay}" /></TextBlock>
+                                <TextBlock Margin="0,0,20,6"><Run Text="Valutazione: " FontWeight="SemiBold" /><Run Text="{Binding Telecronaca.SelectedPlayer.Evaluation, Mode=OneWay}" /></TextBlock>
+                            </WrapPanel>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </ScrollViewer>
+        </TabItem>
+        </TabControl>
     </Grid>
 </Window>

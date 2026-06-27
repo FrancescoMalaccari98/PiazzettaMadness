@@ -24,7 +24,11 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private readonly ITeamMismatchConfirmationService? _teamMismatchConfirmation;
     private readonly IIdentityReviewService? _identityReviewService;
     private readonly ImportPayloadBuilder _importPayloadBuilder = new();
+    private readonly TeamIdentityMatcher _teamIdentityMatcher = new();
     private bool _reviewResolved = true;
+    // Messaggio di blocco quando le squadre del PDF non corrispondono al match selezionato.
+    // null = nessun mismatch. Quando valorizzato, import e revisione sono bloccati.
+    private string? _teamMismatchMessage;
     private IReadOnlyDictionary<string, int>? _reviewOverrides;
     private string? _selectedPdfPath;
     private string _warningText = string.Empty;
@@ -42,6 +46,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private OcrMatchContext? _selectedMatchContext;
     private Task? _activeContextLoad;
     private ProcessingResult? _lastResult;
+    private TelecronacaViewModel? _telecronaca;
+    private int _selectedTabIndex;
 
     public MainViewModel(
         IPdfProcessingPipeline pipeline,
@@ -80,6 +86,15 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     public bool HasImportService => _importService is not null;
 
+    /// <summary>
+    /// Avviso mostrato quando il backend non è configurato: senza <c>ocrApi.baseUrl</c>/<c>token</c>
+    /// in <c>Config/appsettings.json</c> non si possono caricare le partite né importare. La data resta
+    /// comunque selezionabile. Stringa vuota quando il backend è configurato.
+    /// </summary>
+    public string BackendStatusHint => HasImportService
+        ? string.Empty
+        : "Backend non configurato: imposta ocrApi.baseUrl e token in Config/appsettings.json per caricare le partite e importare nel DB.";
+
     public string? SelectedPdfPath
     {
         get => _selectedPdfPath;
@@ -88,9 +103,14 @@ public sealed class MainViewModel : INotifyPropertyChanged
             if (SetField(ref _selectedPdfPath, value))
             {
                 ProcessPdfCommand.RaiseCanExecuteChanged();
+                RaisePropertyChanged(nameof(HasSelectedPdf));
+                RaisePropertyChanged(nameof(ProcessHint));
             }
         }
     }
+
+    /// <summary>True quando un PDF è stato selezionato (per la UI a step).</summary>
+    public bool HasSelectedPdf => !string.IsNullOrWhiteSpace(_selectedPdfPath);
 
     public string WarningText
     {
@@ -113,7 +133,13 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public bool IsBusy
     {
         get => _isBusy;
-        set => SetField(ref _isBusy, value);
+        set
+        {
+            if (SetField(ref _isBusy, value))
+            {
+                RaiseWorkflowChanged();
+            }
+        }
     }
 
     public bool IsLoadingMatches
@@ -124,6 +150,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             if (SetField(ref _isLoadingMatches, value))
             {
                 ProcessPdfCommand.RaiseCanExecuteChanged();
+                RaisePropertyChanged(nameof(WorkflowStatus));
             }
         }
     }
@@ -197,6 +224,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 {
                     SelectedMatchContext = null;
                 }
+
+                RaiseMatchInfoChanged();
             }
         }
     }
@@ -213,9 +242,14 @@ public sealed class MainViewModel : INotifyPropertyChanged
             if (SetField(ref _selectedMatchContext, value))
             {
                 ProcessPdfCommand.RaiseCanExecuteChanged();
+                RaisePropertyChanged(nameof(IsContextReady));
+                RaiseWorkflowChanged();
             }
         }
     }
+
+    /// <summary>True quando il contesto canonico della partita è caricato (passo 1 completo).</summary>
+    public bool IsContextReady => _selectedMatchContext is not null;
 
     /// <summary>
     /// Task del caricamento contesto in corso. Esposto per i test (await deterministico).
@@ -226,6 +260,189 @@ public sealed class MainViewModel : INotifyPropertyChanged
     {
         get => _importStatusText;
         set => SetField(ref _importStatusText, value);
+    }
+
+    /// <summary>
+    /// Vista "Risultati Telecronaca" dell'ultima elaborazione (dati finali). Null finché non si elabora.
+    /// </summary>
+    public TelecronacaViewModel? Telecronaca
+    {
+        get => _telecronaca;
+        private set
+        {
+            if (SetField(ref _telecronaca, value))
+            {
+                RaisePropertyChanged(nameof(HasTelecronaca));
+            }
+        }
+    }
+
+    public bool HasTelecronaca => _telecronaca is not null;
+
+    /// <summary>Tab attivo: 0 = Elaborazione, 1 = Risultati Telecronaca. Dopo l'elaborazione passa a 1.</summary>
+    public int SelectedTabIndex
+    {
+        get => _selectedTabIndex;
+        set => SetField(ref _selectedTabIndex, value);
+    }
+
+    /// <summary>True quando una partita è selezionata: alimenta la visibilità del blocco info match.</summary>
+    public bool HasSelectedMatch => _selectedMatchOption is not null;
+
+    /// <summary>Squadre della partita selezionata ("Casa vs Ospite"), per il riepilogo a video.</summary>
+    public string SelectedMatchTeams
+    {
+        get
+        {
+            var match = _selectedMatchOption;
+            if (match is null)
+            {
+                return string.Empty;
+            }
+
+            var home = string.IsNullOrWhiteSpace(match.HomeTeam.Name) ? null : match.HomeTeam.Name;
+            var away = string.IsNullOrWhiteSpace(match.AwayTeam.Name) ? null : match.AwayTeam.Name;
+            if (home is null && away is null)
+            {
+                return match.MatchName ?? match.DisplayName;
+            }
+
+            return $"{home ?? "?"} vs {away ?? "?"}";
+        }
+    }
+
+    /// <summary>Orario di inizio programmato della partita selezionata, formattato se possibile.</summary>
+    public string SelectedMatchTime
+    {
+        get
+        {
+            var raw = _selectedMatchOption?.ScheduledStartAt;
+            if (string.IsNullOrWhiteSpace(raw))
+            {
+                return string.Empty;
+            }
+
+            return DateTime.TryParse(raw, CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed)
+                ? parsed.ToString("dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture)
+                : raw;
+        }
+    }
+
+    /// <summary>
+    /// Fase/turno della partita selezionata (es. "GroupStage — Giornata 1"). Il girone non è esposto
+    /// dall'endpoint di lookup: si mostra ciò che è disponibile, senza inventare.
+    /// </summary>
+    public string SelectedMatchPhase
+    {
+        get
+        {
+            var match = _selectedMatchOption;
+            if (match is null)
+            {
+                return string.Empty;
+            }
+
+            var parts = new[] { match.Phase, match.Round }
+                .Where(part => !string.IsNullOrWhiteSpace(part));
+            return string.Join(" — ", parts);
+        }
+    }
+
+    /// <summary>
+    /// Stato generale del flusso per l'intestazione: Pronto / Caricamento match... / Elaborazione... /
+    /// Completato / Errore / Revisione richiesta.
+    /// </summary>
+    public string WorkflowStatus
+    {
+        get
+        {
+            if (_isLoadingMatches)
+            {
+                return "Caricamento match...";
+            }
+
+            if (_isBusy)
+            {
+                return "Elaborazione...";
+            }
+
+            if (_teamMismatchMessage is not null)
+            {
+                return "PDF non corrispondente";
+            }
+
+            if (_lastResult is null)
+            {
+                return "Pronto";
+            }
+
+            return _lastResult.ProcessedFile.Status switch
+            {
+                FileProcessingStatus.CompletedWithReviewRequired => "Revisione richiesta",
+                FileProcessingStatus.Failed => "Errore",
+                _ => "Completato"
+            };
+        }
+    }
+
+    /// <summary>Suggerimento contestuale sul perché "Elabora PDF" non è ancora disponibile.</summary>
+    public string ProcessHint
+    {
+        get
+        {
+            if (_isBusy)
+            {
+                return "Elaborazione in corso...";
+            }
+
+            if (_selectedMatchContext is null)
+            {
+                return "Seleziona prima una partita (passo 1).";
+            }
+
+            if (string.IsNullOrWhiteSpace(_selectedPdfPath))
+            {
+                return "Seleziona un PDF (passo 2).";
+            }
+
+            return "Pronto per elaborare.";
+        }
+    }
+
+    /// <summary>
+    /// Riepilogo sintetico dell'ultima elaborazione: solo conteggi importanti (errori bloccanti,
+    /// revisioni richieste, avvisi matematici), invece di centinaia di warning tecnici.
+    /// </summary>
+    public string ProcessingSummary
+    {
+        get
+        {
+            if (_lastResult is null)
+            {
+                return string.Empty;
+            }
+
+            var warnings = _lastResult.Validation.Warnings;
+            var blocking =
+                (_teamMismatchMessage is not null ? 1 : 0) +
+                warnings.Count(w => string.Equals(w.Severity, "Error", StringComparison.OrdinalIgnoreCase));
+            if (_lastResult.ProcessedFile.Status == FileProcessingStatus.Failed)
+            {
+                blocking = Math.Max(blocking, 1);
+            }
+
+            var reviews = _lastResult.IdentityReview.Count(i => i.Reason is IdentityReviewReason.Conflict or IdentityReviewReason.NotInPdf);
+            var math = warnings.Count(w => w.RuleId.StartsWith("math.", StringComparison.OrdinalIgnoreCase));
+
+            var header = _teamMismatchMessage is not null
+                ? "Elaborazione completata (PDF non corrispondente al match)."
+                : "Elaborazione completata.";
+            return string.Join(Environment.NewLine,
+                header,
+                $"{blocking} errori bloccanti.",
+                $"{reviews} revisioni richieste.",
+                $"{math} avvisi matematici.");
+        }
     }
 
     private Task SelectPdfAsync()
@@ -269,7 +486,11 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
             var result = await _pipeline.ProcessPdfAsync(SelectedPdfPath, selection, SelectedMatchContext);
             AddResult(result);
-            StatusText = $"Completato: {result.ProcessedFile.Status}";
+            // In caso di mismatch PDF↔match, AddResult ha già impostato lo stato di blocco: non sovrascriverlo
+            // con "Completato" (sarebbe fuorviante — l'import è bloccato).
+            StatusText = _teamMismatchMessage is not null
+                ? "PDF NON corrispondente al match: import bloccato."
+                : $"Completato: {result.ProcessedFile.Status}";
         });
     }
 
@@ -317,22 +538,86 @@ public sealed class MainViewModel : INotifyPropertyChanged
         // Se l'elaborazione richiede revisione, l'export resta bloccato finché non è risolta.
         _reviewResolved = result.ProcessedFile.Status != FileProcessingStatus.CompletedWithReviewRequired;
         _reviewOverrides = null;
+        // Controllo bloccante: le squadre lette dal PDF devono corrispondere al match selezionato.
+        _teamMismatchMessage = DetectTeamMismatch(result);
         ProcessedFiles.Insert(0, new ProcessedFileRowViewModel(result.ProcessedFile));
         OutputJsonPath = result.ProcessedFile.OutputJsonPath ?? string.Empty;
-        WarningText = BuildWarnings(result);
-        ImportStatusText = _reviewResolved
-            ? string.Empty
-            : $"Revisione richiesta: {result.IdentityReview.Count(i => i.Reason is IdentityReviewReason.Conflict or IdentityReviewReason.NotInPdf)} conflitti obbligatori. Usa 'Revisiona'.";
+
+        if (_teamMismatchMessage is not null)
+        {
+            // Mismatch: errore in evidenza, import/revisione bloccati (CanImport/CanReviewIdentity).
+            WarningText = _teamMismatchMessage + Environment.NewLine + Environment.NewLine + BuildWarnings(result);
+            ImportStatusText = _teamMismatchMessage;
+            StatusText = "PDF non corrispondente al match selezionato";
+        }
+        else
+        {
+            WarningText = BuildWarnings(result);
+            ImportStatusText = _reviewResolved
+                ? string.Empty
+                : $"Revisione richiesta: {result.IdentityReview.Count(i => i.Reason is IdentityReviewReason.Conflict or IdentityReviewReason.NotInPdf)} conflitti obbligatori. Usa 'Revisiona'.";
+        }
+
         ReviewIdentityCommand.RaiseCanExecuteChanged();
         ImportToDbCommand.RaiseCanExecuteChanged();
+        RaiseWorkflowChanged();
+        RaisePropertyChanged(nameof(ProcessingSummary));
+
+        // Vista telecronaca dai dati finali. Su mismatch mostra solo l'errore (niente tabelle fuorvianti).
+        var importable = _teamMismatchMessage is null && _reviewResolved && !HasBlockingError();
+        Telecronaca = new TelecronacaViewModel(result, SelectedMatchOption, _teamMismatchMessage, importable);
+        SelectedTabIndex = 1; // porta subito alla schermata "Risultati Telecronaca"
+
         _resultPresentation.TryPresent(result, AppendResultViewerStatus);
+    }
+
+    /// <summary>
+    /// Confronta le squadre lette dall'OCR con quelle del match selezionato (contesto DB).
+    /// Ritorna un messaggio di errore se NON corrispondono (mismatch bloccante), altrimenti null.
+    /// Home/Away invertiti NON sono un errore (gestiti come side inversion). Se l'OCR non ha letto
+    /// alcun nome squadra non si afferma un mismatch (si evita un falso positivo).
+    /// </summary>
+    private string? DetectTeamMismatch(ProcessingResult result)
+    {
+        if (SelectedMatchContext is null || result.ProcessedFile.Status == FileProcessingStatus.Failed)
+        {
+            return null;
+        }
+
+        var homeOcr = FindTeamBySide(result, "Home")?.Name;
+        var awayOcr = FindTeamBySide(result, "Away")?.Name;
+        if (string.IsNullOrWhiteSpace(homeOcr) && string.IsNullOrWhiteSpace(awayOcr))
+        {
+            return null;
+        }
+
+        var match = _teamIdentityMatcher.Match(homeOcr, awayOcr, SelectedMatchContext);
+        if (match.Outcome != TeamMatchOutcome.Mismatch)
+        {
+            return null; // CorrectOrder o Inverted → corrispondenza valida.
+        }
+
+        var selected = $"{SelectedMatchContext.HomeTeam.Name} vs {SelectedMatchContext.AwayTeam.Name}";
+        var pdf = FormatOcrTeamPair(homeOcr, awayOcr);
+        return "Il PDF selezionato non corrisponde al match scelto." + Environment.NewLine +
+               $"Match selezionato: {selected}" + Environment.NewLine +
+               $"PDF rilevato: {pdf}" + Environment.NewLine +
+               "Seleziona il match corretto o scegli un altro PDF.";
+    }
+
+    private static string FormatOcrTeamPair(string? home, string? away)
+    {
+        var h = string.IsNullOrWhiteSpace(home) ? "?" : home!;
+        var a = string.IsNullOrWhiteSpace(away) ? "?" : away!;
+        return h == "?" && a == "?" ? "(squadre non leggibili dal PDF)" : $"{h} vs {a}";
     }
 
     private bool CanReviewIdentity() =>
         _identityReviewService is not null &&
         _lastResult is not null &&
         _lastResult.IdentityReview.Count > 0 &&
-        SelectedMatchContext is not null;
+        SelectedMatchContext is not null &&
+        _teamMismatchMessage is null; // PDF non corrispondente: niente revisione (match sbagliato).
 
     private Task ReviewIdentityAsync()
     {
@@ -482,7 +767,18 @@ public sealed class MainViewModel : INotifyPropertyChanged
         _importService is not null &&
         _lastResult is not null &&
         int.TryParse(_matchIdText, out var id) && id > 0 &&
-        _reviewResolved;
+        _reviewResolved &&
+        _teamMismatchMessage is null && // PDF non corrispondente al match: import bloccato.
+        !HasBlockingError(); // errore OCR grave / non validato / errore: import bloccato.
+
+    /// <summary>
+    /// Errore bloccante che impedisce l'import: elaborazione fallita/non validata o un warning di
+    /// severità Error. I warning non bloccanti (math.*, info) NON bloccano l'import.
+    /// </summary>
+    private bool HasBlockingError() =>
+        _lastResult is not null &&
+        (_lastResult.ProcessedFile.Status is FileProcessingStatus.Failed or FileProcessingStatus.CompletedNotValidated ||
+         _lastResult.Validation.Warnings.Any(w => string.Equals(w.Severity, "Error", StringComparison.OrdinalIgnoreCase)));
 
     private async Task ImportToDbAsync()
     {
@@ -684,11 +980,13 @@ public sealed class MainViewModel : INotifyPropertyChanged
             lines.Add(result.ProcessedFile.ErrorMessage);
         }
 
+        // Solo i run OCR realmente falliti: lo stderr dei run riusciti (log Paddle/Tesseract) è rumore.
         lines.AddRange(result.OcrRuns
-            .Where(x => !string.IsNullOrWhiteSpace(x.Error))
+            .Where(x => x.Status is OcrRunStatus.Failed or OcrRunStatus.Timeout && !string.IsNullOrWhiteSpace(x.Error))
             .Select(x => $"{x.Engine}: {x.Status} - {TruncateWarning(x.Error!)}"));
+        // I warning importanti (math.*, team.*, errori) sono già aggregati in Validation.Warnings;
+        // le copie per-stat sarebbero duplicati, quindi non si ri-elencano.
         lines.AddRange(result.Validation.Warnings.Select(x => $"{x.Severity}: {x.Message}"));
-        lines.AddRange(result.Stats.SelectMany(x => x.Warnings).Select(x => $"{x.Severity}: {x.Message}"));
         return string.Join(Environment.NewLine, lines);
     }
 
@@ -712,5 +1010,19 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     private void RaisePropertyChanged(string propertyName) =>
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+
+    private void RaiseMatchInfoChanged()
+    {
+        RaisePropertyChanged(nameof(HasSelectedMatch));
+        RaisePropertyChanged(nameof(SelectedMatchTeams));
+        RaisePropertyChanged(nameof(SelectedMatchTime));
+        RaisePropertyChanged(nameof(SelectedMatchPhase));
+    }
+
+    private void RaiseWorkflowChanged()
+    {
+        RaisePropertyChanged(nameof(WorkflowStatus));
+        RaisePropertyChanged(nameof(ProcessHint));
+    }
 
 }

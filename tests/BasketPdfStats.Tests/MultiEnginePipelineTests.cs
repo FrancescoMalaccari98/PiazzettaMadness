@@ -3,6 +3,7 @@ using BasketPdfStats.Core.Enums;
 using BasketPdfStats.Core.Identity;
 using BasketPdfStats.Core.Models;
 using BasketPdfStats.Core.Ocr;
+using BasketPdfStats.Core.Pipeline;
 using BasketPdfStats.Infrastructure.Configuration;
 using BasketPdfStats.Infrastructure.Pipeline;
 using BasketPdfStats.Ocr.Mock;
@@ -250,8 +251,243 @@ public sealed class MultiEnginePipelineTests
         }
     }
 
+    [Fact]
+    public async Task Mismatch_with_decider_abort_skips_remaining_channels()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "BasketPdfStatsTests", Guid.NewGuid().ToString("N"));
+        try
+        {
+            var options = new RuntimeOptions { RuntimeRoot = root };
+            var uploadFolder = Path.Combine(root, "Uploads");
+            Directory.CreateDirectory(uploadFolder);
+            var pdf = Path.Combine(uploadFolder, "abort.pdf");
+            await File.WriteAllBytesAsync(pdf, [1, 2, 3, 4]);
+
+            var ch1 = new TeamResultOcrEngine(homeName: "Lakers", awayName: "Celtics", finalScore: "80-70");
+            var laterChannel = new TrackingOcrEngine(OcrStrategyNames.PaddleTableRows);
+            var decider = new StubDecider(continueProcessing: false); // interrompi (consigliato)
+            var pipeline = new PdfProcessingPipeline(options, [ch1, laterChannel], teamMismatchDecider: decider);
+            var context = new OcrMatchContext
+            {
+                MatchId = 1,
+                HomeTeam = new OcrContextTeam { TeamId = 1, Name = "Virtus" },
+                AwayTeam = new OcrContextTeam { TeamId = 2, Name = "Pall" },
+            };
+
+            var result = await pipeline.ProcessPdfAsync(pdf, new OcrRunSelection { UseTesseract = true, UsePaddle = true }, context);
+
+            Assert.True(decider.WasAsked);
+            Assert.False(laterChannel.WasCalled); // CH2–CH4 saltati
+            Assert.Contains(result.Validation.Warnings, w => w.RuleId == "ocr.processingAbortedByUser");
+            Assert.Contains(result.Validation.Warnings, w => w.RuleId == "team.mismatch");
+        }
+        finally
+        {
+            if (Directory.Exists(root)) Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task Mismatch_with_decider_continue_runs_remaining_channels()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "BasketPdfStatsTests", Guid.NewGuid().ToString("N"));
+        try
+        {
+            var options = new RuntimeOptions { RuntimeRoot = root };
+            var uploadFolder = Path.Combine(root, "Uploads");
+            Directory.CreateDirectory(uploadFolder);
+            var pdf = Path.Combine(uploadFolder, "continue.pdf");
+            await File.WriteAllBytesAsync(pdf, [1, 2, 3, 4]);
+
+            var ch1 = new TeamResultOcrEngine(homeName: "Lakers", awayName: "Celtics", finalScore: "80-70");
+            var laterChannel = new TrackingOcrEngine(OcrStrategyNames.PaddleTableRows);
+            var decider = new StubDecider(continueProcessing: true); // completa comunque
+            var pipeline = new PdfProcessingPipeline(options, [ch1, laterChannel], teamMismatchDecider: decider);
+            var context = new OcrMatchContext
+            {
+                MatchId = 1,
+                HomeTeam = new OcrContextTeam { TeamId = 1, Name = "Virtus" },
+                AwayTeam = new OcrContextTeam { TeamId = 2, Name = "Pall" },
+            };
+
+            var result = await pipeline.ProcessPdfAsync(pdf, new OcrRunSelection { UseTesseract = true, UsePaddle = true }, context);
+
+            Assert.True(decider.WasAsked);
+            Assert.True(laterChannel.WasCalled); // CH2–CH4 eseguiti
+            Assert.DoesNotContain(result.Validation.Warnings, w => w.RuleId == "ocr.processingAbortedByUser");
+        }
+        finally
+        {
+            if (Directory.Exists(root)) Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task Matching_teams_do_not_invoke_decider_and_run_all_channels()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "BasketPdfStatsTests", Guid.NewGuid().ToString("N"));
+        try
+        {
+            var options = new RuntimeOptions { RuntimeRoot = root };
+            var uploadFolder = Path.Combine(root, "Uploads");
+            Directory.CreateDirectory(uploadFolder);
+            var pdf = Path.Combine(uploadFolder, "ok.pdf");
+            await File.WriteAllBytesAsync(pdf, [1, 2, 3, 4]);
+
+            var ch1 = new TeamResultOcrEngine(homeName: "Virtus", awayName: "Pall", finalScore: "80-70");
+            var laterChannel = new TrackingOcrEngine(OcrStrategyNames.PaddleTableRows);
+            var decider = new StubDecider(continueProcessing: false);
+            var pipeline = new PdfProcessingPipeline(options, [ch1, laterChannel], teamMismatchDecider: decider);
+            var context = new OcrMatchContext
+            {
+                MatchId = 1,
+                HomeTeam = new OcrContextTeam { TeamId = 1, Name = "Virtus" },
+                AwayTeam = new OcrContextTeam { TeamId = 2, Name = "Pall" },
+            };
+
+            var result = await pipeline.ProcessPdfAsync(pdf, new OcrRunSelection { UseTesseract = true, UsePaddle = true }, context);
+
+            Assert.False(decider.WasAsked); // squadre coerenti → nessuna popup
+            Assert.True(laterChannel.WasCalled);
+            Assert.DoesNotContain(result.Validation.Warnings, w => w.RuleId == "ocr.processingAbortedByUser");
+        }
+        finally
+        {
+            if (Directory.Exists(root)) Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task Pipeline_removes_ocr_diagnostic_warnings_in_normal_mode()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "BasketPdfStatsTests", Guid.NewGuid().ToString("N"));
+        try
+        {
+            var options = new RuntimeOptions { RuntimeRoot = root };
+            var uploadFolder = Path.Combine(root, "Uploads");
+            Directory.CreateDirectory(uploadFolder);
+            var pdf = Path.Combine(uploadFolder, "noise.pdf");
+            await File.WriteAllBytesAsync(pdf, [1, 2, 3, 4]);
+
+            // Due provider con valore in conflitto → il reconciler genera ocr.reconciliation.conflict,
+            // che la pipeline deve rimuovere in modalità normale.
+            var pipeline = new PdfProcessingPipeline(options,
+            [
+                new StatSetOcrEngine(OcrStrategyNames.TesseractFullPage, ("points", 12)),
+                new StatSetOcrEngine(OcrStrategyNames.TesseractLayoutCrops, ("points", 14)),
+            ]);
+
+            var result = await pipeline.ProcessPdfAsync(pdf);
+
+            Assert.DoesNotContain(result.Validation.Warnings, w => w.RuleId.StartsWith("ocr.reconciliation", StringComparison.OrdinalIgnoreCase));
+            Assert.DoesNotContain(result.Validation.Warnings, w => w.RuleId.StartsWith("ocr.", StringComparison.OrdinalIgnoreCase));
+            var stat = Assert.Single(result.Stats);
+            Assert.Empty(stat.Warnings);
+            Assert.Equal(StatValidationStatus.Validato, stat.Status);
+        }
+        finally
+        {
+            if (Directory.Exists(root)) Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task Pipeline_keeps_math_warning_and_emits_clean_json()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "BasketPdfStatsTests", Guid.NewGuid().ToString("N"));
+        try
+        {
+            var options = new RuntimeOptions { RuntimeRoot = root };
+            var uploadFolder = Path.Combine(root, "Uploads");
+            Directory.CreateDirectory(uploadFolder);
+            var pdf = Path.Combine(uploadFolder, "math.pdf");
+            await File.WriteAllBytesAsync(pdf, [1, 2, 3, 4]);
+
+            // points=20 ma 2*5+3*2+1=17 → math.pointsFormula deve restare.
+            var pipeline = new PdfProcessingPipeline(options,
+            [
+                new StatSetOcrEngine(OcrStrategyNames.TesseractFullPage,
+                    ("points", 20), ("twoPoints.made", 5), ("threePoints.made", 2), ("freeThrows.made", 1)),
+            ]);
+
+            var result = await pipeline.ProcessPdfAsync(pdf);
+
+            Assert.Contains(result.Validation.Warnings, w => w.RuleId == "math.pointsFormula");
+
+            var json = await File.ReadAllTextAsync(result.ProcessedFile.OutputJsonPath!);
+            Assert.Contains("math.pointsFormula", json);
+            Assert.DoesNotContain("ocr.reconciliation", json);
+            Assert.DoesNotContain("providerValues", json);
+            Assert.DoesNotContain("\"candidates\"", json); // [JsonIgnore]: chiave assente
+        }
+        finally
+        {
+            if (Directory.Exists(root)) Directory.Delete(root, recursive: true);
+        }
+    }
+
     private static bool ContainsPdf(string folder) =>
         Directory.Exists(folder) && Directory.EnumerateFiles(folder, "*.pdf").Any();
+
+    private sealed class StatSetOcrEngine : IOcrEngine
+    {
+        private readonly (string Key, int Value)[] _stats;
+        public StatSetOcrEngine(string engineName, params (string, int)[] stats)
+        {
+            EngineName = engineName;
+            _stats = stats;
+        }
+
+        public string EngineName { get; }
+
+        public Task<ProcessingResult> ProcessAsync(OcrProcessingRequest request, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(new ProcessingResult
+            {
+                OcrRuns = [new OcrRunResult { Engine = EngineName, Status = OcrRunStatus.Success }],
+                Stats = _stats.Select(s => new StatValue
+                {
+                    Scope = StatScope.Team,
+                    Side = "Home",
+                    EntityId = "team:Home",
+                    StatKey = s.Key,
+                    FieldId = $"team:Home:{s.Key}",
+                    Value = s.Value,
+                    Score = 0.9,
+                    Status = StatValidationStatus.Validato,
+                }).ToList(),
+            });
+        }
+    }
+
+    private sealed class StubDecider : ITeamMismatchProcessingDecider
+    {
+        private readonly bool _continue;
+        public StubDecider(bool continueProcessing) => _continue = continueProcessing;
+        public bool WasAsked { get; private set; }
+
+        public bool ShouldContinueProcessing(TeamMismatchPrompt prompt)
+        {
+            WasAsked = true;
+            return _continue;
+        }
+    }
+
+    private sealed class TrackingOcrEngine : IOcrEngine
+    {
+        public TrackingOcrEngine(string engineName) => EngineName = engineName;
+        public string EngineName { get; }
+        public bool WasCalled { get; private set; }
+
+        public Task<ProcessingResult> ProcessAsync(OcrProcessingRequest request, CancellationToken cancellationToken = default)
+        {
+            WasCalled = true;
+            return Task.FromResult(new ProcessingResult
+            {
+                OcrRuns = [new OcrRunResult { Engine = EngineName, Status = OcrRunStatus.Success }],
+            });
+        }
+    }
 
     private sealed class RosterResultOcrEngine : IOcrEngine
     {

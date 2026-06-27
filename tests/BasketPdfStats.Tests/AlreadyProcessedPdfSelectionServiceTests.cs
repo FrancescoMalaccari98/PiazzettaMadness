@@ -59,7 +59,7 @@ public sealed class AlreadyProcessedPdfSelectionServiceTests
         // Fase 2: MainWindow non conosce più engine/opzioni; usa AppComposition + adapter WPF.
         var source = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "src", "BasketPdfStats.App", "MainWindow.xaml.cs"));
 
-        Assert.Contains("AppComposition.Build(settings, root)", source);
+        Assert.Contains("AppComposition.Build(settings, root, new WpfTeamMismatchProcessingDecider())", source);
         Assert.Contains("composition.AlreadyProcessedPdfDetector", source);
         Assert.Contains("new WpfAlreadyProcessedPdfDecisionService()", source);
         Assert.Contains("new WpfTeamMismatchConfirmationService()", source);

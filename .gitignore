@@ -9,6 +9,10 @@ TestResults/
 # Pacchetto backend generato (Fase 8B) — artefatto binario, non committare
 release/backend.zip
 
+# Pacchetto app portable generato (Fase UI+Portable) — artefatti di build, non committare
+release/app-portable/
+release/*.zip
+
 # VS Code local
 .vscode/*
 !.vscode/settings.json

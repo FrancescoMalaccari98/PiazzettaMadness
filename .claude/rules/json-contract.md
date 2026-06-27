@@ -53,14 +53,8 @@ Lo schema JSON di `ProcessingResult` è stabile. Non modificarlo senza:
       "value": 14,
       "status": "Validato | NonValidato",
       "score": 0.95,
-      "candidates": [],
       "warnings": [],
-      "failedRules": [],
-      "reconciliation": {
-        "selectedProvider": "ocr.tesseract.crop",
-        "agreedProviders": ["ocr.tesseract.crop", "ocr.paddle.row"],
-        "providerValues": { "ocr.tesseract.fullpage": 14, "ocr.paddle.row": 14 }
-      }
+      "failedRules": []
     }
   ],
   "validation": {
@@ -86,6 +80,13 @@ Lo schema JSON di `ProcessingResult` è stabile. Non modificarlo senza:
   in Fase 8 si sposterà in IdentityResolutionResult/CanonicalGameResult.
 - Stato `CompletedWithReviewRequired` aggiunto a `FileProcessingStatus`: impostato quando ci sono
   voci di revisione `Conflict` o `NotInPdf`.
+- **Pulizia diagnostica (2026-06-26):** `stats[].candidates` e `stats[].reconciliation` (per-campo,
+  con `providerValues`) **non sono più nel JSON** (marcati `[JsonIgnore]`): restano solo in-memory per
+  la riconciliazione/test. In `stats[].warnings`/`failedRules` e in `validation.warnings` restano solo i
+  warning importanti: severità `Error`, `math.*`, `team.*` (mismatch/inversione), `ocr.processingAbortedByUser`.
+  I warning OCR diagnostici (`ocr.reconciliation.*`, plan/crop, disaccordo provider) non vengono più emessi
+  nel risultato finale. Il blocco `reconciliation` a livello di risultato (enabled/providers/strategy/
+  sideInversionApplied) resta invariato.
 
 ## Contratto import (Fase 8) — ImportPayload
 

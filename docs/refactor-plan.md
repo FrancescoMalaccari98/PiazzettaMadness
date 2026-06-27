@@ -1003,6 +1003,60 @@ README worker, regole `.claude`, `database/05-import-contract.md`, `legacy-code-
 `MatchLookupDate`, `backend/backend.zip` (altri item Fase 9, gating separato). Build verde, 246 test
 non-integration verdi, smoke test Python OK. Nessuna modifica a schema JSON, `engineWeights`, `appsettings.json`, backend PHP.
 
+**Fase UI + Portable (2026-06-26):** UI WPF ridisegnata a step guidati e script per pacchetto portable.
+- `MainWindow.xaml`: 4 passi (1. Seleziona partita → DatePicker + "Carica match" + combo + riepilogo match
+  con Match ID read-only/squadre/orario/fase; 2. Seleziona PDF + Elabora; 3. Risultato: tabella + Warning +
+  JSON; 4. Revisione e import), layout a 2 colonne, badge stato (`WorkflowStatus`), barra avanzamento,
+  usabile a 1280×800. Stili sobri (keyed, solo WPF) in `App.xaml`; nessuna libreria esterna.
+- `MainViewModel.cs`: aggiunte SOLO proprietà calcolate (`WorkflowStatus`, `ProcessHint`,
+  `HasSelectedMatch`, `SelectedMatchTeams/Time/Phase`, `HasSelectedPdf`, `IsContextReady`) + notifiche;
+  comandi e logica invariati. `OcrMatchContext` resta legato alla partita selezionata. `MainWindow.xaml.cs` invariato.
+- `tools/build-app-portable.ps1`: `dotnet publish` win-x64 (`-SelfContained` default true, `-Zip`) →
+  `release/app-portable/` con exe + `Config/appsettings.portable.json` (template senza segreti) +
+  `README-LANCIO.txt`; guardia anti-token; zip opzionale. `.gitignore`: `release/app-portable/`, `release/*.zip`.
+- Verifiche: build verde, 253 test non-integration verdi (+7 `MainViewModelUiStateTests`). `dotnet publish`
+  e lo script `.ps1` **non eseguiti da Claude** (deny list sicurezza `dotnet publish` + deny rule PowerShell):
+  da lanciare in locale dall'utente. Nessuna modifica a OCR Python, `engineWeights`, `appsettings.json`, backend.
+
+**Bugfix — PDF↔match mismatch (2026-06-26):** prima nessun controllo bloccava l'import di un PDF di una
+partita diversa da quella selezionata (la pipeline aggiungeva solo un warning non bloccante; `CanImport`
+non verificava le squadre). Aggiunto `MainViewModel.DetectTeamMismatch` (in `AddResult`, dopo l'OCR):
+confronta `result.Teams` con `SelectedMatchContext` via `TeamIdentityMatcher`. `Mismatch` →
+`CanImport`/`CanReviewIdentity` false, messaggio chiaro, nessun payload/chiamata import; `Inverted`/
+`CorrectOrder` → ok. Falsi positivi evitati quando l'OCR non legge i nomi squadra. Test
+`MainViewModelTeamMismatchTests` (5 casi).
+Inoltre **blocco anticipato in pipeline**: `ITeamMismatchProcessingDecider` (Core) iniettato in
+`PdfProcessingPipeline`; dopo CH1, su mismatch mostra una popup (`WpfTeamMismatchProcessingDecider` via
+`AppComposition.Build`/`MainWindow`) — "interrompi (consigliato)" salta CH2–CH4 + warning
+`ocr.processingAbortedByUser`, "continua" completa l'OCR; import bloccato in entrambi i casi.
+`OcrProcessingRequest.TeamMismatchAborted` transitorio. Test pipeline in `MultiEnginePipelineTests` (3 casi).
+Build verde, 261 test non-integration verdi. Nessuna modifica a OCR Python, schema JSON, `engineWeights`,
+`appsettings.json`, backend.
+
+**Ottimizzazione finale — riduzione rumore warning / JSON pulito (2026-06-26):** modalità normale senza
+flag/DiagnosticMode. I warning OCR diagnostici (~2735 `ocr.reconciliation.*` per PDF) non sporcano più
+UI/JSON. `PdfProcessingPipeline.CleanupDiagnostics` rimuove da validation+stat tutto tranne `Error`,
+`math.*`, `team.*`, `ocr.processingAbortedByUser`; reconciler invariato (logica in-memory testata).
+`StatValue.Candidates`/`Reconciliation` → `[JsonIgnore]` (niente providerValues/candidates nel JSON né nel
+payload). UI: `BuildWarnings` salta lo stderr dei run riusciti + niente duplicati per-stat; nuovo
+`ProcessingSummary` (conteggi sintetici). `CanImport` aggiunge `!HasBlockingError()` (status Failed/
+NotValidato o warning Error) → solo `math.*` non blocca l'import. Analisi performance: OCR domina
+(~16/6/12/23s CH1–CH4 per PDF, Fase 10C); warning/reconciliation/JSON/UI sono ms. Proposte OCR non
+applicate: worker Paddle unico crop+row, parallelizzare CH2–CH4, scala/DPI CH1. Test: +2 pipeline +4 VM
+(`MainViewModelNoiseTests`). Build verde, 267 test non-integration verdi. Nessuna modifica a OCR Python,
+`engineWeights`, `appsettings.json`, backend.
+
+**Fase UI — Vista "Risultati Telecronaca" (2026-06-26):** dopo l'elaborazione l'app passa automaticamente
+a una vista da commentatore. `TabControl` (Elaborazione + Risultati Telecronaca) in `MainWindow.xaml`;
+`MainViewModel.SelectedTabIndex` → tab 2 dopo `Elabora`. Nuovo `TelecronacaViewModel` (POCO, no WPF, linkato
+nei test): header (squadre/punteggio/matchId/data/fase/banner stato), due `DataGrid` affiancati sortable con
+tabella compatta `# Giocatore PTS 2PT(%) 3PT(%) FT(%) REB AST STL FAL` ("-" se mancante), dettaglio giocatore
+al click, top player e spunti telecronaca — solo dati finali. Ordinamento maglia crescente, N.E. in fondo
+(grigi). Review → banner arancione; mismatch PDF/match → banner rosso + tabelle nascoste, import disabilitato.
+Stili sobri in `App.xaml` (`PlayerGrid`), nessuna libreria esterna. `TelecronacaViewModel.cs` linkato in
+`BasketPdfStats.Tests.csproj`. Test `TelecronacaViewModelTests` (9). Build verde, 276 test non-integration
+verdi. Nessuna modifica a OCR Python, `engineWeights`, `appsettings.json`, backend.
+
 ---
 
 ## 16. Matrice dei test per fase

@@ -24,6 +24,7 @@ public class PdfProcessingPipeline : IPdfProcessingPipeline
     private readonly NormalizedOcrReconciler _normalizedOcrReconciler;
     private readonly TeamIdentityMatcher _teamIdentityMatcher = new();
     private readonly IdentityReviewBuilder _identityReviewBuilder = new();
+    private readonly ITeamMismatchProcessingDecider? _teamMismatchDecider;
 
     public PdfProcessingPipeline(
         RuntimeOptions options,
@@ -31,7 +32,8 @@ public class PdfProcessingPipeline : IPdfProcessingPipeline
         OcrRunPlanBuilder? runPlanBuilder = null,
         DocumentPreparationStage? documentPreparationStage = null,
         NormalizedOcrResultWriter? normalizedOcrResultWriter = null,
-        NormalizedOcrReconciler? normalizedOcrReconciler = null)
+        NormalizedOcrReconciler? normalizedOcrReconciler = null,
+        ITeamMismatchProcessingDecider? teamMismatchDecider = null)
     {
         _options = options;
         _ocrEngines = ocrEngines.ToArray();
@@ -40,6 +42,7 @@ public class PdfProcessingPipeline : IPdfProcessingPipeline
         _documentPreparationStage = documentPreparationStage;
         _normalizedOcrResultWriter = normalizedOcrResultWriter ?? new NormalizedOcrResultWriter(_options);
         _normalizedOcrReconciler = normalizedOcrReconciler ?? new NormalizedOcrReconciler();
+        _teamMismatchDecider = teamMismatchDecider;
     }
 
     public async Task<ProcessingResult> ProcessPdfAsync(string pdfPath, CancellationToken cancellationToken = default)
@@ -123,11 +126,21 @@ public class PdfProcessingPipeline : IPdfProcessingPipeline
 
             MergePrimaryResult(result, reconciledResult, engineResults);
             ApplyTeamIdentity(result, matchContext);
+            if (request.TeamMismatchAborted)
+            {
+                result.Validation.Warnings.Add(new ValidationWarning
+                {
+                    RuleId = "ocr.processingAbortedByUser",
+                    Severity = "Warning",
+                    Message = "Elaborazione interrotta dall'utente: il PDF non corrisponde al match selezionato. Eseguito solo CH1; nessun import."
+                });
+            }
             if (matchContext is not null)
             {
                 result.IdentityReview = _identityReviewBuilder.Build(result, matchContext);
             }
             MergePreparationDiagnostics(result, request);
+            CleanupDiagnostics(result);
             result.ProcessedFile.Status = ResolveCompletedStatus(result);
             result.Validation.Status = result.ProcessedFile.Status;
             result.ProcessedFile.OutputJsonPath = await SaveResultJsonAsync(result, cancellationToken);
@@ -173,6 +186,15 @@ public class PdfProcessingPipeline : IPdfProcessingPipeline
             results.Add(await RunEngineAsync(engine, request, cancellationToken));
         }
 
+        // Controllo precoce: dopo CH1 conosciamo le squadre lette dal PDF. Se NON corrispondono al
+        // match selezionato, chiediamo all'utente se interrompere (consigliato) prima di eseguire i
+        // canali successivi (CH2–CH4, Paddle lenti). L'import resta comunque bloccato a valle.
+        if (ShouldAbortForTeamMismatch(request, results))
+        {
+            request.TeamMismatchAborted = true;
+            return results; // salta crop e CH2–CH4: nessun OCR aggiuntivo su un PDF sbagliato.
+        }
+
         if (request.RunPlan?.NeedsLayoutCrops == true && _documentPreparationStage is not null)
         {
             request.DocumentPreparation = await _documentPreparationStage.PrepareAsync(request, request.RunPlan, cancellationToken);
@@ -192,6 +214,47 @@ public class PdfProcessingPipeline : IPdfProcessingPipeline
         }
 
         return results;
+    }
+
+    /// <summary>
+    /// True se: c'è un decider e un contesto match, CH1 ha letto almeno un nome squadra, e queste non
+    /// corrispondono al match selezionato, e l'utente sceglie di interrompere. Se l'OCR non ha letto
+    /// alcun nome squadra non si afferma un mismatch (si evita un falso positivo).
+    /// </summary>
+    private bool ShouldAbortForTeamMismatch(OcrProcessingRequest request, IReadOnlyList<ProcessingResult> ch1Results)
+    {
+        if (_teamMismatchDecider is null || request.MatchContext is null)
+        {
+            return false;
+        }
+
+        var ch1 = ch1Results.FirstOrDefault(r => r.Teams.Count > 0);
+        if (ch1 is null)
+        {
+            return false;
+        }
+
+        var pdfHome = ch1.Teams.FirstOrDefault(t => string.Equals(t.Side, "Home", StringComparison.OrdinalIgnoreCase))?.Name;
+        var pdfAway = ch1.Teams.FirstOrDefault(t => string.Equals(t.Side, "Away", StringComparison.OrdinalIgnoreCase))?.Name;
+        if (string.IsNullOrWhiteSpace(pdfHome) && string.IsNullOrWhiteSpace(pdfAway))
+        {
+            return false;
+        }
+
+        var match = _teamIdentityMatcher.Match(pdfHome, pdfAway, request.MatchContext);
+        if (match.Outcome != TeamMatchOutcome.Mismatch)
+        {
+            return false; // CorrectOrder o Inverted → corrispondenza valida.
+        }
+
+        var prompt = new TeamMismatchPrompt(
+            request.MatchContext.HomeTeam.Name,
+            request.MatchContext.AwayTeam.Name,
+            string.IsNullOrWhiteSpace(pdfHome) ? "?" : pdfHome!,
+            string.IsNullOrWhiteSpace(pdfAway) ? "?" : pdfAway!);
+
+        // ShouldContinueProcessing: true = continua (CH2–CH4); false = interrompi.
+        return !_teamMismatchDecider.ShouldContinueProcessing(prompt);
     }
 
     private async Task<ProcessingResult> RunEngineAsync(IOcrEngine engine, OcrProcessingRequest request, CancellationToken cancellationToken)
@@ -400,6 +463,33 @@ public class PdfProcessingPipeline : IPdfProcessingPipeline
     private static bool HasSuccessfulRun(ProcessingResult result)
     {
         return result.OcrRuns.Any(x => x.Status == OcrRunStatus.Success);
+    }
+
+    /// <summary>
+    /// Modalità normale: rimuove i warning OCR diagnostici (disaccordo tra provider, confidence,
+    /// dettagli per-campo, plan/crop info) da validazione e stat, tenendo solo ciò che è importante o
+    /// bloccante: errori, <c>math.*</c>, <c>team.*</c> (mismatch/inversione), interruzione utente.
+    /// Allinea lo stato delle stat dopo la pulizia. I candidati/metadati di riconciliazione per-campo
+    /// sono già esclusi dal JSON via [JsonIgnore].
+    /// </summary>
+    private static void CleanupDiagnostics(ProcessingResult result)
+    {
+        result.Validation.Warnings.RemoveAll(w => !IsImportantWarning(w));
+        foreach (var stat in result.Stats)
+        {
+            stat.Warnings.RemoveAll(w => !IsImportantWarning(w));
+            stat.Status = stat.FailedRules.Count == 0 && stat.Warnings.Count == 0
+                ? StatValidationStatus.Validato
+                : StatValidationStatus.NonValidato;
+        }
+    }
+
+    private static bool IsImportantWarning(ValidationWarning warning)
+    {
+        return string.Equals(warning.Severity, "Error", StringComparison.OrdinalIgnoreCase)
+               || warning.RuleId.StartsWith("math.", StringComparison.OrdinalIgnoreCase)
+               || warning.RuleId.StartsWith("team.", StringComparison.OrdinalIgnoreCase)
+               || string.Equals(warning.RuleId, "ocr.processingAbortedByUser", StringComparison.OrdinalIgnoreCase);
     }
 
     private static FileProcessingStatus ResolveCompletedStatus(ProcessingResult result)
