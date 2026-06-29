@@ -131,6 +131,13 @@ export function Home() {
   const galleryNext = () => setGalleryGroup(g => (g + 1) % galleryTotalGroups);
   const galleryPrev = () => setGalleryGroup(g => (g - 1 + galleryTotalGroups) % galleryTotalGroups);
 
+  // Auto-slide gallery ogni 5 secondi
+  useEffect(() => {
+    if (galleryTotalGroups <= 1) return;
+    const id = setInterval(galleryNext, 5000);
+    return () => clearInterval(id);
+  }, [galleryTotalGroups]);
+
   const fallbackTarget = (() => {
     const now = new Date();
     const y = now.getFullYear();
@@ -372,7 +379,7 @@ export function Home() {
           <div className="flex-1 pr-0 lg:pr-10">
             <h2 className="font-display text-5xl sm:text-6xl md:text-8xl font-black uppercase leading-[0.85] mb-8">
               Non e' solo <br/>
-              <span className="text-stroke-active text-transparent">un gioco</span>
+              <span className="text-brand-orange">un gioco</span>
             </h2>
             <div className="w-24 h-2 bg-brand-orange mb-8 transform -rotate-2"></div>
             <p className="font-sans font-light text-lg md:text-xl max-w-lg mb-10 text-zinc-300">

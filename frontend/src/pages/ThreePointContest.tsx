@@ -208,7 +208,6 @@ export function ThreePointContest() {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-
         {loading ? (
           <div className="text-center py-20">
             <div className="inline-block w-12 h-12 border-4 border-zinc-700 border-t-brand-orange rounded-full animate-spin" />
@@ -216,7 +215,7 @@ export function ThreePointContest() {
         ) : !hasEntries ? (
           <EmptyState message={data?.message} scheduledAt={data?.scheduled_at} />
         ) : (
-          <div className="space-y-10">
+          <div className="space-y-10 relative z-10">
 
             {/* Status badge */}
             {(isLive || isCompleted) && (
@@ -346,8 +345,8 @@ function Podium({ entries }: { entries: Entry[] }) {
       borderColor: "border-amber-700",
       bgColor: "bg-amber-900/20",
       numColor: "text-amber-700",
-      nameColor: "text-amber-400",
-      scoreColor: "text-amber-500",
+      nameColor: "text-amber-600",
+      scoreColor: "text-amber-600",
       zClass: "-ml-[3px]",
     },
   ];
@@ -404,6 +403,7 @@ function Podium({ entries }: { entries: Entry[] }) {
 }
 
 // ── Stato vuoto ─────────────────────────────────────────────
+// ── Campetto SVG sfondo ─────────────────────────────────────
 function EmptyState({ message, scheduledAt }: { message?: string; scheduledAt?: string }) {
   return (
     <div className="border-[3px] border-dashed border-zinc-700 bg-zinc-900/50 p-10 sm:p-16 text-center max-w-2xl mx-auto">
