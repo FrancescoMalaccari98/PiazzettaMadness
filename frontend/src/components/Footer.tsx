@@ -15,17 +15,12 @@ const MailIcon = () => (
   </svg>
 );
 
-const ArrowIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M7 17 17 7"/><path d="M7 7h10v10"/>
-  </svg>
-);
-
 export function Footer() {
+
   return (
     <footer className="relative bg-brand-orange overflow-hidden text-brand-bg">
 
-      {/* Striscia nera in cima — stile divisa sportiva */}
+      {/* Striscia nera in cima */}
       <div className="h-4 bg-zinc-950 w-full" />
 
       {/* Testo decorativo di sfondo */}
@@ -35,127 +30,91 @@ export function Footer() {
         </span>
       </div>
 
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-16">
-        <div className="grid grid-cols-2 md:grid-cols-12 gap-6 md:gap-12">
-
-          {/* Colonna brand — full width su mobile */}
-          <div className="col-span-2 md:col-span-5">
-            <div className="flex items-center gap-3 mb-4 md:mb-6">
+          {/* Brand + descrizione */}
+          <div>
+            <div className="flex items-center gap-3 mb-4">
               <img
                 src="/assets/logo.png"
                 alt="Piazzetta Madness"
-                className="h-10 md:h-16 w-auto"
+                className="h-10 md:h-14 w-auto"
                 style={{ filter: "brightness(0)" }}
               />
-              <div className="font-display text-2xl md:text-4xl uppercase leading-[0.82] border-l-4 border-brand-bg pl-3 md:pl-4 text-brand-bg">
+              <div className="font-display text-2xl md:text-3xl uppercase leading-[0.82] border-l-4 border-brand-bg pl-3 md:pl-4 text-brand-bg">
                 PIAZZETTA<br />MADNESS
               </div>
             </div>
-
-            <p className="font-sans font-semibold text-brand-bg/75 text-sm md:text-base leading-relaxed mb-5 md:mb-8 max-w-sm">
+            <p className="font-sans font-semibold text-brand-bg/75 text-sm md:text-base leading-relaxed max-w-sm">
               Il torneo di basket 5vs5 più duro dell'asfalto.<br />
               Raduna la tua crew e conquista la gloria.
             </p>
-
-            {/* CTA social */}
-            <div className="flex flex-wrap gap-2 md:gap-3">
-              <a
-                href="https://www.instagram.com/piazzetta_madness/"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 bg-brand-bg text-white px-4 py-2.5 md:px-5 md:py-3 font-display uppercase text-xs md:text-sm tracking-widest hover:bg-zinc-800 transition-colors shadow-[4px_4px_0_rgba(0,0,0,0.2)]"
-              >
-                <InstagramIcon />
-                @piazzetta_madness
-              </a>
-              <a
-                href="mailto:info@piazzettamadness.it"
-                className="inline-flex items-center gap-2 border-[3px] border-brand-bg text-brand-bg px-4 py-2.5 md:px-5 md:py-3 font-display uppercase text-xs md:text-sm tracking-widest hover:bg-brand-bg hover:text-white transition-colors"
-              >
-                <MailIcon />
-                Contattaci
-              </a>
-            </div>
           </div>
 
-          {/* Colonna navigazione — affiancata a Legale su mobile */}
-          <div className="col-span-1 md:col-span-3 md:col-start-7">
-            <h4 className="font-display text-xs uppercase tracking-[0.2em] text-brand-bg/50 mb-4 md:mb-5 pb-2 border-b-2 border-brand-bg/20">
-              Naviga
-            </h4>
-            <ul className="space-y-2 md:space-y-3">
-              {[
-                { label: "Home", to: "/" },
-                { label: "Info & Regolamento", to: "/info" },
-                { label: "Foto", to: "/foto" },
-                { label: "Match & Bracket", to: "/match" },
-                { label: "Statistiche", to: "/statistiche" },
-                { label: "Staff", to: "/staff" },
-                { label: "Player", to: "/giocatori" },
-                { label: "Sponsor", to: "/sponsor" },
-              ].map(({ label, to }) => (
-                <li key={to}>
-                  <Link
-                    to={to}
-                    className="group inline-flex items-center gap-2 font-sans font-bold text-brand-bg/75 text-xs md:text-sm hover:text-brand-bg transition-colors"
-                  >
-                    <span className="opacity-0 group-hover:opacity-100 transition-opacity -translate-x-1 group-hover:translate-x-0 duration-200">
-                      <ArrowIcon />
-                    </span>
-                    {label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Colonna legale — affiancata a Naviga su mobile */}
-          <div className="col-span-1 md:col-span-2">
-            <h4 className="font-display text-xs uppercase tracking-[0.2em] text-brand-bg/50 mb-4 md:mb-5 pb-2 border-b-2 border-brand-bg/20">
-              Legale
-            </h4>
-            <ul className="space-y-2 md:space-y-3">
-              <li>
-                <Link
-                  to="/privacy"
-                  className="group inline-flex items-center gap-2 font-sans font-bold text-brand-bg/75 text-xs md:text-sm hover:text-brand-bg transition-colors"
-                >
-                  <span className="opacity-0 group-hover:opacity-100 transition-opacity -translate-x-1 group-hover:translate-x-0 duration-200">
-                    <ArrowIcon />
-                  </span>
-                  Privacy & Cookie Policy
-                </Link>
-              </li>
-              <li>
-                <button
-                  onClick={() => { localStorage.removeItem("pm_cookie_consent"); window.location.reload(); }}
-                  className="group inline-flex items-center gap-2 font-sans font-bold text-brand-bg/75 text-xs md:text-sm hover:text-brand-bg transition-colors bg-transparent"
-                >
-                  <span className="opacity-0 group-hover:opacity-100 transition-opacity -translate-x-1 group-hover:translate-x-0 duration-200">
-                    <ArrowIcon />
-                  </span>
-                  Gestisci Cookie
-                </button>
-              </li>
-            </ul>
+          {/* Bottoni CTA */}
+          <div className="flex flex-wrap gap-2 md:gap-3 shrink-0">
+            <a
+              href="https://www.instagram.com/piazzetta_madness/"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 bg-brand-bg text-white px-4 py-2.5 md:px-5 md:py-3 font-display uppercase text-xs md:text-sm tracking-widest hover:bg-zinc-800 transition-colors shadow-[4px_4px_0_rgba(0,0,0,0.2)]"
+            >
+              <InstagramIcon />
+              @piazzetta_madness
+            </a>
+            <a
+              href="mailto:info@piazzettamadness.it"
+              className="inline-flex items-center gap-2 border-[3px] border-brand-bg text-brand-bg px-4 py-2.5 md:px-5 md:py-3 font-display uppercase text-xs md:text-sm tracking-widest hover:bg-brand-bg hover:text-white transition-colors"
+            >
+              <MailIcon />
+              Contattaci
+            </a>
           </div>
 
         </div>
       </div>
 
-      {/* Copyright — stesso sfondo arancio, niente card scura */}
+      {/* Copyright */}
       <div className="relative z-10 border-t-2 border-brand-bg/20 py-5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-2">
           <p className="font-sans font-semibold text-brand-bg/50 text-xs uppercase tracking-widest">
             <span className="hidden sm:inline">© {new Date().getFullYear()} Piazzetta Madness — Porto Potenza Picena</span>
             <span className="sm:hidden">© {new Date().getFullYear()} Piazzetta Madness</span>
           </p>
-          <p className="font-sans font-semibold text-brand-bg/35 text-xs uppercase tracking-widest">
-            Estate 2026
-          </p>
+          <div className="flex items-center gap-4">
+            <Link
+              to="/privacy"
+              className="font-sans font-semibold text-brand-bg/50 text-xs uppercase tracking-widest hover:text-brand-bg transition-colors"
+            >
+              Privacy & Cookie Policy
+            </Link>
+            <button
+              onClick={() => { localStorage.removeItem("pm_cookie_consent"); window.location.reload(); }}
+              className="font-sans font-semibold text-brand-bg/50 text-xs uppercase tracking-widest hover:text-brand-bg transition-colors bg-transparent"
+            >
+              Gestisci Cookie
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* ── SEZIONI RIMOSSE — commentate per futura re-abilitazione ──
+
+      Colonna navigazione:
+      <div className="col-span-1 md:col-span-3 md:col-start-7">
+        <h4>Naviga</h4>
+        <ul>Home / Info / Foto / Match / Statistiche / Staff / Player / Sponsor</ul>
+      </div>
+
+      Colonna legale (ora solo Privacy nel copyright bar):
+      <div className="col-span-1 md:col-span-2">
+        <h4>Legale</h4>
+        <ul>Privacy & Cookie Policy / Gestisci Cookie</ul>
+      </div>
+
+      ── */}
+
     </footer>
   );
 }

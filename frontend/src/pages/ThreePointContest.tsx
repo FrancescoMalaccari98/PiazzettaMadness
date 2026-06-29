@@ -130,7 +130,7 @@ function PlayerRow({ entry, pos, isCompleted, showRoundTypes }: {
           >
             {entry.player}
           </Link>
-          <p className="font-sans text-[10px] sm:text-xs text-zinc-500 truncate">{entry.team}</p>
+          <Link to={`/giocatori?team=${encodeURIComponent(entry.team)}`} className="font-sans text-[10px] sm:text-xs text-zinc-500 truncate hover:text-brand-orange transition-colors">{entry.team}</Link>
         </div>
 
         <span className={`font-mono text-lg sm:text-2xl font-black tabular-nums shrink-0 ${
@@ -372,9 +372,9 @@ function Podium({ entries }: { entries: Entry[] }) {
                 <p className={`font-display text-[11px] sm:text-base md:text-xl font-black uppercase leading-tight break-words ${nameColor}`}>
                   {entry.player}
                 </p>
-                <p className="font-sans text-[9px] sm:text-[10px] uppercase tracking-wide text-zinc-500 mt-0.5">
+                <Link to={`/giocatori?team=${encodeURIComponent(entry.team)}`} className="font-sans text-[9px] sm:text-[10px] uppercase tracking-wide text-zinc-500 mt-0.5 hover:text-brand-orange transition-colors block">
                   {entry.team}
-                </p>
+                </Link>
                 <p className={`font-display text-lg sm:text-3xl md:text-4xl font-black ${scoreColor} mt-0.5 sm:mt-1 leading-none`}>
                   {score}
                   <span className="font-sans text-[10px] sm:text-xs text-zinc-500 ml-0.5 sm:ml-1 font-normal">pts</span>

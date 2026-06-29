@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
-import { Users2 } from "lucide-react";
 
 const API = import.meta.env.VITE_API_URL ?? "";
 
@@ -159,20 +158,21 @@ export function Staff() {
 
         {/* CTA join */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-24">
-          <div className="border-[3px] border-brand-orange bg-zinc-900 border-dashed p-10 text-center relative overflow-hidden group">
-            <div className="relative z-10">
-              <Users2 className="w-16 h-16 text-brand-orange mx-auto mb-6" />
-              <h2 className="font-display text-4xl uppercase mb-4">Vuoi unirti a noi?</h2>
-              <p className="font-sans text-zinc-400 text-lg mb-8 max-w-2xl mx-auto">
-                Siamo sempre alla ricerca di volontari, arbitri e collaboratori per far crescere il torneo. Contattaci!
+          <div className="border-[4px] border-brand-orange bg-brand-orange/5 p-10 md:p-14 flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
+            <div>
+              <h3 className="font-display text-3xl md:text-4xl uppercase text-white mb-2">
+                Vuoi unirti a noi?
+              </h3>
+              <p className="font-sans text-zinc-400 text-base max-w-md">
+                Siamo sempre alla ricerca di volontari, arbitri e collaboratori per far crescere il torneo.
               </p>
-              <a
-                href="mailto:info@piazzettamadness.it"
-                className="inline-block bg-brand-orange text-brand-bg font-display uppercase tracking-widest px-8 py-4 text-xl hover:bg-white hover:text-brand-bg transition-colors"
-              >
-                Contattaci
-              </a>
             </div>
+            <a
+              href="mailto:info@piazzettamadness.it"
+              className="shrink-0 bg-brand-orange text-brand-bg px-8 py-4 font-display text-xl uppercase tracking-widest hover:bg-white transition-colors shadow-[6px_6px_0_rgba(0,0,0,0.3)]"
+            >
+              Contattaci
+            </a>
           </div>
         </div>
       </motion.div>

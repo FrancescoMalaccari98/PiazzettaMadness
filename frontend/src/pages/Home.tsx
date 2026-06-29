@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "motion/react";
-import { Calendar, MapPin, Trophy, Users, ArrowUpRight } from "lucide-react";
+import { Calendar, MapPin, Trophy, BarChart2, ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
 
 const MAPS_URL = "https://maps.app.goo.gl/5kgGKRw5Hm3LJHbn9";
 
@@ -62,6 +62,9 @@ function CountdownUnit({ value, label, pulse = false }: { value: number; label: 
   );
 }
 
+type StatLeader = { name: string; team: string; value: number };
+type HomeStats = { pts: StatLeader | null; ast: StatLeader | null; reb: StatLeader | null };
+
 type HomeMatch = {
   id: string;
   round: string;
@@ -74,6 +77,9 @@ type HomeMatch = {
 export function Home() {
   const [kickoffState, setKickoffState] = useState<{ target: Date; show: boolean } | null>(null);
   const [allMatches, setAllMatches] = useState<HomeMatch[]>([]);
+  const [homeStats, setHomeStats] = useState<HomeStats | null>(null);
+  const [galleryPhotos, setGalleryPhotos] = useState<string[]>([]);
+  const [galleryGroup, setGalleryGroup] = useState(0);
 
   useEffect(() => {
     fetch(`${API}/api-web/partite`)
@@ -83,6 +89,29 @@ export function Home() {
         setAllMatches(matches);
         const first = matches.find(m => m.date);
         if (first) setKickoffState(getKickoffState(first.date));
+      })
+      .catch(() => {});
+
+    fetch(`${API}/api-web/statistiche`)
+      .then(r => r.ok ? r.json() : null)
+      .then((d: any) => {
+        const ps: any[] = d?.players ?? [];
+        if (!ps.length) return;
+        const top = (key: string): StatLeader | null => {
+          const p = [...ps].sort((a, b) => b[key] - a[key])[0];
+          return p ? { name: p.name, team: p.team, value: p[key] } : null;
+        };
+        setHomeStats({ pts: top("pts"), ast: top("ast"), reb: top("reb") });
+      })
+      .catch(() => {});
+
+    fetch(`${API}/api-web/foto`)
+      .then(r => r.ok ? r.json() as Promise<string[]> : null)
+      .then(data => {
+        if (!data?.length) return;
+        const shuffled = [...data].sort(() => Math.random() - 0.5);
+        setGalleryPhotos(shuffled);
+        setGalleryGroup(Math.floor(Math.random() * Math.ceil(shuffled.length / 4)));
       })
       .catch(() => {});
   }, []);
@@ -95,6 +124,12 @@ export function Home() {
   const sf1 = semis[0];
   const sf2 = semis[1];
   const finale = allMatches.find(m => m.round === "Finale" || m.round.includes("Finale 1"));
+
+  const galleryGroupSize = 4;
+  const galleryTotalGroups = Math.max(1, Math.ceil(galleryPhotos.length / galleryGroupSize));
+  const gallerySlice = galleryPhotos.slice(galleryGroup * galleryGroupSize, (galleryGroup + 1) * galleryGroupSize);
+  const galleryNext = () => setGalleryGroup(g => (g + 1) % galleryTotalGroups);
+  const galleryPrev = () => setGalleryGroup(g => (g - 1 + galleryTotalGroups) % galleryTotalGroups);
 
   const fallbackTarget = (() => {
     const now = new Date();
@@ -196,7 +231,7 @@ export function Home() {
       )}
 
       {/* Info Quick Look - Bento Grid Layout */}
-      <section className="py-32 bg-brand-bg relative z-10">
+      <section className="py-12 md:py-16 bg-brand-bg relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
             
@@ -229,17 +264,38 @@ export function Home() {
               </div>
             </a>
 
-            {/* Block 2: High Contrast Accent */}
-            <div className="md:col-span-4 bg-brand-orange border-[4px] border-brand-orange p-8 md:p-12 flex flex-col justify-between group cursor-crosshair">
-              <div className="flex justify-between items-start mb-16">
-                <Calendar className="w-12 h-12 text-brand-bg group-hover:rotate-12 transition-transform" />
-                <ArrowUpRight className="w-10 h-10 text-brand-bg opacity-50 group-hover:opacity-100 transition-opacity" />
+            {/* Block 2: Stats leader */}
+            <Link to="/statistiche" className="md:col-span-4 bg-zinc-900 border-[4px] border-brand-orange p-8 flex flex-col justify-between group hover:-translate-y-1 transition-transform shadow-[8px_8px_0_var(--color-brand-orange)]">
+              <div className="flex justify-between items-start mb-4">
+                <BarChart2 className="w-10 h-10 text-brand-orange group-hover:scale-110 transition-transform" />
+                <ArrowUpRight className="w-8 h-8 text-brand-orange opacity-40 group-hover:opacity-100 transition-opacity" />
               </div>
-              <div>
-                <h3 className="font-display text-4xl mb-2 text-brand-bg uppercase">Summer '26</h3>
-                <p className="font-sans font-bold text-brand-bg/80 text-lg">Le date ufficiali verranno svelate a breve. Preparati.</p>
+
+              <div className="flex-1 flex flex-col justify-between">
+                <h3 className="font-display text-2xl sm:text-3xl uppercase text-white mb-4">Statistiche</h3>
+
+                {homeStats ? (
+                  <div className="space-y-3">
+                    {([
+                      { label: "PTS", stat: homeStats.pts },
+                      { label: "AST", stat: homeStats.ast },
+                      { label: "REB", stat: homeStats.reb },
+                    ] as const).map(({ label, stat }) => stat && (
+                      <div key={label} className="flex items-center gap-3 border-b border-zinc-800 pb-3 last:border-0 last:pb-0">
+                        <span className="font-display text-[10px] uppercase tracking-widest text-brand-orange w-7 shrink-0">{label}</span>
+                        <span className="font-sans text-sm text-zinc-300 truncate flex-1 leading-tight">{stat.name}</span>
+                        <span className="font-mono text-base font-black text-white tabular-nums shrink-0">{stat.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    <p className="font-sans text-zinc-500 text-sm leading-relaxed">Statistiche disponibili dopo le prime partite.</p>
+                    <p className="font-display text-xs uppercase tracking-widest text-brand-orange mt-2">Vedi la pagina →</p>
+                  </div>
+                )}
               </div>
-            </div>
+            </Link>
 
             {/* Block 3: Fase a Gironi + prossima partita */}
             <Link to="/match" className="md:col-span-5 bg-zinc-900/50 border-[4px] border-brand-blue p-8 flex flex-col justify-between group hover:-translate-y-1 transition-transform shadow-[8px_8px_0_var(--color-brand-blue)]">
@@ -306,7 +362,7 @@ export function Home() {
 
       
       {/* Visual Section */}
-      <section className="py-32 relative overflow-hidden bg-brand-bg">
+      <section className="py-12 md:py-16 relative overflow-hidden bg-brand-bg">
         {/* Background massive typography */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-display text-[15vw] text-zinc-900/40 whitespace-nowrap pointer-events-none z-0 tracking-tighter">
           NO FOULS
@@ -315,7 +371,7 @@ export function Home() {
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row items-center gap-16 text-white">
           <div className="flex-1 pr-0 lg:pr-10">
             <h2 className="font-display text-5xl sm:text-6xl md:text-8xl font-black uppercase leading-[0.85] mb-8">
-              Non è solo <br/>
+              Non e' solo <br/>
               <span className="text-stroke-active text-transparent">un gioco</span>
             </h2>
             <div className="w-24 h-2 bg-brand-orange mb-8 transform -rotate-2"></div>
@@ -332,19 +388,57 @@ export function Home() {
           </div>
           
           <div className="flex-1 w-full relative mt-12 lg:mt-0">
-             <div className="aspect-[4/5] md:aspect-square bg-zinc-900 border-[8px] border-brand-orange relative group overflow-hidden shadow-[20px_20px_0_var(--color-brand-blue)] rotate-2 hover:rotate-0 transition-transform">
-              <div className="absolute -left-6 top-4 bg-brand-yellow text-brand-bg px-8 py-2 font-black text-xl -rotate-6 uppercase z-20 border-2 border-brand-bg">
-                STREET CRED
+            {galleryPhotos.length > 0 ? (
+              <div>
+                <div className={`grid gap-1.5 border-[6px] border-brand-orange shadow-[16px_16px_0_var(--color-brand-blue)] ${gallerySlice.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}>
+                  {gallerySlice.map((url, i) => (
+                    <div key={url + i} className="aspect-square overflow-hidden bg-zinc-900">
+                      <img
+                        src={url}
+                        alt={`Gallery ${galleryGroup * galleryGroupSize + i + 1}`}
+                        className="w-full h-full object-cover"
+                        loading="eager"
+                        referrerPolicy="no-referrer"
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                {galleryTotalGroups > 1 && (
+                  <div className="flex items-center justify-between mt-4">
+                    <button
+                      onClick={galleryPrev}
+                      className="p-2.5 border-[3px] border-zinc-700 text-zinc-400 hover:border-brand-orange hover:text-brand-orange transition-colors"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    <span className="font-mono text-xs text-zinc-600 tracking-[0.2em]">
+                      {galleryGroup + 1} / {galleryTotalGroups}
+                    </span>
+                    <button
+                      onClick={galleryNext}
+                      className="p-2.5 border-[3px] border-zinc-700 text-zinc-400 hover:border-brand-orange hover:text-brand-orange transition-colors"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  </div>
+                )}
               </div>
-              <img
-                src="/assets/beer.png"
-                alt="Mascotte Piazzetta Madness"
-                className="w-full h-full object-contain p-8 scale-100 group-hover:scale-110 transition-all duration-700"
-              />
-              <span className="absolute inset-x-0 bottom-10 flex items-center justify-center text-brand-bg/50 font-black text-4xl sm:text-5xl md:text-6xl pointer-events-none uppercase tracking-widest z-20 mix-blend-difference">
-                MADNESS
-              </span>
-            </div>
+            ) : (
+              <div className="aspect-[4/5] md:aspect-square bg-zinc-900 border-[8px] border-brand-orange relative group overflow-hidden shadow-[20px_20px_0_var(--color-brand-blue)] rotate-2 hover:rotate-0 transition-transform">
+                <div className="absolute -left-6 top-4 bg-brand-yellow text-brand-bg px-8 py-2 font-black text-xl -rotate-6 uppercase z-20 border-2 border-brand-bg">
+                  STREET CRED
+                </div>
+                <img
+                  src="/assets/beer.png"
+                  alt="Mascotte Piazzetta Madness"
+                  className="w-full h-full object-contain p-8 scale-100 group-hover:scale-110 transition-all duration-700"
+                />
+                <span className="absolute inset-x-0 bottom-10 flex items-center justify-center text-brand-bg/50 font-black text-4xl sm:text-5xl md:text-6xl pointer-events-none uppercase tracking-widest z-20 mix-blend-difference">
+                  MADNESS
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </section>

@@ -23,13 +23,17 @@ Options -Indexes -MultiViews
 
 AddDefaultCharset UTF-8
 
+# ── MIME types font ──────────────────────────────────────────
+AddType font/woff2 .woff2
+AddType font/otf   .otf
+
 RewriteEngine On
 RewriteBase /
 
 # ── File statici: serve direttamente per estensione ──────────
 # Più affidabile di %{REQUEST_FILENAME} -f su hosting condiviso Aruba,
 # perché non dipende da come Apache risolve il percorso assoluto.
-RewriteRule \.(html|js|mjs|css|png|jpg|jpeg|gif|ico|svg|webp|woff|woff2|ttf|eot|map|json|txt|xml)$ - [L,NC]
+RewriteRule \.(html|js|mjs|css|png|jpg|jpeg|gif|ico|svg|webp|woff|woff2|otf|ttf|eot|map|json|txt|xml)$ - [L,NC]
 
 # ── API: lascia gestire ad Apache + rispettivi .htaccess ─────
 RewriteRule ^api/ - [L]

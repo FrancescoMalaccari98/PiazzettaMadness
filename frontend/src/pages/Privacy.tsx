@@ -295,7 +295,7 @@ export function Privacy() {
                   <tr>
                     <th className="p-3 font-display uppercase text-zinc-300 text-xs tracking-widest">Nome</th>
                     <th className="p-3 font-display uppercase text-zinc-300 text-xs tracking-widest">Tipo</th>
-                    <th className="p-3 font-display uppercase text-zinc-300 text-xs tracking-widest">Finalità</th>
+                    <th className="p-3 font-display uppercase text-zinc-300 text-xs tracking-widest">Finalita'</th>
                     <th className="p-3 font-display uppercase text-zinc-300 text-xs tracking-widest">Durata</th>
                   </tr>
                 </thead>
@@ -323,7 +323,7 @@ export function Privacy() {
                   <tr>
                     <th className="p-3 font-display uppercase text-zinc-300 text-xs tracking-widest">Nome</th>
                     <th className="p-3 font-display uppercase text-zinc-300 text-xs tracking-widest">Terza parte</th>
-                    <th className="p-3 font-display uppercase text-zinc-300 text-xs tracking-widest">Finalità</th>
+                    <th className="p-3 font-display uppercase text-zinc-300 text-xs tracking-widest">Finalita'</th>
                     <th className="p-3 font-display uppercase text-zinc-300 text-xs tracking-widest">Durata</th>
                   </tr>
                 </thead>

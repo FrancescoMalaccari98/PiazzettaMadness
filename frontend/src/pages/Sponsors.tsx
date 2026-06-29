@@ -20,11 +20,18 @@ const IgIcon = ({ size = 14 }: { size?: number }) => (
   </svg>
 );
 
-function SponsorCard({ sponsor }: { sponsor: Sponsor }) {
+const CARD_COLORS = [
+  { border: "border-brand-orange", shadow: "shadow-[6px_6px_0_var(--color-brand-orange)]", text: "text-brand-orange" },
+  { border: "border-brand-yellow", shadow: "shadow-[6px_6px_0_var(--color-brand-yellow)]", text: "text-brand-yellow" },
+  { border: "border-brand-blue",   shadow: "shadow-[6px_6px_0_var(--color-brand-blue)]",   text: "text-brand-blue" },
+  { border: "border-zinc-400",     shadow: "shadow-[6px_6px_0_rgba(161,161,170,0.5)]",     text: "text-zinc-300" },
+] as const;
+
+function SponsorCard({ sponsor, index }: { sponsor: Sponsor; index: number }) {
+  const color = CARD_COLORS[index % CARD_COLORS.length];
   const hasSito = !!sponsor.sito;
   const hasIg = !!sponsor.ig;
   const hasLinks = hasSito || hasIg;
-
   const igUrl = sponsor.ig.startsWith("http") ? sponsor.ig : `https://instagram.com/${sponsor.ig}`;
   const clickHref = hasSito ? sponsor.sito : (hasIg ? igUrl : "");
   const hasClick = hasSito || hasIg;
@@ -37,12 +44,12 @@ function SponsorCard({ sponsor }: { sponsor: Sponsor }) {
   } : {};
 
   return (
-    <div className="group flex flex-col border-[3px] border-zinc-700 bg-zinc-900 hover:border-brand-orange transition-all duration-300 hover:-translate-y-1 hover:shadow-[8px_8px_0_var(--color-brand-orange)] overflow-hidden">
+    <div className={`group flex flex-col bg-zinc-900 border-[4px] ${color.border} ${color.shadow} overflow-hidden`}>
 
       {/* Logo */}
       <Wrapper
         {...wrapperProps}
-        className="flex items-center justify-center h-40 sm:h-48 p-6 relative cursor-pointer bg-zinc-400"
+        className="flex items-center justify-center h-48 sm:h-64 p-8 relative cursor-pointer bg-zinc-200"
       >
         <img
           src={sponsor.logo}
@@ -51,39 +58,46 @@ function SponsorCard({ sponsor }: { sponsor: Sponsor }) {
           loading="lazy"
         />
         {hasClick && (
-          <ExternalLink className="absolute top-3 right-3 w-4 h-4 text-brand-orange opacity-0 group-hover:opacity-100 transition-opacity" />
+          <ExternalLink className={`absolute top-3 right-3 w-4 h-4 ${color.text} opacity-0 group-hover:opacity-100 transition-opacity`} />
         )}
       </Wrapper>
 
       {/* Footer: nome + link */}
-      <div className="border-t-[3px] border-zinc-800 px-4 py-3 bg-zinc-950/80">
-        <p className="font-display text-sm uppercase tracking-wide text-brand-orange truncate mb-1">
-          {sponsor.nome}
-        </p>
+      <div className="px-4 py-4 bg-zinc-950/80 flex items-center justify-between gap-3">
+        {hasClick ? (
+          <a href={clickHref} target="_blank" rel="noreferrer" className={`font-display text-xl sm:text-2xl uppercase leading-tight ${color.text} min-w-0 hover:underline`}>
+            {sponsor.nome}
+          </a>
+        ) : (
+          <p className={`font-display text-xl sm:text-2xl uppercase leading-tight ${color.text} min-w-0`}>
+            {sponsor.nome}
+          </p>
+        )}
 
         {hasLinks && (
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 shrink-0">
             {hasSito && (
               <a
                 href={sponsor.sito}
                 target="_blank"
                 rel="noreferrer"
                 onClick={e => e.stopPropagation()}
-                className="font-sans text-[10px] sm:text-xs uppercase tracking-wider text-zinc-400 hover:text-white transition-colors flex items-center gap-1.5"
+                className="text-zinc-400 hover:text-white transition-colors"
+                title="Sito ufficiale"
               >
-                <ExternalLink className="w-3 h-3" /> Sito ufficiale
+                <ExternalLink className="w-5 h-5" />
               </a>
             )}
             {hasIg && (
               <a
-                href={sponsor.ig.startsWith("http") ? sponsor.ig : `https://instagram.com/${sponsor.ig}`}
+                href={igUrl}
                 target="_blank"
                 rel="noreferrer"
                 onClick={e => e.stopPropagation()}
-                className="text-zinc-400 hover:text-white transition-colors flex items-center gap-1.5"
+                className="text-zinc-400 hover:text-white transition-colors"
+                title="Instagram"
               >
-                <IgIcon size={13} />
-                <span className="font-sans text-[10px] sm:text-xs">Instagram</span>
+                <IgIcon size={20} />
               </a>
             )}
           </div>
@@ -135,7 +149,7 @@ export function Sponsors() {
             <p className="font-display text-2xl uppercase text-zinc-600">Sponsor in arrivo</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {sponsors.map((sponsor, i) => (
               <motion.div
                 key={sponsor.id}
@@ -144,7 +158,7 @@ export function Sponsors() {
                 viewport={{ once: true, margin: "-40px" }}
                 transition={{ delay: (i % 5) * 0.07, duration: 0.4, ease: "easeOut" }}
               >
-                <SponsorCard sponsor={sponsor} />
+                <SponsorCard sponsor={sponsor} index={i} />
               </motion.div>
             ))}
           </div>

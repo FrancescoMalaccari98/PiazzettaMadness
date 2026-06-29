@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "Basketball";
+  src: url("/assets/Basketball.woff2") format("woff2"),
+       url("/assets/Basketball.otf") format("opentype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0020-0026, U+0028-007E;
+}
+
 @theme {
   --color-brand-blue: #19658c;
   --color-brand-orange: #ea6324;
@@ -15,7 +25,7 @@
   --color-zinc-800: rgba(255,255,255,0.1);
   
   --font-sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --font-display: "Arial Black", "Helvetica Neue", sans-serif;
+  --font-display: "Basketball", "Arial Black", "Helvetica Neue", sans-serif;
 }
 
 @layer base {

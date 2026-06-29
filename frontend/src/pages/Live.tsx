@@ -1,5 +1,16 @@
 import { useState, useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
 import { motion } from "motion/react";
+
+function playerSlug(fullName: string, jerseyNumber: number | string | null = null): string {
+  const base = fullName
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "");
+  return jerseyNumber !== null ? `${base}-${jerseyNumber}` : base;
+}
 
 const API = import.meta.env.VITE_API_URL ?? "";
 
@@ -222,9 +233,9 @@ function TeamScore({ team, score, leading, accent, align }: {
   return (
     <div className={`flex flex-col ${align === "right" ? "items-end text-right" : "items-start text-left"}`}>
       <div className={`h-1 w-12 sm:w-20 mb-2 ${a.bar}`} />
-      <div className="font-display uppercase text-white text-base sm:text-3xl leading-[0.95] break-words">
+      <Link to={`/giocatori?team=${encodeURIComponent(team.name)}`} className="font-display uppercase text-white text-base sm:text-3xl leading-[0.95] break-words hover:text-brand-orange transition-colors">
         {team.name}
-      </div>
+      </Link>
       {team.short_name && (
         <div className="font-mono text-zinc-600 text-xs sm:text-sm mt-0.5">{team.short_name}</div>
       )}
@@ -275,7 +286,7 @@ function PlayerList({ team, accent, mirrored = false }: { team: LiveTeam; accent
             const fouledOut = p.fouls >= FOUL_LIMIT;
             return (
               <li key={p.player_id} className={`flex items-center gap-2 ${padX} py-2 ${rowDir}`}>
-                <span className={`font-sans text-zinc-200 text-xs sm:text-sm flex-1 min-w-0 break-words leading-tight ${nameAlign}`}>
+                <Link to={`/statistiche/${playerSlug(p.name, p.jersey_number)}`} className={`font-sans text-zinc-200 text-xs sm:text-sm flex-1 min-w-0 break-words leading-tight hover:text-brand-orange transition-colors ${nameAlign}`}>
                   {(() => {
                     const parts = p.name.trim().split(" ");
                     const first = parts.shift() ?? "";
@@ -287,7 +298,7 @@ function PlayerList({ team, accent, mirrored = false }: { team: LiveTeam; accent
                       </>
                     );
                   })()}
-                </span>
+                </Link>
                 <span className={`font-mono tabular-nums text-sm w-5 text-center shrink-0 ${
                   fouledOut ? "text-red-500 font-bold" : "text-zinc-500"
                 }`}>

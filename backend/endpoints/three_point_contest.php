@@ -71,6 +71,7 @@ function handle_three_point_contest(PDO $pdo): void {
         $placeholders = implode(',', array_fill(0, count($entry_ids), '?'));
         $stmt = $pdo->prepare("
             SELECT
+                r.id            AS round_id,
                 r.entry_id,
                 r.round_number,
                 r.round_type,
@@ -85,9 +86,34 @@ function handle_three_point_contest(PDO $pdo): void {
             ORDER BY r.entry_id, r.round_number
         ");
         $stmt->execute($entry_ids);
+        $all_rounds = $stmt->fetchAll();
 
-        foreach ($stmt->fetchAll() as $r) {
-            $eid_r = (int)$r['entry_id'];
+        // Fetch tiri singoli per tutti i round trovati
+        $round_ids = array_map(fn($r) => (int)$r['round_id'], $all_rounds);
+        $shots_map = [];
+        if (!empty($round_ids)) {
+            $ph2 = implode(',', array_fill(0, count($round_ids), '?'));
+            $stmt2 = $pdo->prepare("
+                SELECT round_id, station_number, ball_number, point_value, result
+                FROM three_point_contest_shots
+                WHERE round_id IN ($ph2)
+                ORDER BY round_id, station_number, ball_number
+            ");
+            $stmt2->execute($round_ids);
+            foreach ($stmt2->fetchAll() as $s) {
+                $rid  = (int)$s['round_id'];
+                $snum = (int)$s['station_number'];
+                $shots_map[$rid][$snum][] = [
+                    'ball'   => (int)$s['ball_number'],
+                    'value'  => (int)$s['point_value'],
+                    'result' => $s['result'],
+                ];
+            }
+        }
+
+        foreach ($all_rounds as $r) {
+            $eid_r  = (int)$r['entry_id'];
+            $rid    = (int)$r['round_id'];
             if (!isset($rounds_map[$eid_r])) $rounds_map[$eid_r] = [];
             $rounds_map[$eid_r][] = [
                 'round_number' => (int)$r['round_number'],
@@ -100,6 +126,7 @@ function handle_three_point_contest(PDO $pdo): void {
                     (int)$r['station5_score'],
                 ],
                 'total' => (int)$r['total_score'],
+                'shots' => $shots_map[$rid] ?? [],
             ];
         }
     }

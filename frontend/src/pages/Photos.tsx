@@ -9,7 +9,7 @@ export function Photos() {
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
 
   useEffect(() => {
-    fetch(`${API}/img/list.php`)
+    fetch(`${API}/api-web/foto`)
       .then(r => r.ok ? r.json() as Promise<string[]> : null)
       .then(data => { if (data) setPhotos(data); })
       .catch(() => {});

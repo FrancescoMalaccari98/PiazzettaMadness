@@ -194,6 +194,11 @@ try {
         require_once __DIR__ . '/endpoints/staff.php';
         handle_staff(get_pdo());
 
+    // ── /foto ───────────────────────────────────────────────
+    } elseif ($seg0 === 'foto') {
+        require_once __DIR__ . '/endpoints/foto.php';
+        handle_foto();
+
     // ── / (health check) ────────────────────────────────────
     } elseif ($seg0 === '' || $seg0 === 'health') {
         send_json([
