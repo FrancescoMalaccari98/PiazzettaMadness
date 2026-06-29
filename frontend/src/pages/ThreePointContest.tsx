@@ -1,6 +1,17 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { motion } from "motion/react";
 import { Target, Trophy } from "lucide-react";
+
+function playerSlug(fullName: string, jerseyNumber: number | null = null): string {
+  const base = fullName
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "");
+  return jerseyNumber !== null ? `${base}-${jerseyNumber}` : base;
+}
 
 const API = import.meta.env.VITE_API_URL ?? "";
 
@@ -18,6 +29,8 @@ type Entry = {
   seed_order: number | null;
   total_score: number;
   final_position: number | null;
+  jersey_number: number | null;
+  team_color: string | null;
   rounds: Round[];
 };
 
@@ -43,58 +56,94 @@ const POSITION_STYLES: Record<number, { badge: string; border: string; text: str
 
 const MAX_STATION = 6;
 
+const QUAL_TYPES = ["Qualification"];
+const FINAL_TYPES = ["Final", "TieBreak"];
+
+function roundTotal(entry: Entry, types: string[]): number {
+  return entry.rounds
+    .filter(r => types.includes(r.round_type))
+    .reduce((s, r) => s + r.total, 0);
+}
+
 function StationBars({ round }: { round: Round }) {
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-end gap-2">
       {round.stations.map((score, si) => (
-        <div key={si} className={`w-8 h-8 flex items-center justify-center font-mono text-xs font-bold border border-zinc-700 ${
-          score >= 5 ? "bg-brand-yellow/20 text-brand-yellow border-brand-yellow/40"
-          : score >= 3 ? "bg-brand-orange/10 text-brand-orange border-brand-orange/30"
-          : "bg-zinc-900 text-zinc-500"
-        }`}>
-          {score}
+        <div key={si} className="flex-1 max-w-[80px]">
+          <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden mb-1">
+            <div
+              className={`h-full rounded-full transition-all ${
+                score >= 5 ? "bg-brand-yellow"
+                : score >= 3 ? "bg-brand-orange"
+                : "bg-zinc-600"
+              }`}
+              style={{ width: `${(score / MAX_STATION) * 100}%` }}
+            />
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="font-display text-[9px] uppercase text-zinc-600">S{si + 1}</span>
+            <span className={`font-mono text-xs font-bold ${
+              score >= 5 ? "text-brand-yellow"
+              : score >= 3 ? "text-brand-orange"
+              : "text-zinc-500"
+            }`}>
+              {score}
+            </span>
+          </div>
         </div>
       ))}
-      <div className="font-mono text-base font-black text-white ml-2 w-8 text-center">
-        {round.total}
+      <div className="border-l border-zinc-700 pl-3 ml-1 shrink-0">
+        <span className="font-mono text-lg font-black text-white">{round.total}</span>
+        <span className="font-display text-[9px] uppercase text-zinc-600 block">TOT</span>
       </div>
     </div>
   );
 }
 
-function PlayerRow({ entry, pos, isCompleted }: { entry: Entry; pos: number; isCompleted: boolean }) {
+function PlayerRow({ entry, pos, isCompleted, showRoundTypes }: {
+  entry: Entry;
+  pos: number;
+  isCompleted: boolean;
+  showRoundTypes: string[];
+}) {
   const style = POSITION_STYLES[pos];
+  const visibleRounds = entry.rounds.filter(r => showRoundTypes.includes(r.round_type));
+  const sectionTotal = visibleRounds.reduce((s, r) => s + r.total, 0);
 
   return (
     <div className={`border-b border-zinc-800/60 last:border-0 ${pos <= 3 && isCompleted ? "bg-zinc-800/10" : ""}`}>
       {/* Info giocatore */}
       <div className="flex items-center gap-2 sm:gap-4 px-3 sm:px-5 py-3 sm:py-4">
-        <span className={`w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center font-display text-xs sm:text-sm font-bold shrink-0 ${
-          style ? style.badge : "text-zinc-600"
-        }`}>
+        <span
+          className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center font-display text-xs sm:text-sm font-bold shrink-0 text-white"
+          style={{ backgroundColor: entry.team_color ?? "#3f3f46" }}
+        >
           {pos}
         </span>
 
         <div className="min-w-0 flex-1">
-          <p className={`font-sans font-bold text-xs sm:text-base uppercase truncate ${
-            style ? style.text : "text-zinc-300"
-          }`}>
+          <Link
+            to={`/statistiche/${playerSlug(entry.player, entry.jersey_number)}`}
+            className={`font-sans font-bold text-xs sm:text-base uppercase truncate block hover:text-brand-orange transition-colors ${
+              style ? style.text : "text-zinc-300"
+            }`}
+          >
             {entry.player}
-          </p>
+          </Link>
           <p className="font-sans text-[10px] sm:text-xs text-zinc-500 truncate">{entry.team}</p>
         </div>
 
         <span className={`font-mono text-lg sm:text-2xl font-black tabular-nums shrink-0 ${
           style ? style.text : "text-zinc-400"
         }`}>
-          {entry.total_score}
+          {sectionTotal}
         </span>
       </div>
 
-      {/* Dettaglio stazioni — sempre visibile */}
-      {entry.rounds.length > 0 && (
+      {/* Dettaglio stazioni — solo round della sezione corrente */}
+      {visibleRounds.length > 0 && (
         <div className="px-3 sm:px-5 pb-3 sm:pb-4 pt-0 space-y-2 sm:space-y-3">
-          {entry.rounds.map(round => (
+          {visibleRounds.map(round => (
             <div key={round.round_number}>
               <p className="font-display text-[9px] sm:text-[10px] uppercase tracking-widest text-zinc-500 mb-1.5 sm:mb-2">
                 {ROUND_LABELS[round.round_type] ?? round.round_type}
@@ -124,10 +173,20 @@ export function ThreePointContest() {
   const isCompleted = data?.status === "Completed";
   const isLive = data?.status === "Live";
 
-  // Separa qualificazione da finalisti
-  const qualEntries = data?.entries.filter(e => !e.rounds.some(r => r.round_type === "Final" || r.round_type === "TieBreak")) ?? [];
+  // Separa qualificazione da finalisti.
+  // I finalisti restano anche in qualEntries con il solo punteggio di qualificazione.
+  const qualEntries  = data?.entries.filter(e => e.rounds.some(r => r.round_type === "Qualification")) ?? [];
   const finalEntries = data?.entries.filter(e => e.rounds.some(r => r.round_type === "Final" || r.round_type === "TieBreak")) ?? [];
+  // Ordina i finalisti: per final_position se settata, altrimenti per punteggio Final DESC
+  const sortedFinalEntries = [...finalEntries].sort((a, b) => {
+    if (a.final_position !== null && b.final_position !== null) {
+      return a.final_position - b.final_position;
+    }
+    return roundTotal(b, FINAL_TYPES) - roundTotal(a, FINAL_TYPES);
+  });
   const hasFinals = finalEntries.length > 0;
+  // Podio automatico: ≥3 finalisti hanno un punteggio Final > 0
+  const showPodium = sortedFinalEntries.filter(e => roundTotal(e, FINAL_TYPES) > 0).length >= 3;
 
   return (
     <div className="pt-32 pb-20 min-h-screen">
@@ -176,9 +235,9 @@ export function ThreePointContest() {
               </div>
             )}
 
-            {/* Podio (solo se completato con posizioni) */}
-            {isCompleted && data.entries.some(e => e.final_position !== null) && (
-              <Podium entries={data.entries} />
+            {/* Podio (automatico quando ≥3 finalisti hanno punteggio > 0) */}
+            {showPodium && (
+              <Podium entries={sortedFinalEntries} />
             )}
 
             {/* FINALE — separata dalla qualificazione */}
@@ -194,10 +253,9 @@ export function ThreePointContest() {
                     <span className="w-20 text-center">Squadra</span>
                     <span className="w-12 text-center">Punti</span>
                   </div>
-                  {finalEntries
-                    .sort((a, b) => (a.final_position ?? 99) - (b.final_position ?? 99))
+                  {sortedFinalEntries
                     .map((entry, i) => (
-                      <PlayerRow key={entry.player} entry={entry} pos={entry.final_position ?? i + 1} isCompleted={isCompleted} />
+                      <PlayerRow key={entry.player} entry={entry} pos={entry.final_position ?? i + 1} isCompleted={isCompleted} showRoundTypes={FINAL_TYPES} />
                     ))}
                 </div>
               </section>
@@ -216,34 +274,34 @@ export function ThreePointContest() {
                   <span className="w-12 text-center">Punti</span>
                 </div>
                 {(hasFinals ? qualEntries : data.entries)
-                  .sort((a, b) => b.total_score - a.total_score)
+                  .sort((a, b) => roundTotal(b, QUAL_TYPES) - roundTotal(a, QUAL_TYPES))
                   .map((entry, i) => (
-                    <PlayerRow key={entry.player} entry={entry} pos={entry.final_position ?? i + 1} isCompleted={isCompleted} />
+                    <PlayerRow key={entry.player} entry={entry} pos={i + 1} isCompleted={isCompleted} showRoundTypes={QUAL_TYPES} />
                   ))}
               </div>
             </section>
 
             {/* Regole rapide */}
-            <div className="border-[3px] border-dashed border-zinc-700 bg-zinc-900/50 p-6 sm:p-8">
-              <h3 className="font-display text-lg uppercase text-zinc-400 mb-4 flex items-center gap-2">
-                <Target className="w-4 h-4" /> Come funziona
+            <div>
+              <h3 className="font-display text-lg sm:text-2xl uppercase tracking-widest text-zinc-500 mb-6 flex items-center gap-3">
+                <Target className="w-5 h-5 text-brand-orange" /> Come funziona
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm font-sans text-zinc-400">
-                <div className="bg-zinc-950 border border-zinc-800 p-4 text-center">
-                  <p className="font-mono text-3xl text-brand-orange font-black mb-1">5</p>
-                  <p>Postazioni dietro la linea dei 3 punti</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                <div className="bg-zinc-900 border-[4px] border-brand-orange shadow-[6px_6px_0_var(--color-brand-orange)] p-6 sm:p-8 flex flex-col items-center text-center">
+                  <p className="font-display text-6xl sm:text-7xl text-brand-orange font-black leading-none mb-4">5</p>
+                  <p className="font-sans text-zinc-400 text-sm">Postazioni dietro la linea dei 3 punti</p>
                 </div>
-                <div className="bg-zinc-950 border border-zinc-800 p-4 text-center">
-                  <p className="font-mono text-3xl text-brand-yellow font-black mb-1">25</p>
-                  <p>Palloni totali (4 da 1pt + 1 money ball da 2pt)</p>
+                <div className="bg-zinc-900 border-[4px] border-brand-yellow shadow-[6px_6px_0_var(--color-brand-yellow)] p-6 sm:p-8 flex flex-col items-center text-center">
+                  <p className="font-display text-6xl sm:text-7xl text-brand-yellow font-black leading-none mb-4">25</p>
+                  <p className="font-sans text-zinc-400 text-sm">Palloni totali (4 da 1pt + 1 money ball da 2pt)</p>
                 </div>
-                <div className="bg-zinc-950 border border-zinc-800 p-4 text-center">
-                  <p className="font-mono text-3xl text-white font-black mb-1">90"</p>
-                  <p>Secondi per completare il percorso</p>
+                <div className="bg-zinc-900 border-[4px] border-zinc-400 shadow-[6px_6px_0_rgba(161,161,170,0.5)] p-6 sm:p-8 flex flex-col items-center text-center">
+                  <p className="font-display text-6xl sm:text-7xl text-white font-black leading-none mb-4">90"</p>
+                  <p className="font-sans text-zinc-400 text-sm">Secondi per completare il percorso</p>
                 </div>
-                <div className="bg-zinc-950 border border-zinc-800 p-4 text-center">
-                  <p className="font-mono text-3xl text-brand-blue font-black mb-1">3</p>
-                  <p>I migliori vanno in finale. Parità: spareggio da 3 postazioni</p>
+                <div className="bg-zinc-900 border-[4px] border-brand-blue shadow-[6px_6px_0_var(--color-brand-blue)] p-6 sm:p-8 flex flex-col items-center text-center">
+                  <p className="font-display text-6xl sm:text-7xl text-brand-blue font-black leading-none mb-4">3</p>
+                  <p className="font-sans text-zinc-400 text-sm">I migliori vanno in finale. Parità: spareggio da 3 postazioni</p>
                 </div>
               </div>
             </div>
@@ -255,45 +313,92 @@ export function ThreePointContest() {
 }
 
 // ── Podio top 3 ─────────────────────────────────────────────
+// entries deve essere già ordinato per punteggio Final DESC (1°, 2°, 3°)
 function Podium({ entries }: { entries: Entry[] }) {
-  const top3 = entries.filter(e => e.final_position !== null && e.final_position <= 3)
-    .sort((a, b) => a.final_position! - b.final_position!);
+  const top3 = entries.slice(0, 3);
+  if (top3.length < 3) return null;
 
-  if (top3.length === 0) return null;
-
-  const podiumOrder = [top3[1], top3[0], top3[2]].filter(Boolean);
-  const heights = ["h-28 sm:h-36", "h-36 sm:h-48", "h-20 sm:h-28"];
+  // 2°-sinistra, 1°-centro, 3°-destra
+  const config = [
+    {
+      entry: top3[1], pos: 2,
+      blockH: "h-20 sm:h-28 md:h-36",
+      borderColor: "border-zinc-400",
+      bgColor: "bg-zinc-800/60",
+      numColor: "text-zinc-400",
+      nameColor: "text-white",
+      scoreColor: "text-zinc-300",
+      zClass: "-mr-[3px]",
+    },
+    {
+      entry: top3[0], pos: 1,
+      blockH: "h-32 sm:h-44 md:h-56",
+      borderColor: "border-brand-yellow",
+      bgColor: "bg-brand-yellow/10",
+      numColor: "text-brand-yellow",
+      nameColor: "text-brand-yellow",
+      scoreColor: "text-brand-yellow",
+      zClass: "relative z-10",
+    },
+    {
+      entry: top3[2], pos: 3,
+      blockH: "h-14 sm:h-20 md:h-28",
+      borderColor: "border-amber-700",
+      bgColor: "bg-amber-900/20",
+      numColor: "text-amber-700",
+      nameColor: "text-amber-400",
+      scoreColor: "text-amber-500",
+      zClass: "-ml-[3px]",
+    },
+  ];
 
   return (
-    <div className="flex items-end justify-center gap-2 sm:gap-5 mb-8">
-      {podiumOrder.map((entry, i) => {
-        if (!entry) return null;
-        const pos = entry.final_position!;
-        const style = POSITION_STYLES[pos]!;
-        return (
-          <motion.div
-            key={entry.player}
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.15, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className="flex flex-col items-center w-1/3 max-w-[200px]"
-          >
-            <p className={`font-sans font-bold text-[10px] sm:text-sm uppercase text-center mb-1 sm:mb-2 leading-tight break-words ${style.text}`}>
-              {entry.player}
-            </p>
-            <p className="font-sans text-[9px] sm:text-[10px] text-zinc-500 uppercase mb-2 sm:mb-3 truncate max-w-full">{entry.team}</p>
-            <div className={`w-full ${heights[i]} border-[2px] sm:border-[3px] ${style.border} bg-zinc-900 flex flex-col items-center justify-center relative`}>
-              <span className={`font-display text-2xl sm:text-5xl font-black ${style.text}`}>
-                {entry.total_score}
-              </span>
-              <span className="font-display text-[9px] sm:text-xs uppercase tracking-widest text-zinc-500">pts</span>
-              <div className={`absolute -top-3 sm:-top-4 w-6 h-6 sm:w-8 sm:h-8 ${style.badge} flex items-center justify-center font-display text-xs sm:text-sm font-black`}>
-                {pos}
+    <div className="mb-10">
+      {/* Colonne: info + blocco — items-end allinea i blocchi in basso,
+          così i nomi si posizionano naturalmente sopra il proprio blocco */}
+      <div className="flex items-end justify-center">
+        {config.map(({ entry, pos, blockH, borderColor, bgColor, numColor, nameColor, scoreColor, zClass }, i) => {
+          const score = roundTotal(entry, FINAL_TYPES);
+          return (
+            <motion.div
+              key={entry.player}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.12, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+              className={`flex flex-col items-center flex-1 ${zClass}`}
+            >
+              {/* Info giocatore — subito sopra il blocco */}
+              <div className="text-center px-1 pb-2 sm:pb-3 w-full">
+                <p className={`font-display text-[11px] sm:text-base md:text-xl font-black uppercase leading-tight break-words ${nameColor}`}>
+                  {entry.player}
+                </p>
+                <p className="font-sans text-[9px] sm:text-[10px] uppercase tracking-wide text-zinc-500 mt-0.5">
+                  {entry.team}
+                </p>
+                <p className={`font-display text-lg sm:text-3xl md:text-4xl font-black ${scoreColor} mt-0.5 sm:mt-1 leading-none`}>
+                  {score}
+                  <span className="font-sans text-[10px] sm:text-xs text-zinc-500 ml-0.5 sm:ml-1 font-normal">pts</span>
+                </p>
               </div>
-            </div>
-          </motion.div>
-        );
-      })}
+
+              {/* Blocco podio */}
+              <motion.div
+                initial={{ scaleY: 0 }}
+                animate={{ scaleY: 1 }}
+                style={{ originY: 1 }}
+                transition={{ delay: i * 0.12 + 0.15, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                className={`w-full ${blockH} ${bgColor} border-[3px] border-b-0 ${borderColor} flex items-center justify-center`}
+              >
+                <span className={`font-display text-4xl sm:text-6xl md:text-7xl font-black ${numColor} opacity-40 select-none`}>
+                  {pos}
+                </span>
+              </motion.div>
+            </motion.div>
+          );
+        })}
+      </div>
+      {/* Base */}
+      <div className="h-[3px] bg-zinc-700" />
     </div>
   );
 }

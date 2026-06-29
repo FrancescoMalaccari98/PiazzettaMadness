@@ -25,9 +25,13 @@ function SponsorCard({ sponsor }: { sponsor: Sponsor }) {
   const hasIg = !!sponsor.ig;
   const hasLinks = hasSito || hasIg;
 
-  const Wrapper = hasSito ? "a" : "div";
-  const wrapperProps = hasSito ? {
-    href: sponsor.sito,
+  const igUrl = sponsor.ig.startsWith("http") ? sponsor.ig : `https://instagram.com/${sponsor.ig}`;
+  const clickHref = hasSito ? sponsor.sito : (hasIg ? igUrl : "");
+  const hasClick = hasSito || hasIg;
+
+  const Wrapper = hasClick ? "a" : "div";
+  const wrapperProps = hasClick ? {
+    href: clickHref,
     target: "_blank" as const,
     rel: "noreferrer",
   } : {};
@@ -46,7 +50,7 @@ function SponsorCard({ sponsor }: { sponsor: Sponsor }) {
           className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
           loading="lazy"
         />
-        {hasSito && (
+        {hasClick && (
           <ExternalLink className="absolute top-3 right-3 w-4 h-4 text-brand-orange opacity-0 group-hover:opacity-100 transition-opacity" />
         )}
       </Wrapper>

@@ -46,10 +46,13 @@ function handle_three_point_contest(PDO $pdo): void {
             p.first_name,
             p.last_name,
             t.name          AS team_name,
-            t.short_name    AS team_short
+            t.short_name    AS team_short,
+            t.primary_color AS team_color,
+            tr.jersey_number
         FROM three_point_contest_entries e
         JOIN players p ON p.id = e.player_id
         JOIN teams   t ON t.id = e.team_id
+        LEFT JOIN team_rosters tr ON tr.player_id = e.player_id AND tr.team_id = e.team_id AND tr.is_active = 1
         WHERE e.competition_event_id = ?
         ORDER BY
             CASE WHEN e.final_position IS NOT NULL THEN 0 ELSE 1 END,
@@ -106,6 +109,8 @@ function handle_three_point_contest(PDO $pdo): void {
         $eid_e = (int)$e['entry_id'];
         $entries[] = [
             'player'         => trim($e['first_name'] . ' ' . $e['last_name']),
+            'jersey_number'  => $e['jersey_number'] !== null ? (int)$e['jersey_number'] : null,
+            'team_color'     => $e['team_color'] ?? null,
             'team'           => $e['team_name'],
             'team_short'     => $e['team_short'],
             'seed_order'     => $e['seed_order'] !== null ? (int)$e['seed_order'] : null,

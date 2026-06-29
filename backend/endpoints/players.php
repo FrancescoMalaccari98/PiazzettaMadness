@@ -9,7 +9,7 @@
 
 // ── Query condivisa: aggregati + medie per giocatore ────────
 
-function fetch_players_with_stats(PDO $pdo, int $edition_id): array {
+function fetch_players_with_stats(PDO $pdo, int $edition_id, bool $only_with_stats = false): array {
     $sql = "
         SELECT
             p.id AS player_id,
@@ -83,10 +83,11 @@ function fetch_players_with_stats(PDO $pdo, int $edition_id): array {
             ON stats.player_id = tr.player_id
            AND stats.team_id = tr.team_id
         WHERE tr.is_active = 1
+          AND (NOT ? OR COALESCE(stats.games_played, 0) > 0)
         ORDER BY total_points DESC, p.last_name, p.first_name
     ";
     $stmt = $pdo->prepare($sql);
-    $stmt->execute([$edition_id, $edition_id]);
+    $stmt->execute([$edition_id, $edition_id, $only_with_stats ? 1 : 0]);
     return $stmt->fetchAll();
 }
 

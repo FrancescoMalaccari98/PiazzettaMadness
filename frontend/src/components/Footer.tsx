@@ -74,7 +74,7 @@ export function Footer() {
                 className="inline-flex items-center gap-2 border-[3px] border-brand-bg text-brand-bg px-4 py-2.5 md:px-5 md:py-3 font-display uppercase text-xs md:text-sm tracking-widest hover:bg-brand-bg hover:text-white transition-colors"
               >
                 <MailIcon />
-                Scrivici
+                Contattaci
               </a>
             </div>
           </div>

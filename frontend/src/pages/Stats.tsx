@@ -54,6 +54,7 @@ export function Stats() {
     [...allPlayers].sort((a, b) => b[key] - a[key]).slice(0, n);
 
   const hasPlayers = allPlayers.length > 0;
+  const hasData    = hasPlayers || matchMvps.length > 0 || data.teamStats.length > 0;
   const tournamentMvp = hasPlayers ? (allPlayers.find(p => p.slug === tournamentMvpSlug) ?? allPlayers[0]) : null;
   const topScorer  = hasPlayers ? topLeader("pts", 1)[0] : null;
   const topAssist  = hasPlayers ? topLeader("ast", 1)[0] : null;
@@ -169,8 +170,29 @@ export function Stats() {
         </motion.section>
         )}
 
+        {/* — EMPTY STATE — */}
+        {!hasData && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            className="border-[3px] border-zinc-800 bg-zinc-900 py-20 px-8 text-center"
+          >
+            <BarChart2 className="w-14 h-14 text-zinc-700 mx-auto mb-6" />
+            <h2 className="font-display text-2xl sm:text-3xl uppercase tracking-widest text-zinc-400 mb-6">
+              Statistiche non ancora disponibili
+            </h2>
+            <Link
+              to="/match"
+              className="inline-block px-8 py-4 border-[3px] border-zinc-600 text-zinc-400 font-display uppercase tracking-widest text-sm hover:border-brand-orange hover:text-brand-orange transition-colors"
+            >
+              Vedi il Calendario
+            </Link>
+          </motion.div>
+        )}
+
         {/* — MVP PER PARTITA — */}
-        <section className="mb-16">
+        {hasData && <section className="mb-16">
           <h2 className="font-display text-lg sm:text-2xl uppercase tracking-widest text-zinc-500 mb-6 flex items-center gap-3">
             <Flame className="w-5 h-5 text-brand-orange" /> MVP per Partita
           </h2>
@@ -198,10 +220,10 @@ export function Stats() {
               </div>
             ))}
           </div>
-        </section>
+        </section>}
 
         {/* — CLASSIFICHE INDIVIDUALI — */}
-        <section className="mb-16">
+        {hasData && <section className="mb-16">
           <h2 className="font-display text-lg sm:text-2xl uppercase tracking-widest text-zinc-500 mb-6 flex items-center gap-3">
             <Trophy className="w-5 h-5 text-brand-blue" /> Classifiche Individuali
           </h2>
@@ -274,7 +296,7 @@ export function Stats() {
             </motion.div>
             </AnimatePresence>
           </div>
-        </section>
+        </section>}
 
 
         {/* — STATISTICHE DI SQUADRA (medie per partita) — */}
@@ -329,7 +351,7 @@ export function Stats() {
         )}
 
         {/* — ROSTER PER SQUADRA — */}
-        <section>
+        {hasData && <section>
           <h2 className="font-display text-lg sm:text-2xl uppercase tracking-widest text-zinc-500 mb-6 flex items-center gap-3">
             <Shield className="w-5 h-5 text-brand-yellow" /> Roster per Squadra
           </h2>
@@ -410,7 +432,7 @@ export function Stats() {
               );
             })}
           </div>
-        </section>
+        </section>}
 
       </div>
     </div>

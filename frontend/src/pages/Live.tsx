@@ -42,6 +42,14 @@ const POLL_IDLE_MS = 15000;
 
 const FOUL_LIMIT = 5; // personal_foul_limit di default nel db
 
+const PERIOD_LABELS: Record<number, string> = {
+  1: "Tempo 1",
+  2: "Tempo 2",
+  3: "Overtime",
+  4: "Intervallo",
+  5: "Riscaldamento",
+};
+
 // Classi statiche per accento squadra (Tailwind non rileva classi dinamiche).
 const ACCENTS = {
   blue:   { bar: "bg-brand-blue",   text: "text-brand-blue",   border: "border-brand-blue" },
@@ -182,14 +190,13 @@ function LiveBoard({ data, clock, running, period }: { data: LiveData; clock: st
           {/* CENTRO: periodo + tempo */}
           <div className="flex flex-col items-center justify-center px-1 sm:px-4 min-w-[80px] sm:min-w-[140px]">
             <div className="font-display uppercase text-zinc-500 text-[10px] sm:text-sm tracking-widest mb-1">
-              {(period ?? data.period) ? `${period ?? data.period}° Tempo` : "—"}
+              {PERIOD_LABELS[period ?? data.period ?? 0] ?? "—"}
             </div>
             <div className={`font-mono font-black tabular-nums text-2xl sm:text-5xl leading-none ${
               running ? "text-brand-yellow" : "text-zinc-400"
             }`}>
               {clock}
             </div>
-            <div className="font-display text-zinc-700 text-lg sm:text-3xl mt-2">VS</div>
           </div>
 
           {/* AWAY */}

@@ -164,7 +164,7 @@ export function Staff() {
               <Users2 className="w-16 h-16 text-brand-orange mx-auto mb-6" />
               <h2 className="font-display text-4xl uppercase mb-4">Vuoi unirti a noi?</h2>
               <p className="font-sans text-zinc-400 text-lg mb-8 max-w-2xl mx-auto">
-                Siamo sempre alla ricerca di volontari, arbitri e collaboratori per far crescere il torneo. Scrivici!
+                Siamo sempre alla ricerca di volontari, arbitri e collaboratori per far crescere il torneo. Contattaci!
               </p>
               <a
                 href="mailto:info@piazzettamadness.it"

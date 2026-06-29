@@ -24,8 +24,8 @@ function handle_statistiche_compat(PDO $pdo): void {
         return;
     }
 
-    // ── 1. Giocatori con medie ──────────────────────────────
-    $rows    = fetch_players_with_stats($pdo, $eid);
+    // ── 1. Giocatori con medie (solo chi ha almeno una partita) ──
+    $rows    = fetch_players_with_stats($pdo, $eid, true);
     $players = array_map('row_to_player', $rows);
 
     // ── 2. MVP del torneo ───────────────────────────────────

@@ -9,9 +9,10 @@ function handle_sponsors(PDO $pdo): void {
     require_method('GET');
 
     $stmt = $pdo->query("
-        SELECT id, filename, nome, sito, instagram
-        FROM sponsor_links
-        ORDER BY id ASC
+        SELECT id, filename, name, sito, instagram
+        FROM sponsors
+        WHERE is_active = 1
+        ORDER BY sort_order ASC, id ASC
     ");
     $rows = $stmt->fetchAll();
 
@@ -20,7 +21,7 @@ function handle_sponsors(PDO $pdo): void {
         if (!$r['filename']) continue;
         $result[] = [
             'id'   => (int)$r['id'],
-            'nome' => $r['nome'] ?? '',
+            'nome' => $r['name'] ?? '',
             'logo' => '/img/sponsor/' . $r['filename'],
             'sito' => $r['sito'] ?? '',
             'ig'   => $r['instagram'] ?? '',
