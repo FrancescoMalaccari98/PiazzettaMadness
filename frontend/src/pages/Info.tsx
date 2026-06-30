@@ -58,7 +58,7 @@ export function Info() {
                 Tutto qui. Ma è tutto quello che serve.
               </p>
               <p>
-                Siamo un gruppo di amici che ha deciso di organizzare qualcosa per restituire un po' di quello che questo posto ci dà ogni giorno. Non ci interessa guadagnarci, ci interessa esserci, fare la nostra parte, non stare con le mani in mano e spenderci per creare qualcosa di bello a casa nostra.
+                Siamo un gruppo di amici che ha deciso di organizzare qualcosa per restituire un po' di quello che questo posto ci dà ogni giorno. Non lo facciamo per guadagno ma perché vogliamo esserci, fare la nostra parte, non stare con le mani in mano e creare qualcosa di bello a casa nostra.
               </p>
             </div>
           </section>
