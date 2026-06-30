@@ -19,6 +19,7 @@ function fetch_players_with_stats(PDO $pdo, int $edition_id, bool $only_with_sta
 
             t.id AS team_id,
             t.name AS team_name,
+            t.primary_color AS team_color,
 
             tr.jersey_number,
             tr.is_captain,
@@ -98,6 +99,7 @@ function row_to_player(array $r): array {
         'slug'       => player_slug($r['first_name'], $r['last_name'], $r['jersey_number'] ?? null),
         'name'       => trim($r['first_name'] . ' ' . $r['last_name']),
         'team'       => $r['team_name'],
+        'teamColor'  => $r['team_color'] ?? null,
         'number'     => $r['jersey_number'] !== null ? (int)$r['jersey_number'] : null,
         'photo'      => $r['photo_path'] ? ('/img/giocatori/' . $r['photo_path']) : null,
         'pts'        => avg((int)$r['total_points'],    $gp),

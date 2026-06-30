@@ -11,6 +11,7 @@ export type Player = {
   slug: string;
   name: string;
   team: string;
+  teamColor?: string | null;
   number?: number;
   photo?: string;
   // medie per partita — calcolate dal backend dai tabellini FIBA

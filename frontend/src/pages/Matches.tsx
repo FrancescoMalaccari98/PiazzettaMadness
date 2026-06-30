@@ -26,7 +26,7 @@ function TeamLink({ name, className = "" }: { name: string; className?: string }
   );
 }
 
-type TeamScore = { name: string; score: number };
+type TeamScore = { name: string; score: number; color?: string | null };
 type Match = {
   id: string;
   round: string;
@@ -270,16 +270,16 @@ function StandingsTable({ group }: { group: Group }) {
   const rows = computeStandings(group.teams, group.matches);
 
   return (
-    <table className="w-full text-sm">
+    <table className="w-full text-sm table-fixed">
       <thead>
         <tr className={`border-b-2 ${group.borderClass} border-opacity-30`}>
           <th className="text-left pb-3 pr-1.5 sm:pr-3 font-display text-xs uppercase tracking-widest text-zinc-500 w-6 sm:w-8">#</th>
           <th className="text-left pb-3 font-display text-xs uppercase tracking-widest text-zinc-500">Squadra</th>
-          <th className="text-center pb-3 px-1.5 sm:px-3 font-display text-xs uppercase tracking-widest text-zinc-500">G</th>
-          <th className="text-center pb-3 px-1.5 sm:px-3 font-display text-xs uppercase tracking-widest text-zinc-500">V</th>
-          <th className="text-center pb-3 px-1.5 sm:px-3 font-display text-xs uppercase tracking-widest text-zinc-500">P</th>
-          <th className="text-center pb-3 px-1.5 sm:px-3 font-display text-xs uppercase tracking-widest text-brand-orange">PT</th>
-          <th className="text-center pb-3 pl-1.5 sm:pl-3 font-display text-xs uppercase tracking-widest text-zinc-500">+/-</th>
+          <th className="text-center pb-3 px-1 sm:px-3 font-display text-xs uppercase tracking-widest text-zinc-500 w-6 sm:w-9">G</th>
+          <th className="text-center pb-3 px-1 sm:px-3 font-display text-xs uppercase tracking-widest text-zinc-500 w-6 sm:w-9">V</th>
+          <th className="text-center pb-3 px-1 sm:px-3 font-display text-xs uppercase tracking-widest text-zinc-500 w-6 sm:w-9">P</th>
+          <th className="text-center pb-3 px-1 sm:px-3 font-display text-xs uppercase tracking-widest text-brand-orange w-7 sm:w-10">PT</th>
+          <th className="text-center pb-3 pl-1 sm:pl-3 font-display text-xs uppercase tracking-widest text-zinc-500 w-9 sm:w-12">+/-</th>
         </tr>
       </thead>
       <tbody>
@@ -297,12 +297,12 @@ function StandingsTable({ group }: { group: Group }) {
                   {i + 1}
                 </div>
               </td>
-              <td className="py-3">
-                <div className="flex items-center gap-2">
+              <td className="py-3 pr-1 min-w-0">
+                <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
                   {qualifies && (
                     <span className={`w-1 h-4 ${group.borderClass} bg-current ${group.accentClass} opacity-60 shrink-0`} />
                   )}
-                  <TeamLink name={row.name} className={`font-sans font-bold text-sm uppercase truncate ${i === 0 ? "text-white" : "text-zinc-300"}`} />
+                  <TeamLink name={row.name} className={`font-sans font-bold text-sm uppercase truncate min-w-0 flex-1 block ${i === 0 ? "text-white" : "text-zinc-300"}`} />
                   {qualifies && (
                     <span className={`font-display text-[9px] uppercase tracking-widest ${group.accentClass} border ${group.borderClass} px-1 shrink-0 opacity-70`}>
                       Q
@@ -329,13 +329,16 @@ function StandingsTable({ group }: { group: Group }) {
 
 // Riga partita a due righe (una per squadra): i nomi reali dal backend
 // restano sempre leggibili anche su mobile in verticale.
-function TeamScoreLine({ name, score, win, pending, accent = "text-brand-orange" }: {
-  name: string; score: number; win: boolean; pending: boolean; accent?: string;
+function TeamScoreLine({ name, score, win, pending, accent = "text-brand-orange", color }: {
+  name: string; score: number; win: boolean; pending: boolean; accent?: string; color?: string | null;
 }) {
   return (
     <div className="flex items-center justify-between gap-2">
-      <TeamLink name={name} className={`font-sans font-bold text-xs sm:text-sm uppercase truncate
-        ${win ? "text-white" : pending ? "text-zinc-400" : "text-zinc-500"}`} />
+      <div className="flex items-center gap-1.5 min-w-0">
+        {color && <span className="w-2 h-2 shrink-0 rounded-sm" style={{ backgroundColor: color }} />}
+        <TeamLink name={name} className={`font-sans font-bold text-xs sm:text-sm uppercase truncate
+          ${win ? "text-white" : pending ? "text-zinc-400" : "text-zinc-500"}`} />
+      </div>
       <span className={`font-mono text-base sm:text-lg font-bold shrink-0 tabular-nums w-7 text-right
         ${win ? accent : pending ? "text-zinc-600" : "text-zinc-500"}`}>
         {pending ? "—" : score}
@@ -361,8 +364,8 @@ function GroupMatchRow({ match, onClick }: { match: Match; onClick: () => void }
 
       {/* Squadre impilate con punteggio allineato a destra */}
       <div className="flex-1 min-w-0 flex flex-col gap-1.5 border-l border-zinc-800 pl-3">
-        <TeamScoreLine name={match.team1.name} score={match.team1.score} win={t1Wins} pending={isPending} />
-        <TeamScoreLine name={match.team2.name} score={match.team2.score} win={t2Wins} pending={isPending} />
+        <TeamScoreLine name={match.team1.name} score={match.team1.score} win={t1Wins} pending={isPending} color={match.team1.color} />
+        <TeamScoreLine name={match.team2.name} score={match.team2.score} win={t2Wins} pending={isPending} color={match.team2.color} />
       </div>
 
       {/* Status */}
@@ -399,11 +402,17 @@ function PlayoffCard({ match, isFinal = false, onClick }: { match: Match; isFina
       </div>
       <div className="p-4 flex flex-col gap-3">
         <div className={`flex justify-between items-center ${!isPending && match.team1.score > match.team2.score ? "text-white" : "text-zinc-500"}`}>
-          <TeamLink name={match.team1.name} className="font-sans font-[900] tracking-tight text-sm uppercase truncate max-w-[150px]" />
+          <div className="flex items-center gap-1.5 min-w-0 max-w-[150px]">
+            {match.team1.color && <span className="w-2 h-2 shrink-0 rounded-sm" style={{ backgroundColor: match.team1.color }} />}
+            <TeamLink name={match.team1.name} className="font-sans font-[900] tracking-tight text-sm uppercase truncate block" />
+          </div>
           <span className="font-mono text-2xl font-bold">{isPending ? "—" : match.team1.score}</span>
         </div>
         <div className={`flex justify-between items-center ${!isPending && match.team2.score > match.team1.score ? "text-white" : "text-zinc-500"}`}>
-          <TeamLink name={match.team2.name} className="font-sans font-[900] tracking-tight text-sm uppercase truncate max-w-[150px]" />
+          <div className="flex items-center gap-1.5 min-w-0 max-w-[150px]">
+            {match.team2.color && <span className="w-2 h-2 shrink-0 rounded-sm" style={{ backgroundColor: match.team2.color }} />}
+            <TeamLink name={match.team2.name} className="font-sans font-[900] tracking-tight text-sm uppercase truncate block" />
+          </div>
           <span className="font-mono text-2xl font-bold">{isPending ? "—" : match.team2.score}</span>
         </div>
       </div>
@@ -528,15 +537,22 @@ export function Matches() {
       }
     }
 
-    // 2. Quando le semis sono complete → popola la finale 3°-4° con i perdenti
+    // 2. Quando le semis sono complete → popola 3°-4° posto (perdenti) e finale (vincitori)
     const semisComplete = bracketMatches.semis.every(s => s.status === "COMPLETA");
     if (semisComplete) {
       const loser = (s: typeof bracketMatches.semis[0]) =>
         s.team1.score < s.team2.score ? s.team1.name : s.team2.name;
+      const winner = (s: typeof bracketMatches.semis[0]) =>
+        s.team1.score > s.team2.score ? s.team1.name : s.team2.name;
       result.third = {
         ...result.third,
         team1: { ...result.third.team1, name: resolve(result.third.team1.name, loser(bracketMatches.semis[0])) },
         team2: { ...result.third.team2, name: resolve(result.third.team2.name, loser(bracketMatches.semis[1])) },
+      };
+      result.final = {
+        ...result.final,
+        team1: { ...result.final.team1, name: resolve(result.final.team1.name, winner(bracketMatches.semis[0])) },
+        team2: { ...result.final.team2, name: resolve(result.final.team2.name, winner(bracketMatches.semis[1])) },
       };
     }
 
@@ -634,8 +650,8 @@ export function Matches() {
 
                     {/* Squadre impilate */}
                     <div className="flex-1 min-w-0 flex flex-col gap-1.5 border-l border-zinc-800 pl-3">
-                      <TeamScoreLine name={match.team1.name} score={match.team1.score} win={t1Wins} pending={isPending} />
-                      <TeamScoreLine name={match.team2.name} score={match.team2.score} win={t2Wins} pending={isPending} />
+                      <TeamScoreLine name={match.team1.name} score={match.team1.score} win={t1Wins} pending={isPending} color={match.team1.color} />
+                      <TeamScoreLine name={match.team2.name} score={match.team2.score} win={t2Wins} pending={isPending} color={match.team2.color} />
                     </div>
 
                     {/* Status badge */}
@@ -752,37 +768,6 @@ export function Matches() {
             </div>
           </div>
 
-          {/* Finale 3°-4° Posto */}
-          <div className="mt-6 border-[3px] border-zinc-700 bg-zinc-900 overflow-hidden">
-            <div className="px-5 py-3 bg-zinc-950 border-b-2 border-zinc-700 flex items-center justify-between">
-              <span className="font-display text-sm uppercase tracking-widest text-zinc-400">Finale 3°-4° Posto</span>
-              <span className="font-display text-[10px] uppercase tracking-widest text-zinc-600">{displayBracket.third.date}</span>
-            </div>
-            <div
-              onClick={() => handleSelectMatch(displayBracket.third)}
-              className="flex items-center gap-3 px-4 sm:px-6 py-4 cursor-pointer hover:bg-zinc-800/30 transition-colors"
-            >
-              <div className="flex-1 min-w-0 flex flex-col gap-2">
-                <TeamScoreLine
-                  name={displayBracket.third.team1.name}
-                  score={displayBracket.third.team1.score}
-                  win={displayBracket.third.status === "COMPLETA" && displayBracket.third.team1.score > displayBracket.third.team2.score}
-                  pending={displayBracket.third.status !== "COMPLETA"}
-                  accent="text-white"
-                />
-                <TeamScoreLine
-                  name={displayBracket.third.team2.name}
-                  score={displayBracket.third.team2.score}
-                  win={displayBracket.third.status === "COMPLETA" && displayBracket.third.team2.score > displayBracket.third.team1.score}
-                  pending={displayBracket.third.status !== "COMPLETA"}
-                  accent="text-white"
-                />
-              </div>
-              {displayBracket.third.status === "COMPLETA" && (
-                <span className="font-display text-[9px] uppercase tracking-widest text-zinc-600 shrink-0">Tabellino →</span>
-              )}
-            </div>
-          </div>
         </div>
         </div>
 

@@ -25,6 +25,7 @@ export function Players() {
   }, [teamParam]);
 
   const teams = [...new Set(players.map(p => p.team))];
+  const teamColorMap = new Map(players.map(p => [p.team, p.teamColor || "#ea6324"]));
 
   const grouped = activeTeam === "all"
     ? teams.map(team => ({ team, players: players.filter(p => p.team === team) }))
@@ -65,24 +66,32 @@ export function Players() {
           >
             Tutte
           </button>
-          {teams.map(team => (
-            <button
-              key={team}
-              onClick={() => setActiveTeam(team)}
-              className={`font-display text-xs uppercase tracking-widest px-4 py-2 border-2 transition-all bg-transparent
-                ${activeTeam === team ? "border-brand-orange bg-brand-orange/10 text-brand-orange" : "border-zinc-700 text-zinc-500 hover:border-zinc-500 hover:text-zinc-300"}`}
-            >
-              {team}
-            </button>
-          ))}
+          {teams.map(team => {
+            const color = teamColorMap.get(team) ?? "#ea6324";
+            const active = activeTeam === team;
+            return (
+              <button
+                key={team}
+                onClick={() => setActiveTeam(team)}
+                className={`font-display text-xs uppercase tracking-widest px-4 py-2 border-2 transition-all ${active ? "text-white" : "text-zinc-500"}`}
+                style={active
+                  ? { borderColor: color, backgroundColor: `${color}26` }
+                  : { borderColor: "#3f3f46", backgroundColor: "transparent" }}
+              >
+                {team}
+              </button>
+            );
+          })}
         </div>
 
         {/* Griglia giocatori */}
         <div className="space-y-14">
-          {grouped.map(({ team, players: roster }) => (
+          {grouped.map(({ team, players: roster }) => {
+            const teamColor = roster[0]?.teamColor || "#ea6324"; // fallback brand-orange
+            return (
             <div key={team}>
               <div className="flex items-center gap-4 mb-6">
-                <span className="w-2 h-6 bg-brand-orange shrink-0" />
+                <span className="w-2 h-6 shrink-0" style={{ backgroundColor: teamColor }} />
                 <h2 className="font-display text-xl md:text-2xl uppercase tracking-wide text-white">{team}</h2>
                 <div className="flex-1 h-px bg-zinc-800" />
                 <span className="font-display text-xs uppercase tracking-widest text-zinc-600">{roster.length} giocatori</span>
@@ -99,7 +108,15 @@ export function Players() {
                   >
                   <Link
                     to={`/statistiche/${player.slug}`}
-                    className="block group border-[3px] border-zinc-800 bg-zinc-900 hover:border-brand-orange transition-all hover:-translate-y-1 hover:shadow-[6px_6px_0_var(--color-brand-orange)] overflow-hidden"
+                    className="block group border-[3px] border-zinc-800 bg-zinc-900 transition-all hover:-translate-y-1 overflow-hidden"
+                    onMouseEnter={e => {
+                      e.currentTarget.style.borderColor = teamColor;
+                      e.currentTarget.style.boxShadow = `6px 6px 0 ${teamColor}`;
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.borderColor = "";
+                      e.currentTarget.style.boxShadow = "";
+                    }}
                   >
                     {/* Foto o placeholder */}
                     <div className="aspect-square bg-zinc-800 relative overflow-hidden">
@@ -115,7 +132,7 @@ export function Players() {
                             {player.name.split(" ").filter(Boolean).map(n => n[0]).join("").slice(0, 2)}
                           </span>
                           {player.number && (
-                            <span className="font-display text-xs text-zinc-700 group-hover:text-brand-orange transition-colors mt-1">
+                            <span className="font-display text-xs text-zinc-700 group-hover:text-zinc-400 transition-colors mt-1">
                               #{player.number}
                             </span>
                           )}
@@ -125,9 +142,12 @@ export function Players() {
 
                     {/* Info */}
                     <div className="p-3">
-                      <p className="font-sans font-bold text-sm uppercase text-white leading-tight group-hover:text-brand-orange transition-colors truncate">
-                        {player.name}
-                      </p>
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="w-2 h-2 shrink-0 rounded-sm" style={{ backgroundColor: teamColor }} />
+                        <p className="font-sans font-bold text-sm uppercase text-white leading-tight truncate">
+                          {player.name}
+                        </p>
+                      </div>
                       <p className="font-sans text-xs text-zinc-500 truncate mt-0.5 mb-3">{player.team}</p>
 
                       {/* Stats */}
@@ -150,7 +170,8 @@ export function Players() {
                 ))}
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
 
       </div>

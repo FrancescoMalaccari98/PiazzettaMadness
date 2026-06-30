@@ -97,7 +97,9 @@ function handle_partite_compat(PDO $pdo): void {
             mt_h.score           AS final_home_score,
             mt_a.score           AS final_away_score,
             ht.name              AS home_name,
+            ht.primary_color     AS home_color,
             at.name              AS away_name,
+            at.primary_color     AS away_color,
             tg.code              AS group_code
         FROM matches m
         JOIN match_teams mt_h ON mt_h.match_id = m.id AND mt_h.side = 'Home'
@@ -142,10 +144,12 @@ function handle_partite_compat(PDO $pdo): void {
             'status' => $status,
             'team1'  => [
                 'name'  => $r['home_name'],
+                'color' => $r['home_color'] ?? null,
                 'score' => $isPending ? 0 : (int)($r['final_home_score'] ?? 0),
             ],
             'team2'  => [
                 'name'  => $r['away_name'],
+                'color' => $r['away_color'] ?? null,
                 'score' => $isPending ? 0 : (int)($r['final_away_score'] ?? 0),
             ],
             'details' => [

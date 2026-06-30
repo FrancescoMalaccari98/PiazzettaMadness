@@ -280,32 +280,41 @@ export function ThreePointContest() {
               </div>
             </section>
 
-            {/* Regole rapide */}
-            <div>
-              <h3 className="font-display text-lg sm:text-2xl uppercase tracking-widest text-zinc-500 mb-6 flex items-center gap-3">
-                <Target className="w-5 h-5 text-brand-orange" /> Come funziona
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                <div className="bg-zinc-900 border-[4px] border-brand-orange shadow-[6px_6px_0_var(--color-brand-orange)] p-6 sm:p-8 flex flex-col items-center text-center">
-                  <p className="font-display text-6xl sm:text-7xl text-brand-orange font-black leading-none mb-4">5</p>
-                  <p className="font-sans text-zinc-400 text-sm">Postazioni dietro la linea dei 3 punti</p>
-                </div>
-                <div className="bg-zinc-900 border-[4px] border-brand-yellow shadow-[6px_6px_0_var(--color-brand-yellow)] p-6 sm:p-8 flex flex-col items-center text-center">
-                  <p className="font-display text-6xl sm:text-7xl text-brand-yellow font-black leading-none mb-4">25</p>
-                  <p className="font-sans text-zinc-400 text-sm">Palloni totali (4 da 1pt + 1 money ball da 2pt)</p>
-                </div>
-                <div className="bg-zinc-900 border-[4px] border-zinc-400 shadow-[6px_6px_0_rgba(161,161,170,0.5)] p-6 sm:p-8 flex flex-col items-center text-center">
-                  <p className="font-display text-6xl sm:text-7xl text-white font-black leading-none mb-4">90"</p>
-                  <p className="font-sans text-zinc-400 text-sm">Secondi per completare il percorso</p>
-                </div>
-                <div className="bg-zinc-900 border-[4px] border-brand-blue shadow-[6px_6px_0_var(--color-brand-blue)] p-6 sm:p-8 flex flex-col items-center text-center">
-                  <p className="font-display text-6xl sm:text-7xl text-brand-blue font-black leading-none mb-4">3</p>
-                  <p className="font-sans text-zinc-400 text-sm">I migliori vanno in finale. Parità: spareggio da 3 postazioni</p>
-                </div>
-              </div>
-            </div>
+            <RulesSection />
           </div>
         )}
+
+        {/* Quando non ci sono iscritti, mostra comunque le regole rapide */}
+        {!loading && !hasEntries && <RulesSection />}
+      </div>
+    </div>
+  );
+}
+
+// ── Regole rapide — sempre visibili, anche senza dati ────────
+function RulesSection() {
+  return (
+    <div className="mt-10">
+      <h3 className="font-display text-lg sm:text-2xl uppercase tracking-widest text-zinc-500 mb-6 flex items-center gap-3">
+        <Target className="w-5 h-5 text-brand-orange" /> Come funziona
+      </h3>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="bg-zinc-900 border-[4px] border-brand-orange shadow-[6px_6px_0_var(--color-brand-orange)] p-6 sm:p-8 flex flex-col items-center text-center">
+          <p className="font-display text-6xl sm:text-7xl text-brand-orange font-black leading-none mb-4">5</p>
+          <p className="font-sans text-zinc-400 text-sm">Postazioni dietro la linea dei 3 punti</p>
+        </div>
+        <div className="bg-zinc-900 border-[4px] border-brand-yellow shadow-[6px_6px_0_var(--color-brand-yellow)] p-6 sm:p-8 flex flex-col items-center text-center">
+          <p className="font-display text-6xl sm:text-7xl text-brand-yellow font-black leading-none mb-4">25</p>
+          <p className="font-sans text-zinc-400 text-sm">Palloni totali (4 da 1pt + 1 money ball da 2pt)</p>
+        </div>
+        <div className="bg-zinc-900 border-[4px] border-zinc-400 shadow-[6px_6px_0_rgba(161,161,170,0.5)] p-6 sm:p-8 flex flex-col items-center text-center">
+          <p className="font-display text-6xl sm:text-7xl text-white font-black leading-none mb-4">90"</p>
+          <p className="font-sans text-zinc-400 text-sm">Secondi per completare il percorso</p>
+        </div>
+        <div className="bg-zinc-900 border-[4px] border-brand-blue shadow-[6px_6px_0_var(--color-brand-blue)] p-6 sm:p-8 flex flex-col items-center text-center">
+          <p className="font-display text-6xl sm:text-7xl text-brand-blue font-black leading-none mb-4">3</p>
+          <p className="font-sans text-zinc-400 text-sm">I migliori vanno in finale. Parità: spareggio da 3 postazioni</p>
+        </div>
       </div>
     </div>
   );
@@ -406,7 +415,7 @@ function Podium({ entries }: { entries: Entry[] }) {
 // ── Campetto SVG sfondo ─────────────────────────────────────
 function EmptyState({ message, scheduledAt }: { message?: string; scheduledAt?: string }) {
   return (
-    <div className="border-[3px] border-dashed border-zinc-700 bg-zinc-900/50 p-10 sm:p-16 text-center max-w-2xl mx-auto">
+    <div className="bg-zinc-900 border-[4px] border-zinc-400 shadow-[6px_6px_0_rgba(161,161,170,0.5)] p-10 sm:p-16 text-center max-w-2xl mx-auto">
       <img src="/assets/logo.png" alt="" className="w-16 h-16 mx-auto mb-6 opacity-30" />
       <h2 className="font-display text-3xl sm:text-4xl uppercase text-white mb-3">
         3 Point Contest
