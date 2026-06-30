@@ -383,7 +383,7 @@ export function Home() {
             </h2>
             <div className="w-24 h-2 bg-brand-orange mb-8 transform -rotate-2"></div>
             <p className="font-sans font-light text-lg md:text-xl max-w-lg mb-10 text-zinc-300">
-              Piazzetta Madness è rispetto, competizione e sudore. Se non hai grinta, questa non è la tua casa. Raduna la tua crew e preparati alla battaglia.
+              Piazzetta Madness è rispetto, competizione e sudore.<br />Se non hai grinta, questa non è la tua casa.<br />Raduna la tua crew e preparati alla battaglia.
             </p>
             <Link 
               to="/foto" 
