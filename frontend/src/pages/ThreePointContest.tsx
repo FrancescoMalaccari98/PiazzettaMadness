@@ -421,14 +421,11 @@ function EmptyState({ message, scheduledAt }: { message?: string; scheduledAt?: 
         3 Point Contest
       </h2>
       <p className="font-sans text-zinc-400 text-base sm:text-lg mb-2">
-        {message ?? "La gara del tiro da 3 punti non è ancora iniziata."}
+        3 Point Contest in programma sabato 11 alle 21:30.
       </p>
       {scheduledAt && (
         <p className="font-mono text-brand-orange text-lg mt-4">{scheduledAt}</p>
       )}
-      <p className="font-sans text-zinc-500 text-sm mt-6">
-        3 Point Contest in programma sabato 11 alle 21:30.
-      </p>
     </div>
   );
 }
