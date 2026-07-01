@@ -415,7 +415,7 @@ function GroupMatchRow({ match, onClick }: { match: Match; onClick: () => void }
 
 // — Match card (playoff) —
 
-function PlayoffCard({ match, isFinal = false, onClick }: { match: Match; isFinal?: boolean; onClick?: () => void }) {
+function PlayoffCard({ match, isFinal = false, small = false, onClick }: { match: Match; isFinal?: boolean; small?: boolean; onClick?: () => void }) {
   const isLive = match.status === "LIVE";
   const isPending = match.status === "IN PROGRAMMA";
   const borderColor = isFinal ? "border-brand-yellow" : isLive ? "border-brand-orange" : isPending ? "border-zinc-700" : "border-zinc-800";
@@ -431,24 +431,24 @@ function PlayoffCard({ match, isFinal = false, onClick }: { match: Match; isFina
           LIVE
         </div>
       )}
-      <div className="flex justify-between items-center px-4 py-2 border-b border-zinc-800 bg-zinc-900">
-        <span className="text-xs font-display text-zinc-400 uppercase tracking-widest">{match.round}</span>
-        <span className="text-xs font-sans text-zinc-500">{match.date}</span>
+      <div className={`flex justify-between items-center border-b border-zinc-800 bg-zinc-900 ${small ? "px-3 py-1.5" : "px-4 py-2"}`}>
+        <span className={`font-display text-zinc-400 uppercase tracking-widest ${small ? "text-[10px]" : "text-xs"}`}>{match.round}</span>
+        <span className={`font-sans text-zinc-500 ${small ? "text-[10px]" : "text-xs"}`}>{match.date}</span>
       </div>
-      <div className="p-4 flex flex-col gap-3">
+      <div className={`flex flex-col ${small ? "p-3 gap-2" : "p-4 gap-3"}`}>
         <div className={`flex justify-between items-center ${!isPending && match.team1.score > match.team2.score ? "text-white" : "text-zinc-500"}`}>
-          <div className="flex items-center gap-1.5 min-w-0 max-w-[150px]">
+          <div className={`flex items-center gap-1.5 min-w-0 ${small ? "max-w-[120px]" : "max-w-[150px]"}`}>
             {match.team1.color && <span className="w-[3px] h-4 shrink-0" style={{ backgroundColor: match.team1.color }} />}
-            <TeamLink name={match.team1.name} className="font-sans font-[900] tracking-tight text-sm uppercase truncate block" />
+            <TeamLink name={match.team1.name} className={`font-sans font-[900] tracking-tight uppercase truncate block ${small ? "text-xs" : "text-sm"}`} />
           </div>
-          <span className="font-mono text-2xl font-bold">{isPending ? "—" : match.team1.score}</span>
+          <span className={`font-mono font-bold ${small ? "text-lg" : "text-2xl"}`}>{isPending ? "—" : match.team1.score}</span>
         </div>
         <div className={`flex justify-between items-center ${!isPending && match.team2.score > match.team1.score ? "text-white" : "text-zinc-500"}`}>
-          <div className="flex items-center gap-1.5 min-w-0 max-w-[150px]">
+          <div className={`flex items-center gap-1.5 min-w-0 ${small ? "max-w-[120px]" : "max-w-[150px]"}`}>
             {match.team2.color && <span className="w-[3px] h-4 shrink-0" style={{ backgroundColor: match.team2.color }} />}
-            <TeamLink name={match.team2.name} className="font-sans font-[900] tracking-tight text-sm uppercase truncate block" />
+            <TeamLink name={match.team2.name} className={`font-sans font-[900] tracking-tight uppercase truncate block ${small ? "text-xs" : "text-sm"}`} />
           </div>
-          <span className="font-mono text-2xl font-bold">{isPending ? "—" : match.team2.score}</span>
+          <span className={`font-mono font-bold ${small ? "text-lg" : "text-2xl"}`}>{isPending ? "—" : match.team2.score}</span>
         </div>
       </div>
     </div>
@@ -716,9 +716,10 @@ export function Matches() {
           <div className="overflow-x-auto pb-6 cursor-grab active:cursor-grabbing">
             <div className="min-w-[900px] flex bg-zinc-900/40 p-8 md:p-12 border-[4px] border-zinc-800 shadow-inner">
 
+              {/* ── Colonna semifinali ── */}
               {bracketMatches.semis.length > 0 && (
                 <>
-                  <div className="flex flex-col justify-around w-1/3 pr-8 gap-16 relative z-10">
+                  <div className="flex flex-col justify-around w-[34%] pr-8 gap-16 relative z-10">
                     {bracketMatches.semis.map((match, i) => (
                       <div key={match.id} className="relative">
                         <PlayoffCard match={resolveMatch(match, i)} onClick={() => handleSelectMatch(match)} />
@@ -726,43 +727,63 @@ export function Matches() {
                       </div>
                     ))}
                   </div>
+
+                  {/* ── Connettore: barra verticale + due uscite orizzontali ── */}
                   <div className="w-0 relative z-0">
                     <div className="absolute top-[25%] bottom-[25%] left-0 w-[3px] bg-zinc-700" />
-                    <div className="absolute top-1/2 left-0 w-8 h-[3px] bg-brand-orange" />
+                    <div className="absolute top-[37%] left-0 w-8 h-[3px] bg-brand-orange" />
+                    {bracketMatches.third && (
+                      <div className="absolute top-[63%] left-0 w-8 h-[3px] bg-zinc-600" />
+                    )}
                   </div>
                 </>
               )}
 
-              {bracketMatches.final && (
-                <div className="flex flex-col justify-center w-1/3 px-8 relative z-10">
-                  <div className="relative">
-                    <PlayoffCard match={resolveMatch(bracketMatches.final)} isFinal onClick={() => handleSelectMatch(bracketMatches.final!)} />
-                    <div className="absolute top-1/2 -right-8 w-8 h-[3px] bg-brand-yellow/50" />
-                  </div>
-                </div>
-              )}
+              {/* ── Colonna destra: Finalissima (+ Campione) sopra, 3°-4° sotto ── */}
+              <div className="flex flex-col justify-center flex-1 gap-10 z-10">
 
-              <div className="flex flex-col justify-center w-1/3 pl-8 z-10">
-                <div className={`border-[4px] bg-zinc-950 p-6 text-center rotate-2 ${champion ? "border-brand-yellow shadow-[12px_12px_0_var(--color-brand-yellow)]" : "border-brand-yellow/40 shadow-[12px_12px_0_rgba(0,0,0,0.4)]"}`}>
-                  <Trophy className={`w-16 h-16 mx-auto mb-4 ${champion ? "text-brand-yellow" : "text-brand-yellow/30"}`} />
-                  <span className="font-display text-2xl text-zinc-400 uppercase tracking-widest block">Campione</span>
-                  <span className={`font-display text-2xl uppercase tracking-widest block mt-2 leading-tight ${champion ? "text-brand-yellow" : "text-white opacity-20"}`}>
-                    {champion ? <TeamLink name={champion} /> : "???"}
-                  </span>
-                </div>
+                {/* FINALISSIMA + CAMPIONE */}
+                {bracketMatches.final && (
+                  <div className="flex items-center pl-8 gap-8">
+                    <div className="relative flex-1 min-w-0">
+                      <PlayoffCard
+                        match={resolveMatch(bracketMatches.final)}
+                        isFinal
+                        onClick={() => handleSelectMatch(bracketMatches.final!)}
+                      />
+                      <div className="absolute top-1/2 left-full w-8 h-[3px] bg-brand-yellow/50" />
+                    </div>
+                    <div className="shrink-0 w-[200px]">
+                      <div className={`border-[4px] bg-zinc-950 p-5 text-center rotate-2 ${champion ? "border-brand-yellow shadow-[12px_12px_0_var(--color-brand-yellow)]" : "border-brand-yellow/40 shadow-[12px_12px_0_rgba(0,0,0,0.4)]"}`}>
+                        <Trophy className={`w-12 h-12 mx-auto mb-3 ${champion ? "text-brand-yellow" : "text-brand-yellow/30"}`} />
+                        <span className="font-display text-xl text-zinc-400 uppercase tracking-widest block">Campione</span>
+                        <span className={`font-display text-xl uppercase tracking-widest block mt-1 leading-tight ${champion ? "text-brand-yellow" : "text-white opacity-20"}`}>
+                          {champion ? <TeamLink name={champion} /> : "???"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* FINALE 3°-4° POSTO (più piccola, senza campione) */}
+                {bracketMatches.third && (
+                  <div className="flex items-center pl-8">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-display text-[10px] uppercase tracking-widest text-zinc-500 mb-2">Finale 3°-4° Posto</p>
+                      <PlayoffCard
+                        match={resolveMatch(bracketMatches.third)}
+                        small
+                        onClick={() => handleSelectMatch(bracketMatches.third!)}
+                      />
+                    </div>
+                    <div className="shrink-0 w-[200px]" />
+                  </div>
+                )}
+
               </div>
 
             </div>
           </div>
-
-          {bracketMatches.third && (
-            <div className="mt-10 pt-8 border-t-2 border-zinc-800">
-              <p className="font-display text-xs uppercase tracking-widest text-zinc-500 mb-4">Finale 3°-4° Posto</p>
-              <div className="max-w-xs">
-                <PlayoffCard match={resolveMatch(bracketMatches.third)} onClick={() => handleSelectMatch(bracketMatches.third!)} />
-              </div>
-            </div>
-          )}
         </div>
         )}
         </div>
