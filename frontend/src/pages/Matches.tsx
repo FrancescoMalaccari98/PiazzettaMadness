@@ -310,10 +310,10 @@ function StandingsTable({ group }: { group: Group }) {
         <tr className={`border-b-2 ${group.borderClass} border-opacity-30`}>
           <th className="text-left pb-3 pr-1.5 sm:pr-3 font-display text-xs uppercase tracking-widest text-zinc-500 w-6 sm:w-8">#</th>
           <th className="text-left pb-3 font-display text-xs uppercase tracking-widest text-zinc-500">Squadra</th>
+          <th className="text-center pb-3 px-1 sm:px-3 font-display text-xs uppercase tracking-widest text-brand-orange w-7 sm:w-10">PT</th>
           <th className="text-center pb-3 px-1 sm:px-3 font-display text-xs uppercase tracking-widest text-zinc-500 w-6 sm:w-9">G</th>
           <th className="text-center pb-3 px-1 sm:px-3 font-display text-xs uppercase tracking-widest text-zinc-500 w-6 sm:w-9">V</th>
           <th className="text-center pb-3 px-1 sm:px-3 font-display text-xs uppercase tracking-widest text-zinc-500 w-6 sm:w-9">P</th>
-          <th className="text-center pb-3 px-1 sm:px-3 font-display text-xs uppercase tracking-widest text-brand-orange w-7 sm:w-10">PT</th>
           <th className="text-center pb-3 pl-1 sm:pl-3 font-display text-xs uppercase tracking-widest text-zinc-500 w-9 sm:w-12">+/-</th>
         </tr>
       </thead>
@@ -345,10 +345,10 @@ function StandingsTable({ group }: { group: Group }) {
                   )}
                 </div>
               </td>
+              <td className={`py-3 text-center font-mono font-bold text-sm px-1.5 sm:px-3 ${i === 0 ? group.accentClass : "text-brand-orange/70"}`}>{row.pt}</td>
               <td className="py-3 text-center font-mono text-xs text-zinc-400 px-1.5 sm:px-3">{row.g}</td>
               <td className="py-3 text-center font-mono text-xs text-zinc-400 px-1.5 sm:px-3">{row.v}</td>
               <td className="py-3 text-center font-mono text-xs text-zinc-400 px-1.5 sm:px-3">{row.p}</td>
-              <td className={`py-3 text-center font-mono font-bold text-sm px-1.5 sm:px-3 ${i === 0 ? group.accentClass : "text-brand-orange/70"}`}>{row.pt}</td>
               <td className={`py-3 text-center font-mono text-xs pl-1.5 sm:pl-3 font-bold ${row.g === 0 ? "text-zinc-600" : diff > 0 ? "text-green-500" : diff < 0 ? "text-red-500" : "text-zinc-400"}`}>
                 {row.g === 0 ? "—" : `${diff > 0 ? "+" : ""}${diff}`}
               </td>
@@ -568,6 +568,11 @@ export function Matches() {
     .sort(([a], [b]) => parseDayKey(a) - parseDayKey(b))
     .map(([day, ms]) => [day, [...ms].sort((a, b) => parseTime(a.date).localeCompare(parseTime(b.date)))] as [string, Match[]]);
 
+  // Se tutte le partite di girone sono completate → playoff in cima
+  const gironiFiniti = groups.every(g =>
+    g.matches.length > 0 && g.matches.every(m => m.status === "COMPLETA")
+  );
+
   return (
     <div className="pt-32 pb-20">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
@@ -589,9 +594,9 @@ export function Matches() {
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col">
         {/* — CALENDARIO — */}
-        <div className="mb-24">
+        <div className={`mb-24 ${gironiFiniti ? "order-3" : "order-1"}`}>
           <h2 className="font-display text-2xl sm:text-4xl md:text-5xl uppercase flex items-center gap-4 border-t-[6px] border-zinc-800 pt-6 pb-10 text-white">
             <Calendar className="w-6 h-6 sm:w-10 sm:h-10 text-brand-orange shrink-0" /> Calendario
           </h2>
@@ -658,7 +663,7 @@ export function Matches() {
         </div>
 
         {/* — FASE A GIRONI — */}
-        <div className="mb-24">
+        <div className="mb-24 order-2">
           <h2 className="font-display text-2xl sm:text-4xl md:text-5xl uppercase flex items-center gap-4 border-t-[6px] border-zinc-800 pt-6 pb-10 text-white">
             <Calendar className="w-6 h-6 sm:w-10 sm:h-10 text-brand-blue shrink-0" /> Fase a Gironi
           </h2>
@@ -701,7 +706,8 @@ export function Matches() {
         </div>
 
         {/* — PLAYOFF — solo se ci sono partite playoff nel DB — */}
-        {(bracketMatches.semis.length > 0 || bracketMatches.final !== null) && (
+        <div className={`${gironiFiniti ? "order-1" : "order-3"}`}>
+        {(bracketMatches.semis.length > 0 || bracketMatches.final !== null || bracketMatches.third !== null) && (
         <div>
           <h2 className="font-display text-2xl sm:text-4xl md:text-5xl uppercase flex items-center gap-4 border-t-[6px] border-zinc-800 pt-6 pb-10 text-white">
             <Swords className="w-6 h-6 sm:w-10 sm:h-10 text-brand-orange shrink-0" /> Playoff Bracket
@@ -748,8 +754,18 @@ export function Matches() {
 
             </div>
           </div>
+
+          {bracketMatches.third && (
+            <div className="mt-10 pt-8 border-t-2 border-zinc-800">
+              <p className="font-display text-xs uppercase tracking-widest text-zinc-500 mb-4">Finale 3°-4° Posto</p>
+              <div className="max-w-xs">
+                <PlayoffCard match={resolveMatch(bracketMatches.third)} onClick={() => handleSelectMatch(bracketMatches.third!)} />
+              </div>
+            </div>
+          )}
         </div>
         )}
+        </div>
         </div>
 
       </motion.div>

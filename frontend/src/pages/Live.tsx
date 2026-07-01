@@ -319,10 +319,8 @@ function PlayerList({ team, accent, mirrored = false }: { team: LiveTeam; accent
 // ── Stati vuoti ──────────────────────────────────────────────
 function EmptyState({ message }: { message?: string }) {
   return (
-    <div className="border-[3px] border-dashed border-zinc-700 bg-zinc-900/50 p-10 sm:p-16 text-center max-w-2xl mx-auto">
-      <div className="flex justify-center mb-6">
-        <img src="/assets/logo.png" alt="" className="w-16 h-16 opacity-30" />
-      </div>
+    <div className="bg-zinc-900 border-[4px] border-zinc-400 shadow-[6px_6px_0_rgba(161,161,170,0.5)] p-10 sm:p-16 text-center max-w-2xl mx-auto">
+      <img src="/assets/logo.png" alt="" className="w-16 h-16 mx-auto mb-6 opacity-30" />
       <h2 className="font-display text-3xl sm:text-4xl uppercase text-white mb-3">
         Nessuna diretta in corso
       </h2>

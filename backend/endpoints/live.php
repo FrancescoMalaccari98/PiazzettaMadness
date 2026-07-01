@@ -103,7 +103,7 @@ function handle_match_live(PDO $pdo, int $match_id): void {
         if ($live) {
             // game_clock_ms_remaining → secondi e decimi
             $clock_ms = (int)($live['game_clock_ms_remaining'] ?? 0);
-            $sec      = intdiv($clock_ms, 1000);
+            $sec      = (int)ceil($clock_ms / 1000);
             $tenths   = intdiv($clock_ms % 1000, 100);
 
             $players = fetch_live_players($pdo, $match_id, $home_id, $away_id);
