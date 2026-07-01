@@ -465,6 +465,7 @@ export function Matches() {
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [matchDetail,   setMatchDetail]   = useState<MatchDetail | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
+  const [champion,      setChampion]      = useState<string | null>(null);
   // Mappa nome giocatore (minuscolo) → slug, per linkare i nomi nei tabellini
   // alla pagina statistiche del giocatore.
   const [playerSlugs, setPlayerSlugs] = useState<Record<string, string>>({});
@@ -478,6 +479,15 @@ export function Matches() {
         const map: Record<string, string> = {};
         for (const p of list) if (p.name && p.slug) map[p.name.trim().toLowerCase()] = p.slug;
         setPlayerSlugs(map);
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    fetch(`${API}/api-web/campione`)
+      .then(r => r.ok ? r.json() : null)
+      .then((data: { has_champion: boolean; team: { name: string } | null } | null) => {
+        if (data?.has_champion && data.team) setChampion(data.team.name);
       })
       .catch(() => {});
   }, []);
@@ -727,21 +737,13 @@ export function Matches() {
               )}
 
               <div className="flex flex-col justify-center w-1/3 pl-8 z-10">
-                {(() => {
-                  const finale = bracketMatches.final;
-                  const campione = finale?.status === "COMPLETA"
-                    ? (finale.team1.score > finale.team2.score ? finale.team1.name : finale.team2.name)
-                    : null;
-                  return (
-                    <div className={`border-[4px] bg-zinc-950 p-6 text-center rotate-2 ${campione ? "border-brand-yellow shadow-[12px_12px_0_var(--color-brand-yellow)]" : "border-brand-yellow/40 shadow-[12px_12px_0_rgba(0,0,0,0.4)]"}`}>
-                      <Trophy className={`w-16 h-16 mx-auto mb-4 ${campione ? "text-brand-yellow" : "text-brand-yellow/30"}`} />
-                      <span className="font-display text-2xl text-zinc-400 uppercase tracking-widest block">Campione</span>
-                      <span className={`font-display text-2xl uppercase tracking-widest block mt-2 leading-tight ${campione ? "text-brand-yellow" : "text-white opacity-20"}`}>
-                        {campione ? <TeamLink name={campione} /> : "???"}
-                      </span>
-                    </div>
-                  );
-                })()}
+                <div className={`border-[4px] bg-zinc-950 p-6 text-center rotate-2 ${champion ? "border-brand-yellow shadow-[12px_12px_0_var(--color-brand-yellow)]" : "border-brand-yellow/40 shadow-[12px_12px_0_rgba(0,0,0,0.4)]"}`}>
+                  <Trophy className={`w-16 h-16 mx-auto mb-4 ${champion ? "text-brand-yellow" : "text-brand-yellow/30"}`} />
+                  <span className="font-display text-2xl text-zinc-400 uppercase tracking-widest block">Campione</span>
+                  <span className={`font-display text-2xl uppercase tracking-widest block mt-2 leading-tight ${champion ? "text-brand-yellow" : "text-white opacity-20"}`}>
+                    {champion ? <TeamLink name={champion} /> : "???"}
+                  </span>
+                </div>
               </div>
 
             </div>

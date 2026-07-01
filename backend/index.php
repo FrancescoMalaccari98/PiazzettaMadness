@@ -194,6 +194,11 @@ try {
         require_once __DIR__ . '/endpoints/staff.php';
         handle_staff(get_pdo());
 
+    // ── /campione ───────────────────────────────────────────
+    } elseif ($seg0 === 'campione') {
+        require_once __DIR__ . '/endpoints/champion.php';
+        handle_champion(get_pdo());
+
     // ── /foto ───────────────────────────────────────────────
     } elseif ($seg0 === 'foto') {
         require_once __DIR__ . '/endpoints/foto.php';
