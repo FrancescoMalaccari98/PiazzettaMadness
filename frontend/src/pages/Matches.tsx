@@ -37,18 +37,32 @@ function resolveMatch(match: Match, semiIndex = 0): Match {
   };
 }
 
+// Abbrevia nomi lunghi solo su mobile.
+const mobileAbbrev = (name: string) => name.replace(/^Philadelphia(?=\s|$)/, "Phila.");
+
+function DisplayName({ name }: { name: string }) {
+  const short = mobileAbbrev(name);
+  if (short === name) return <>{name}</>;
+  return (
+    <>
+      <span className="sm:hidden">{short}</span>
+      <span className="hidden sm:inline">{name}</span>
+    </>
+  );
+}
+
 // Link cliccabile sul nome squadra. stopPropagation: dentro righe/card
 // che hanno un loro onClick (apertura tabellino), il click sul nome
 // naviga alla pagina squadra senza aprire anche il modal.
 function TeamLink({ name, className = "" }: { name: string; className?: string }) {
-  if (!isRealTeam(name)) return <span className={className}>{name}</span>;
+  if (!isRealTeam(name)) return <span className={className}><DisplayName name={name} /></span>;
   return (
     <Link
       to={teamLink(name)}
       onClick={e => e.stopPropagation()}
       className={`${className} hover:text-brand-orange transition-colors`}
     >
-      {name}
+      <DisplayName name={name} />
     </Link>
   );
 }
@@ -538,9 +552,11 @@ export function Matches() {
     return acc;
   }, {});
 
-  // Ordina i giorni cronologicamente
+  // Ordina i giorni cronologicamente, e le partite all'interno di ogni giorno per orario
+  const parseTime = (date: string) => date.trim().split(/\s+/)[2] ?? "00:00";
   const calendarEntries = Object.entries(calendarByDay)
-    .sort(([a], [b]) => parseDayKey(a) - parseDayKey(b));
+    .sort(([a], [b]) => parseDayKey(a) - parseDayKey(b))
+    .map(([day, ms]) => [day, [...ms].sort((a, b) => parseTime(a.date).localeCompare(parseTime(b.date)))] as [string, Match[]]);
 
   return (
     <div className="pt-32 pb-20">
