@@ -102,10 +102,10 @@ function handle_partite_compat(PDO $pdo): void {
             at.primary_color     AS away_color,
             tg.code              AS group_code
         FROM matches m
-        JOIN match_teams mt_h ON mt_h.match_id = m.id AND mt_h.side = 'Home'
-        JOIN match_teams mt_a ON mt_a.match_id = m.id AND mt_a.side = 'Away'
-        JOIN teams ht ON ht.id = mt_h.team_id
-        JOIN teams at ON at.id = mt_a.team_id
+        LEFT JOIN match_teams mt_h ON mt_h.match_id = m.id AND mt_h.side = 'Home'
+        LEFT JOIN match_teams mt_a ON mt_a.match_id = m.id AND mt_a.side = 'Away'
+        LEFT JOIN teams ht ON ht.id = mt_h.team_id
+        LEFT JOIN teams at ON at.id = mt_a.team_id
         LEFT JOIN tournament_groups tg ON tg.id = m.group_id
         WHERE m.edition_id = ?
           AND m.status != 'Cancelled'
@@ -116,14 +116,17 @@ function handle_partite_compat(PDO $pdo): void {
     $rows = $stmt->fetchAll();
 
     $result = [];
+    $semiCount = 0;
     foreach ($rows as $r) {
         $status = map_match_status($r['status']);
+        $homeName = $r['home_name'] ?? 'TBD';
+        $awayName = $r['away_name'] ?? 'TBD';
 
         // Per i playoff forza sempre il label dal phase (compatibilità filtro frontend).
         // Per i gironi usa il round del DB se contiene 'Girone', altrimenti fallback.
         $round = $r['round_label'];
         switch ($r['phase']) {
-            case 'SemiFinal':       $round = 'Semifinale'; break;
+            case 'SemiFinal':       $round = 'Semifinale ' . (++$semiCount); break;
             case 'ThirdPlaceFinal': $round = 'Finale 3°-4° Posto'; break;
             case 'Final':           $round = 'Finale'; break;
             case 'GroupStage':
@@ -140,15 +143,16 @@ function handle_partite_compat(PDO $pdo): void {
         $result[] = [
             'id'     => (string)$r['id'],
             'round'  => $round,
+            'phase'  => $r['phase'] ?? 'GroupStage',
             'date'   => format_match_date($r['scheduled_at']),
             'status' => $status,
             'team1'  => [
-                'name'  => $r['home_name'],
+                'name'  => $homeName,
                 'color' => $r['home_color'] ?? null,
                 'score' => $isPending ? 0 : (int)($r['final_home_score'] ?? 0),
             ],
             'team2'  => [
-                'name'  => $r['away_name'],
+                'name'  => $awayName,
                 'color' => $r['away_color'] ?? null,
                 'score' => $isPending ? 0 : (int)($r['final_away_score'] ?? 0),
             ],

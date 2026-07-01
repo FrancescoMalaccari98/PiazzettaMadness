@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo } from "react";
+﻿import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { Trophy, Flame, X, Swords, Calendar, ChevronRight } from "lucide-react";
@@ -6,9 +6,36 @@ import { Trophy, Flame, X, Swords, Calendar, ChevronRight } from "lucide-react";
 // ── Helper link squadra → pagina Players filtrata su quella squadra ──
 const teamLink = (team: string) => `/giocatori?team=${encodeURIComponent(team)}`;
 
-// Esclude i segnaposto del bracket (es. "1° Girone A", "TBD") dai link.
+// Esclude i segnaposto del bracket dai link.
 const isRealTeam = (name: string) =>
-  !!name && name !== "TBD" && !/^\d+°/.test(name) && !name.includes("Girone");
+  !!name && name !== "TBD" && !/^\d+°/.test(name) && !name.includes("Girone")
+  && !name.startsWith("Perdente") && !name.startsWith("Vincente");
+
+// Sostituisce "TBD" con nomi contestuali basati sulla fase del match.
+// semiIndex: 0 = SF1, 1 = SF2.
+function resolveMatch(match: Match, semiIndex = 0): Match {
+  if (match.phase === "GroupStage") return match;
+  const resolve = (name: string, slot: "team1" | "team2"): string => {
+    if (name && name !== "TBD") return name;
+    switch (match.phase) {
+      case "SemiFinal":
+        return slot === "team1"
+          ? (semiIndex === 0 ? "1° Girone A" : "1° Girone B")
+          : (semiIndex === 0 ? "2° Girone B" : "2° Girone A");
+      case "ThirdPlaceFinal":
+        return slot === "team1" ? "Perdente Semifinale 1" : "Perdente Semifinale 2";
+      case "Final":
+        return slot === "team1" ? "Vincente Semifinale 1" : "Vincente Semifinale 2";
+      default:
+        return name || "TBD";
+    }
+  };
+  return {
+    ...match,
+    team1: { ...match.team1, name: resolve(match.team1.name, "team1") },
+    team2: { ...match.team2, name: resolve(match.team2.name, "team2") },
+  };
+}
 
 // Link cliccabile sul nome squadra. stopPropagation: dentro righe/card
 // che hanno un loro onClick (apertura tabellino), il click sul nome
@@ -30,6 +57,7 @@ type TeamScore = { name: string; score: number; color?: string | null };
 type Match = {
   id: string;
   round: string;
+  phase: string;
   date: string;       // es. "05 Ago 18:00" — viene dal backend
   status: "COMPLETA" | "LIVE" | "IN PROGRAMMA";
   team1: TeamScore;
@@ -229,14 +257,7 @@ const defaultGroups: Group[] = [
   },
 ];
 
-const defaultBracket = {
-  semis: [
-    { id: "sf1", round: "Semifinale 1", date: "12 Ago 18:00", status: "IN PROGRAMMA" as Match["status"], team1: { name: "1° Girone A", score: 0 }, team2: { name: "2° Girone B", score: 0 }, details: { mvp: "TBD", summary: "Semifinale in programma." } },
-    { id: "sf2", round: "Semifinale 2", date: "12 Ago 20:30", status: "IN PROGRAMMA" as Match["status"], team1: { name: "1° Girone B", score: 0 }, team2: { name: "2° Girone A", score: 0 }, details: { mvp: "TBD", summary: "Semifinale in programma." } },
-  ],
-  third: { id: "third", round: "Finale 3°-4° Posto", date: "14 Ago 18:30", status: "IN PROGRAMMA" as Match["status"], team1: { name: "TBD", score: 0 }, team2: { name: "TBD", score: 0 }, details: { mvp: "TBD", summary: "Finale per il terzo posto." } },
-  final: { id: "final", round: "Finale", date: "14 Ago 21:00", status: "IN PROGRAMMA" as Match["status"], team1: { name: "TBD", score: 0 }, team2: { name: "TBD", score: 0 }, details: { mvp: "TBD", summary: "La grande finale." } },
-};
+type Bracket = { semis: Match[]; third: Match | null; final: Match | null };
 
 // — Classifica —
 
@@ -335,7 +356,7 @@ function TeamScoreLine({ name, score, win, pending, accent = "text-brand-orange"
   return (
     <div className="flex items-center justify-between gap-2">
       <div className="flex items-center gap-1.5 min-w-0">
-        {color && <span className="w-2 h-2 shrink-0 rounded-sm" style={{ backgroundColor: color }} />}
+        {color && <span className="w-[3px] h-4 shrink-0" style={{ backgroundColor: color }} />}
         <TeamLink name={name} className={`font-sans font-bold text-xs sm:text-sm uppercase truncate
           ${win ? "text-white" : pending ? "text-zinc-400" : "text-zinc-500"}`} />
       </div>
@@ -403,14 +424,14 @@ function PlayoffCard({ match, isFinal = false, onClick }: { match: Match; isFina
       <div className="p-4 flex flex-col gap-3">
         <div className={`flex justify-between items-center ${!isPending && match.team1.score > match.team2.score ? "text-white" : "text-zinc-500"}`}>
           <div className="flex items-center gap-1.5 min-w-0 max-w-[150px]">
-            {match.team1.color && <span className="w-2 h-2 shrink-0 rounded-sm" style={{ backgroundColor: match.team1.color }} />}
+            {match.team1.color && <span className="w-[3px] h-4 shrink-0" style={{ backgroundColor: match.team1.color }} />}
             <TeamLink name={match.team1.name} className="font-sans font-[900] tracking-tight text-sm uppercase truncate block" />
           </div>
           <span className="font-mono text-2xl font-bold">{isPending ? "—" : match.team1.score}</span>
         </div>
         <div className={`flex justify-between items-center ${!isPending && match.team2.score > match.team1.score ? "text-white" : "text-zinc-500"}`}>
           <div className="flex items-center gap-1.5 min-w-0 max-w-[150px]">
-            {match.team2.color && <span className="w-2 h-2 shrink-0 rounded-sm" style={{ backgroundColor: match.team2.color }} />}
+            {match.team2.color && <span className="w-[3px] h-4 shrink-0" style={{ backgroundColor: match.team2.color }} />}
             <TeamLink name={match.team2.name} className="font-sans font-[900] tracking-tight text-sm uppercase truncate block" />
           </div>
           <span className="font-mono text-2xl font-bold">{isPending ? "—" : match.team2.score}</span>
@@ -426,7 +447,7 @@ const API = import.meta.env.VITE_API_URL ?? "";
 
 export function Matches() {
   const [groups,        setGroups]        = useState<Group[]>(defaultGroups);
-  const [bracketMatches, setBracket]      = useState(defaultBracket);
+  const [bracketMatches, setBracket]      = useState<Bracket>({ semis: [], third: null, final: null });
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [matchDetail,   setMatchDetail]   = useState<MatchDetail | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
@@ -468,18 +489,13 @@ export function Matches() {
           : g.matches,
       })));
 
-      // Aggiorna bracket con partite playoff reali
+      // Aggiorna bracket con partite playoff reali dal campo phase
       if (partite) {
-        const bracket = partite.filter(m =>
-          m.round.includes("Semifinale") || m.round.includes("Finale")
-        );
-        if (bracket.length > 0) {
-          setBracket({
-            semis: bracket.filter(m => m.round.includes("Semifinale")) as typeof defaultBracket.semis,
-            third: (bracket.find(m => m.round.includes("3°")) ?? defaultBracket.third) as typeof defaultBracket.third,
-            final: (bracket.find(m => m.round === "Finale") ?? defaultBracket.final) as typeof defaultBracket.final,
-          });
-        }
+        setBracket({
+          semis: partite.filter(m => m.phase === "SemiFinal"),
+          third: partite.find(m => m.phase === "ThirdPlaceFinal") ?? null,
+          final: partite.find(m => m.phase === "Final") ?? null,
+        });
       }
     })
     .catch(() => {}); // errore di rete → restano i dati statici
@@ -500,71 +516,12 @@ export function Matches() {
     }
   };
 
-  // Bracket con semis/terzo posto auto-populate dai risultati reali
-  const displayBracket = useMemo(() => {
-    // Sostituisce solo nomi placeholder — se l'API ha già i nomi reali li mantiene
-    const resolve = (name: string, real: string) =>
-      (name.startsWith("1°") || name.startsWith("2°") || name === "TBD") ? real : name;
-
-    let result = { ...bracketMatches, semis: [...bracketMatches.semis] };
-
-    // 1. Quando il girone è completo → popola i nomi nelle semis dai qualificati
-    const allGroupComplete = groups.every(g =>
-      g.matches.length > 0 && g.matches.every(m => m.status === "COMPLETA")
-    );
-    if (allGroupComplete) {
-      const qualifiers: Record<string, { first: string; second: string }> = {};
-      for (const g of groups) {
-        const standings = computeStandings(g.teams, g.matches);
-        qualifiers[g.key] = {
-          first:  standings[0]?.name ?? `1° Girone ${g.key}`,
-          second: standings[1]?.name ?? `2° Girone ${g.key}`,
-        };
-      }
-      const gA = qualifiers["A"];
-      const gB = qualifiers["B"];
-      if (gA && gB) {
-        result.semis = [
-          { ...result.semis[0],
-            team1: { ...result.semis[0].team1, name: resolve(result.semis[0].team1.name, gA.first) },
-            team2: { ...result.semis[0].team2, name: resolve(result.semis[0].team2.name, gB.second) },
-          },
-          { ...result.semis[1],
-            team1: { ...result.semis[1].team1, name: resolve(result.semis[1].team1.name, gB.first) },
-            team2: { ...result.semis[1].team2, name: resolve(result.semis[1].team2.name, gA.second) },
-          },
-        ];
-      }
-    }
-
-    // 2. Quando le semis sono complete → popola 3°-4° posto (perdenti) e finale (vincitori)
-    const semisComplete = bracketMatches.semis.every(s => s.status === "COMPLETA");
-    if (semisComplete) {
-      const loser = (s: typeof bracketMatches.semis[0]) =>
-        s.team1.score < s.team2.score ? s.team1.name : s.team2.name;
-      const winner = (s: typeof bracketMatches.semis[0]) =>
-        s.team1.score > s.team2.score ? s.team1.name : s.team2.name;
-      result.third = {
-        ...result.third,
-        team1: { ...result.third.team1, name: resolve(result.third.team1.name, loser(bracketMatches.semis[0])) },
-        team2: { ...result.third.team2, name: resolve(result.third.team2.name, loser(bracketMatches.semis[1])) },
-      };
-      result.final = {
-        ...result.final,
-        team1: { ...result.final.team1, name: resolve(result.final.team1.name, winner(bracketMatches.semis[0])) },
-        team2: { ...result.final.team2, name: resolve(result.final.team2.name, winner(bracketMatches.semis[1])) },
-      };
-    }
-
-    return result;
-  }, [groups, bracketMatches]);
-
-  // Tutte le partite piattate e raggruppate per data
+  // Tutte le partite piattate e raggruppate per data (playoff con nomi risolti)
   const allMatches = [
     ...groups.flatMap(g => g.matches),
-    ...displayBracket.semis,
-    displayBracket.third,
-    displayBracket.final,
+    ...bracketMatches.semis.map((m, i) => resolveMatch(m, i)),
+    ...(bracketMatches.third ? [resolveMatch(bracketMatches.third)] : []),
+    ...(bracketMatches.final ? [resolveMatch(bracketMatches.final)] : []),
   ];
 
   const MESI: Record<string, number> = { Gen:1,Feb:2,Mar:3,Apr:4,Mag:5,Giu:6,Lug:7,Ago:8,Set:9,Ott:10,Nov:11,Dic:12 };
@@ -717,7 +674,8 @@ export function Matches() {
           </div>
         </div>
 
-        {/* — PLAYOFF — */}
+        {/* — PLAYOFF — solo se ci sono partite playoff nel DB — */}
+        {(bracketMatches.semis.length > 0 || bracketMatches.final !== null) && (
         <div>
           <h2 className="font-display text-2xl sm:text-4xl md:text-5xl uppercase flex items-center gap-4 border-t-[6px] border-zinc-800 pt-6 pb-10 text-white">
             <Swords className="w-6 h-6 sm:w-10 sm:h-10 text-brand-orange shrink-0" /> Playoff Bracket
@@ -726,31 +684,36 @@ export function Matches() {
           <div className="overflow-x-auto pb-6 cursor-grab active:cursor-grabbing">
             <div className="min-w-[900px] flex bg-zinc-900/40 p-8 md:p-12 border-[4px] border-zinc-800 shadow-inner">
 
-              <div className="flex flex-col justify-around w-1/3 pr-8 gap-16 relative z-10">
-                {displayBracket.semis.map((match) => (
-                  <div key={match.id} className="relative">
-                    <PlayoffCard match={match} onClick={() => handleSelectMatch(match)} />
-                    <div className="absolute top-1/2 -right-8 w-8 h-[3px] bg-zinc-700" />
+              {bracketMatches.semis.length > 0 && (
+                <>
+                  <div className="flex flex-col justify-around w-1/3 pr-8 gap-16 relative z-10">
+                    {bracketMatches.semis.map((match, i) => (
+                      <div key={match.id} className="relative">
+                        <PlayoffCard match={resolveMatch(match, i)} onClick={() => handleSelectMatch(match)} />
+                        <div className="absolute top-1/2 -right-8 w-8 h-[3px] bg-zinc-700" />
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                  <div className="w-0 relative z-0">
+                    <div className="absolute top-[25%] bottom-[25%] left-0 w-[3px] bg-zinc-700" />
+                    <div className="absolute top-1/2 left-0 w-8 h-[3px] bg-brand-orange" />
+                  </div>
+                </>
+              )}
 
-              <div className="w-0 relative z-0">
-                <div className="absolute top-[25%] bottom-[25%] left-0 w-[3px] bg-zinc-700" />
-                <div className="absolute top-1/2 left-0 w-8 h-[3px] bg-brand-orange" />
-              </div>
-
-              <div className="flex flex-col justify-center w-1/3 px-8 relative z-10">
-                <div className="relative">
-                  <PlayoffCard match={displayBracket.final} isFinal onClick={() => handleSelectMatch(displayBracket.final)} />
-                  <div className="absolute top-1/2 -right-8 w-8 h-[3px] bg-brand-yellow/50" />
+              {bracketMatches.final && (
+                <div className="flex flex-col justify-center w-1/3 px-8 relative z-10">
+                  <div className="relative">
+                    <PlayoffCard match={resolveMatch(bracketMatches.final)} isFinal onClick={() => handleSelectMatch(bracketMatches.final!)} />
+                    <div className="absolute top-1/2 -right-8 w-8 h-[3px] bg-brand-yellow/50" />
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="flex flex-col justify-center w-1/3 pl-8 z-10">
                 {(() => {
-                  const finale = displayBracket.final;
-                  const campione = finale.status === "COMPLETA"
+                  const finale = bracketMatches.final;
+                  const campione = finale?.status === "COMPLETA"
                     ? (finale.team1.score > finale.team2.score ? finale.team1.name : finale.team2.name)
                     : null;
                   return (
@@ -767,8 +730,8 @@ export function Matches() {
 
             </div>
           </div>
-
         </div>
+        )}
         </div>
 
       </motion.div>

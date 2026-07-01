@@ -313,7 +313,7 @@ function RulesSection() {
         </div>
         <div className="bg-zinc-900 border-[4px] border-brand-blue shadow-[6px_6px_0_var(--color-brand-blue)] p-6 sm:p-8 flex flex-col items-center text-center">
           <p className="font-display text-6xl sm:text-7xl text-brand-blue font-black leading-none mb-4">3</p>
-          <p className="font-sans text-zinc-400 text-sm">I migliori vanno in finale. Parità: spareggio da 3 postazioni</p>
+          <p className="font-sans text-zinc-400 text-sm">I migliori 3 punteggi vanno in finale. Parita': spareggio da 3 postazioni</p>
         </div>
       </div>
     </div>
@@ -427,7 +427,7 @@ function EmptyState({ message, scheduledAt }: { message?: string; scheduledAt?: 
         <p className="font-mono text-brand-orange text-lg mt-4">{scheduledAt}</p>
       )}
       <p className="font-sans text-zinc-500 text-sm mt-6">
-        Sabato 11 Luglio — durante la fase finale del torneo.
+        3 Point Contest in programma sabato 11 alle 21:30.
       </p>
     </div>
   );
