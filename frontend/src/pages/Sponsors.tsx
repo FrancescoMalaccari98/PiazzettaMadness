@@ -136,7 +136,7 @@ export function Sponsors() {
             <span className="text-brand-orange">Sponsor</span>
           </h1>
           <p className="font-sans text-zinc-400 text-base sm:text-lg max-w-xl mx-auto">
-            Senza di loro Piazzetta Madness non esisterebbe.
+            Senza di loro Piazzetta Madness non esisterebbe.<br />Scegli chi crede nel campetto.
           </p>
         </div>
       </div>

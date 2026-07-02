@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { Trophy, Flame, X, Swords, Calendar, ChevronRight } from "lucide-react";
 
@@ -470,6 +470,23 @@ export function Matches() {
   // alla pagina statistiche del giocatore.
   const [playerSlugs, setPlayerSlugs] = useState<Record<string, string>>({});
   const getPlayerSlug = (nome: string) => playerSlugs[nome.trim().toLowerCase()];
+  const { hash } = useLocation();
+
+  // Scrolla alla sezione indicata dall'hash dopo che i dati sono caricati.
+  // Usa window.scrollTo con coordinate esplicite per gestire correttamente
+  // il layout flexbox con order riordinato e la navbar fissa (128px).
+  useEffect(() => {
+    if (!hash) return;
+    const NAVBAR_HEIGHT = 80;
+    const scrollToHash = () => {
+      const el = document.getElementById(hash.slice(1));
+      if (!el) return;
+      const top = el.getBoundingClientRect().top + window.scrollY - NAVBAR_HEIGHT;
+      window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+    };
+    const timer = setTimeout(scrollToHash, 400);
+    return () => clearTimeout(timer);
+  }, [hash]);
 
   useEffect(() => {
     fetch(`${API}/api-web/giocatori`)
@@ -596,7 +613,7 @@ export function Matches() {
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col">
         {/* — CALENDARIO — */}
-        <div className={`mb-24 ${gironiFiniti ? "order-3" : "order-1"}`}>
+        <div id="calendario" className={`mb-24 scroll-mt-32 ${gironiFiniti ? "order-3" : "order-1"}`}>
           <h2 className="font-display text-2xl sm:text-4xl md:text-5xl uppercase flex items-center gap-4 border-t-[6px] border-zinc-800 pt-6 pb-10 text-white">
             <Calendar className="w-6 h-6 sm:w-10 sm:h-10 text-brand-orange shrink-0" /> Calendario
           </h2>
@@ -663,7 +680,7 @@ export function Matches() {
         </div>
 
         {/* — FASE A GIRONI — */}
-        <div id="gironi" className="mb-24 order-2">
+        <div id="gironi" className="mb-24 order-2 scroll-mt-32">
           <h2 className="font-display text-2xl sm:text-4xl md:text-5xl uppercase flex items-center gap-4 border-t-[6px] border-zinc-800 pt-6 pb-10 text-white">
             <Calendar className="w-6 h-6 sm:w-10 sm:h-10 text-brand-blue shrink-0" /> Fase a Gironi
           </h2>
@@ -706,7 +723,7 @@ export function Matches() {
         </div>
 
         {/* — PLAYOFF — solo se ci sono partite playoff nel DB — */}
-        <div id="playoff" className={`${gironiFiniti ? "order-1" : "order-3"}`}>
+        <div id="playoff" className={`scroll-mt-32 ${gironiFiniti ? "order-1" : "order-3"}`}>
         {(bracketMatches.semis.length > 0 || bracketMatches.final !== null || bracketMatches.third !== null) && (
         <div>
           <h2 className="font-display text-2xl sm:text-4xl md:text-5xl uppercase flex items-center gap-4 border-t-[6px] border-zinc-800 pt-6 pb-10 text-white">

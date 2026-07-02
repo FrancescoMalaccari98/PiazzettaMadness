@@ -120,7 +120,7 @@ export function Info() {
 
           {/* ── REGOLE DI GIOCO ── */}
           <Section icon={Timer} title="Regole di Gioco">
-            <p><strong className="text-white">Tempi di gioco:</strong> 2 tempi da <span className="text-brand-orange font-bold">12 minuti</span> a tempo continuato. Il cronometro si ferma solo per tiri liberi, palla a due, palla che esce dalla rete o espulsione. Negli <strong className="text-white">ultimi 90 secondi</strong> dell'ultimo quarto il tempo si ferma ad ogni interruzione.</p>
+            <p><strong className="text-white">Tempi di gioco:</strong> 2 tempi da <span className="text-brand-orange font-bold">12 minuti</span> a tempo continuato. Il cronometro si ferma solo per tiri liberi, palla a due, palla che esce dalla rete o espulsione. Negli <strong className="text-white">ultimi 90 secondi</strong> della partita il cronometro si ferma ad ogni interruzione.</p>
             <p className="text-zinc-400 text-sm border-l-2 border-zinc-700 pl-3">Per le finali 3°/4° e 1°/2° posto: tempi da 15 minuti, cronometro fermo negli ultimi 120 secondi. Comportamenti palesemente mirati a perdere tempo saranno sanzionati con fallo tecnico.</p>
 
             <p><strong className="text-white">Punteggio massimo:</strong> la partita finisce se una squadra raggiunge <span className="text-brand-orange font-bold">51 punti</span>. Questa regola <strong className="text-red-400">non si applica</strong> nelle fasi finali (semifinali e finali).</p>
@@ -159,14 +159,13 @@ export function Info() {
 
           {/* ── 3 POINT CONTEST ── */}
           <Section icon={Target} title="3 Point Contest">
-            <p>Ogni squadra può iscrivere <strong className="text-white">uno e un solo giocatore</strong> regolarmente registrato nel roster. Il nome va comunicato entro mercoledì 8 luglio.</p>
+            <p>Ogni squadra può iscrivere <strong className="text-white">un solo giocatore</strong> regolarmente registrato nel roster. Il nome va comunicato entro martedì 7 luglio.</p>
             <p><strong className="text-white">Regole:</strong></p>
             <ul className="list-disc pl-5 space-y-1 text-zinc-400">
               <li>5 postazioni fisse dietro la linea dei 3 punti</li>
               <li>Ogni postazione: 4 palloni da 1 punto + 1 "money ball" da 2 punti</li>
               <li>Tempo limite: <strong className="text-white">90 secondi</strong></li>
               <li>Tiri esclusivamente dietro la linea (piede sulla linea = non valido)</li>
-              <li>Palloni tirati uno alla volta, non si può tornare indietro</li>
             </ul>
             <p><strong className="text-white">Finale:</strong> i 3 migliori punteggi accedono a una finale secca. In caso di parità: mini-sfida da 3 postazioni.</p>
           </Section>
