@@ -172,7 +172,92 @@ public sealed class TelecronacaViewModelTests
             ("points", 11), ("rebounds.total", 5), ("evaluation", 12));
 
         // #12 Verdi: nessuna statistica (N.E.).
+
+        // Totali di squadra (Team scope).
+        AddTeam(result, "Home",
+            ("points", 45), ("twoPoints.made", 18), ("twoPoints.attempted", 40),
+            ("threePoints.made", 1), ("threePoints.attempted", 5),
+            ("freeThrows.made", 6), ("freeThrows.attempted", 10),
+            ("rebounds.total", 24), ("assists", 10), ("steals", 5), ("fouls.committed", 14),
+            ("benchPoints", 12));
+        AddTeam(result, "Away",
+            ("points", 38), ("twoPoints.made", 15), ("twoPoints.attempted", 36),
+            ("threePoints.made", 1), ("threePoints.attempted", 2),
+            ("freeThrows.made", 5), ("freeThrows.attempted", 8),
+            ("rebounds.total", 20), ("assists", 8), ("steals", 4), ("fouls.committed", 12));
+
         return result;
+    }
+
+    [Fact]
+    public void Team_totals_row_is_built()
+    {
+        var vm = new TelecronacaViewModel(SampleResult(), Option());
+
+        Assert.Equal("45", vm.HomeTotals.Points);
+        Assert.Equal("18/40 45%", vm.HomeTotals.Two);
+        Assert.Equal("24", vm.HomeTotals.Rebounds);
+        Assert.Equal("38", vm.AwayTotals.Points);
+    }
+
+    [Fact]
+    public void Team_comparison_has_home_and_away_values()
+    {
+        var vm = new TelecronacaViewModel(SampleResult(), Option());
+
+        Assert.True(vm.HasTeamComparison);
+        var points = vm.TeamComparison.Single(r => r.Statistica == "Punti");
+        Assert.Equal("45", points.Home);
+        Assert.Equal("38", points.Away);
+        Assert.Contains(vm.TeamComparison, r => r.Statistica == "Tiri da 2" && r.Home == "18/40 45%");
+    }
+
+    [Fact]
+    public void Team_comparison_includes_extra_extracted_fields()
+    {
+        // "benchPoints" non è tra le righe curate → deve comparire comunque (tutti i campi estratti).
+        var vm = new TelecronacaViewModel(SampleResult(), Option());
+        Assert.Contains(vm.TeamComparison, r => r.Statistica == "benchPoints" && r.Home == "12");
+    }
+
+    [Fact]
+    public void Player_rows_end_with_separator_and_totals_row()
+    {
+        var vm = new TelecronacaViewModel(SampleResult(), Option());
+
+        // 3 giocatori Home + riga vuota + riga totali = 5.
+        Assert.Equal(vm.HomePlayers.Count + 2, vm.HomeRows.Count);
+        Assert.True(vm.HomeRows[^1].IsTotals);
+        Assert.Equal("Totali", vm.HomeRows[^1].DisplayName);
+        Assert.Equal("45", vm.HomeRows[^1].Points);
+        Assert.True(vm.HomeRows[^2].IsSeparator);
+    }
+
+    [Fact]
+    public void Totals_row_is_not_selectable_as_player()
+    {
+        var vm = new TelecronacaViewModel(SampleResult(), Option());
+        var totalsRow = vm.HomeRows[^1];
+
+        vm.SelectedHomePlayer = totalsRow; // riga totali: non è un giocatore
+
+        Assert.Null(vm.SelectedPlayer);
+        Assert.False(vm.HasSelectedPlayer);
+    }
+
+    [Fact]
+    public void Selected_player_detail_is_built_as_pairs_table()
+    {
+        var vm = new TelecronacaViewModel(SampleResult(), Option());
+        var rossi = vm.HomePlayers.Single(p => p.Number == "4");
+
+        // 15 statistiche (Minuti è nell'header, non in tabella) su righe da 3 coppie = 5 righe.
+        Assert.Equal(5, rossi.DetailPairs.Count);
+        Assert.Equal("Punti", rossi.DetailPairs[0].Label1);
+        Assert.Equal("2PT", rossi.DetailPairs[0].Label2);
+        Assert.Equal("3PT", rossi.DetailPairs[0].Label3);
+        Assert.DoesNotContain(rossi.DetailPairs, r =>
+            r.Label1 == "Minuti" || r.Label2 == "Minuti" || r.Label3 == "Minuti");
     }
 
     private static PlayerStats Player(string entityId, string side, string number, string name, bool didNotPlay = false) =>
@@ -199,6 +284,22 @@ public sealed class TelecronacaViewModelTests
                 EntityId = entityId,
                 StatKey = s.Key,
                 FieldId = $"{entityId}:{s.Key}",
+                Value = s.Value,
+            });
+        }
+    }
+
+    private static void AddTeam(ProcessingResult result, string side, params (string Key, int Value)[] stats)
+    {
+        foreach (var s in stats)
+        {
+            result.Stats.Add(new StatValue
+            {
+                Scope = StatScope.Team,
+                Side = side,
+                EntityId = $"team:{side}",
+                StatKey = s.Key,
+                FieldId = $"team:{side}:{s.Key}",
                 Value = s.Value,
             });
         }

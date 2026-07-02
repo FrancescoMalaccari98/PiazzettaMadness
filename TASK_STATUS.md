@@ -357,6 +357,61 @@ provider is part of the solution. Adobe and GLM-OCR are fully removed.
   - Stili sobri in `App.xaml` (`PlayerGrid`, card, colori neutri); nessuna libreria esterna. Test
     `TelecronacaViewModelTests` (9 casi). `TelecronacaViewModel.cs` linkato in `BasketPdfStats.Tests.csproj`.
     Build verde, 276 test non-integration verdi.
+- **Fase UI — Correzioni layout risultati e flusso (2026-06-26):**
+  - **Niente popup** post-elaborazione: `ProcessingResultPresentationService.TryPresent` non più chiamato
+    (campo rimosso); i risultati restano nell'interfaccia. Test con spy presenter (`ShowCount==0`).
+  - **3 schede** a destra (`TabControl`): **Elaborazione** (compatta: riepilogo neutro, lista File/Stato/JSON,
+    JSON path, warning importanti), **Risultati Telecronaca**, **PDF completo** (percorso + `Apri PDF` con
+    app predefinita via `OpenPdfCommand`; nessun viewer embedded/libreria esterna).
+  - **Colonna step sempre visibile a sinistra** (allargata 440→480): 1 Seleziona partita, 2 Seleziona PDF,
+    3 Elabora (prima erano dentro la scheda Elaborazione).
+  - **Importa nel DB sempre visibile in alto** (header) prima dello stato; + Revisiona. Disabilitati quando
+    non applicabili ma sempre visibili.
+  - **Niente badge verde "Completato"**: header mostra `HeaderStatus` solo per stati importanti
+    (Revisione richiesta / Non importabile / PDF non corrispondente); banner telecronaca solo se
+    `HasImportantStatus` (Review/Error).
+  - **Telecronaca**: scoreboard compatto (una riga), top/spunti compatti, **tabelle giocatori area
+    principale** (`*`), **dettaglio giocatore ampio** (riga con MinHeight 180, font 13–15).
+  - Auto-tab: dopo elaborazione valida → Telecronaca (1); su mismatch → Elaborazione (0) con banner errore.
+  - File: `MainWindow.xaml`, `MainViewModel.cs` (`OpenPdfCommand`, `HeaderStatus`, no popup),
+    `TelecronacaViewModel.cs` (`HasImportantStatus`). Test `MainViewModelLayoutTests` (7). Build verde,
+    283 test non-integration verdi.
+- **Fase UI — Revisione layout v2 (2026-06-26):** schede in alto + 4 viste.
+  - **Tab in alto** (header, tra titolo e pulsanti) via RadioButton+`IndexToBoolean`/`IndexToVisibility`
+    converter; `SelectedTabIndex` pilota un solo pannello visibile alla volta. 4 schede:
+    **Elaborazione** (step 1–2–3 a sinistra + 4 "Revisione e import" a destra con stato/JSON/warning;
+    i pulsanti Revisiona/Importa restano **solo in alto**, sempre visibili), **Risultati giocatore**
+    (ex Telecronaca, a tutta larghezza), **Risultati squadre** (nuova: confronto stat squadra Casa/Ospite),
+    **PDF completo** (Apri PDF + riassunto schematico di tutto l'estratto da `ProcessingResultViewModel`).
+  - **Risultati giocatore**: scoreboard compatto, tabelle area principale con **riga Totali squadra
+    evidenziata** (sfondo accent) sotto ogni lista, **dettaglio giocatore ampio** (riga MinHeight 170).
+  - Nessuna popup post-elaborazione (confermato dai test); auto-tab: valido→Risultati giocatore (1),
+    mismatch→Elaborazione (0). Nessun badge verde "Completato".
+  - VM: `TelecronacaViewModel` (`HomeTotals`/`AwayTotals`, `TeamComparison`, `HasImportantStatus`),
+    `MainViewModel` (`FullResult`, `OpenPdfCommand`, `HeaderStatus`). Converter `IndexToVisibility`/
+    `IndexToBoolean`. Test `MainViewModelLayoutTests` + `TelecronacaViewModelTests` aggiornati.
+    Build verde, 286 test non-integration verdi.
+- **Fase UI — Rifiniture v3 (2026-06-26):**
+  - **Riga Totali parte della tabella**: i DataGrid giocatori bindano `HomeRows`/`AwayRows` = giocatori +
+    riga vuota + riga **Totali** (evidenziata, grassetto, non selezionabile). Sort colonne disattivato per
+    tenere i totali in fondo. `HomePlayers`/`AwayPlayers` restano puri (calcoli/test).
+  - **Dettaglio giocatore a tabella**: `TelecronacaPlayer.DetailPairs` (8 righe da 2 coppie etichetta/valore)
+    reso in un DataGrid; pannello più grande e in risalto.
+  - **Risultati squadre**: tabella ridimensionata (larghezza fissa, valori a destra in grassetto, gridlines)
+    e ora include **tutti** i campi squadra estratti dal PDF (righe curate + qualunque altra chiave team-scope
+    via `ProcessingResultViewModel.Labels`).
+  - **Fix avvio**: in `App.xaml` lo stile `TabRadio` usava `{StaticResource AccentBrushDark}` prima della sua
+    definizione (forward reference) → crash a runtime; spostato dopo i brush.
+  - Build verde, 290 test non-integration verdi (avvio app verificato).
+- **Fase UI — Rifiniture v4 (2026-06-26):**
+  - **Statistiche comparative** (`comparative.*`: punti da palle perse, in area, secondi tiri, contropiede,
+    fast break da palle perse, panchina, massimo vantaggio/parziale, points per possession, cambi di guida,
+    parità, tempo in vantaggio) ora **visibili in "Risultati squadre"** oltre ai totali squadra
+    (`TelecronacaViewModel.BuildComparatives`). Estratte dall'OCR (scope Comparative), prima non mostrate.
+  - **No scroll**: rimossi gli ScrollViewer di pagina (scheda giocatore, PDF, colonna step Elaborazione);
+    layout a fit. "Risultati squadre" su **due colonne affiancate** (`TeamComparisonLeft`/`Right`) per stare
+    in una schermata. (I DataGrid mantengono lo scroll interno solo come fallback per dati eccezionali.)
+  - 4 test aggiunti/aggiornati. 290+ test non-integration verdi.
 - **Refactoring**: tutte le fasi 0A–8B implementate; Fase 9 (per-item: `prepare_crops.py` + `known_names.py`
   rimossi; `MatchLookupDate`/`backend.zip` rinviati) e Fase 10 (validazione/tuning) in mano all'utente per le
   parti che richiedono ambiente OCR / deploy Aruba.

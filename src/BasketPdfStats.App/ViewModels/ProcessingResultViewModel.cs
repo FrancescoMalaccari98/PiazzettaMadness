@@ -7,7 +7,7 @@ namespace BasketPdfStats.App.ViewModels;
 
 public sealed class ProcessingResultViewModel
 {
-    private static readonly IReadOnlyDictionary<string, string> Labels = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+    internal static readonly IReadOnlyDictionary<string, string> Labels = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
     {
         ["points"] = "Punti",
         ["minutes"] = "Minuti",

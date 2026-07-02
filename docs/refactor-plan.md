@@ -1057,6 +1057,32 @@ Stili sobri in `App.xaml` (`PlayerGrid`), nessuna libreria esterna. `Telecronaca
 `BasketPdfStats.Tests.csproj`. Test `TelecronacaViewModelTests` (9). Build verde, 276 test non-integration
 verdi. Nessuna modifica a OCR Python, `engineWeights`, `appsettings.json`, backend.
 
+**Fase UI — Correzioni layout/flusso (2026-06-26):** rimossa la popup post-elaborazione (presentation
+service non più invocato); 3 schede (Elaborazione compatta / Risultati Telecronaca / **PDF completo** con
+`Apri PDF` via `OpenPdfCommand`, no viewer embedded); colonna step sempre visibile a sinistra (440→480);
+**Importa nel DB sempre in alto** nell'header (+ Revisiona), disabilitati se non applicabili; rimosso il
+badge verde "Completato" (`HeaderStatus`/`TelecronacaViewModel.HasImportantStatus` mostrano solo stati
+importanti); telecronaca con scoreboard compatto, tabelle area principale e **dettaglio giocatore ampio**;
+auto-tab Telecronaca su successo, Elaborazione su mismatch. Test `MainViewModelLayoutTests` (7). Build verde,
+283 test non-integration verdi. Nessuna modifica a OCR Python, `engineWeights`, `appsettings.json`, backend.
+
+**Fase UI — Revisione layout v2 (2026-06-26):** schede spostate **in alto** (header, RadioButton +
+`IndexToBoolean`/`IndexToVisibility` converter, `SelectedTabIndex`); 4 viste: Elaborazione (step 1-2-3 +
+passo 4 stato, pulsanti Revisiona/Importa solo in alto), **Risultati giocatore** (ex Telecronaca, full
+width, scoreboard compatto, **riga Totali squadra evidenziata** sotto le tabelle, dettaglio giocatore
+ampio), **Risultati squadre** (nuova: confronto Casa/Ospite), **PDF completo** (Apri PDF + riassunto
+schematico via `ProcessingResultViewModel`). Nessun badge verde. VM: `TelecronacaViewModel`
+(`HomeTotals`/`AwayTotals`/`TeamComparison`/`HasImportantStatus`), `MainViewModel` (`FullResult`).
+Test aggiornati. Build verde, 286 test non-integration verdi.
+
+**Fase UI — Rifiniture v3 (2026-06-26):** riga **Totali come riga interna** della tabella giocatori
+(`HomeRows`/`AwayRows` = giocatori + separatore + totali evidenziati, non selezionabili; sort disattivato;
+`HomePlayers`/`AwayPlayers` restano puri per calcoli/test); **dettaglio giocatore a tabella**
+(`DetailPairs`, DataGrid 4 colonne, più ampio); **Risultati squadre** ridimensionata + **tutti** i campi
+team-scope estratti (curati + extra via `ProcessingResultViewModel.Labels`). Fix avvio: in `App.xaml`
+spostato lo stile `TabRadio` dopo i brush (era un forward reference di `StaticResource` → crash a runtime).
+Build verde, 290 test non-integration verdi; avvio app verificato.
+
 ---
 
 ## 16. Matrice dei test per fase

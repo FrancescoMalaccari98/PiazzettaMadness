@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -18,7 +19,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
 {
     private readonly IPdfProcessingPipeline _pipeline;
     private readonly IFilePicker _filePicker;
-    private readonly ProcessingResultPresentationService _resultPresentation;
     private readonly AlreadyProcessedPdfSelectionService? _alreadyProcessedPdfSelection;
     private readonly IOcrImportService? _importService;
     private readonly ITeamMismatchConfirmationService? _teamMismatchConfirmation;
@@ -47,6 +47,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private Task? _activeContextLoad;
     private ProcessingResult? _lastResult;
     private TelecronacaViewModel? _telecronaca;
+    private ProcessingResultViewModel? _fullResult;
     private int _selectedTabIndex;
 
     public MainViewModel(
@@ -60,7 +61,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     {
         _pipeline = pipeline;
         _filePicker = filePicker;
-        _resultPresentation = new ProcessingResultPresentationService(resultPresenter);
+        _ = resultPresenter; // popup post-elaborazione disattivata: i risultati restano nell'interfaccia.
         _alreadyProcessedPdfSelection = alreadyProcessedPdfSelection;
         _importService = importService;
         _teamMismatchConfirmation = teamMismatchConfirmation;
@@ -72,6 +73,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         LoadMatchesCommand = new AsyncRelayCommand(LoadMatchesForDateAsync, () => HasImportService);
         ReviewIdentityCommand = new AsyncRelayCommand(ReviewIdentityAsync, CanReviewIdentity);
         ImportToDbCommand = new AsyncRelayCommand(ImportToDbAsync, CanImport);
+        OpenPdfCommand = new AsyncRelayCommand(OpenSelectedPdfAsync, () => HasSelectedPdf);
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -83,8 +85,36 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public AsyncRelayCommand LoadMatchesCommand { get; }
     public AsyncRelayCommand ReviewIdentityCommand { get; }
     public AsyncRelayCommand ImportToDbCommand { get; }
+    public AsyncRelayCommand OpenPdfCommand { get; }
 
     public bool HasImportService => _importService is not null;
+
+    /// <summary>
+    /// Stato importante per l'intestazione: vuoto quando tutto è ok (niente badge "Completato"),
+    /// altrimenti il motivo che richiede attenzione. Mostrato in alto, compatto.
+    /// </summary>
+    public string HeaderStatus
+    {
+        get
+        {
+            if (_teamMismatchMessage is not null)
+            {
+                return "PDF non corrispondente al match";
+            }
+
+            if (_lastResult is null)
+            {
+                return string.Empty;
+            }
+
+            if (_lastResult.ProcessedFile.Status == FileProcessingStatus.CompletedWithReviewRequired)
+            {
+                return "Revisione richiesta";
+            }
+
+            return HasBlockingError() ? "Non importabile" : string.Empty;
+        }
+    }
 
     /// <summary>
     /// Avviso mostrato quando il backend non è configurato: senza <c>ocrApi.baseUrl</c>/<c>token</c>
@@ -103,6 +133,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             if (SetField(ref _selectedPdfPath, value))
             {
                 ProcessPdfCommand.RaiseCanExecuteChanged();
+                OpenPdfCommand.RaiseCanExecuteChanged();
                 RaisePropertyChanged(nameof(HasSelectedPdf));
                 RaisePropertyChanged(nameof(ProcessHint));
             }
@@ -278,6 +309,24 @@ public sealed class MainViewModel : INotifyPropertyChanged
     }
 
     public bool HasTelecronaca => _telecronaca is not null;
+
+    /// <summary>
+    /// Riepilogo schematico di tutto ciò che è stato estratto dal PDF (scheda "PDF completo").
+    /// Null finché non si elabora.
+    /// </summary>
+    public ProcessingResultViewModel? FullResult
+    {
+        get => _fullResult;
+        private set
+        {
+            if (SetField(ref _fullResult, value))
+            {
+                RaisePropertyChanged(nameof(HasFullResult));
+            }
+        }
+    }
+
+    public bool HasFullResult => _fullResult is not null;
 
     /// <summary>Tab attivo: 0 = Elaborazione, 1 = Risultati Telecronaca. Dopo l'elaborazione passa a 1.</summary>
     public int SelectedTabIndex
@@ -457,6 +506,28 @@ public sealed class MainViewModel : INotifyPropertyChanged
         return Task.CompletedTask;
     }
 
+    /// <summary>Apre il PDF selezionato con l'applicazione predefinita di Windows (scheda "PDF completo").</summary>
+    private Task OpenSelectedPdfAsync()
+    {
+        var path = _selectedPdfPath;
+        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+        {
+            ImportStatusText = "PDF non disponibile da aprire.";
+            return Task.CompletedTask;
+        }
+
+        try
+        {
+            Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            ImportStatusText = $"Impossibile aprire il PDF: {ex.Message}";
+        }
+
+        return Task.CompletedTask;
+    }
+
     private async Task ProcessSelectedPdfAsync()
     {
         if (string.IsNullOrWhiteSpace(SelectedPdfPath))
@@ -566,9 +637,11 @@ public sealed class MainViewModel : INotifyPropertyChanged
         // Vista telecronaca dai dati finali. Su mismatch mostra solo l'errore (niente tabelle fuorvianti).
         var importable = _teamMismatchMessage is null && _reviewResolved && !HasBlockingError();
         Telecronaca = new TelecronacaViewModel(result, SelectedMatchOption, _teamMismatchMessage, importable);
-        SelectedTabIndex = 1; // porta subito alla schermata "Risultati Telecronaca"
+        FullResult = new ProcessingResultViewModel(result);
 
-        _resultPresentation.TryPresent(result, AppendResultViewerStatus);
+        // Nessuna popup: i risultati restano nell'interfaccia principale.
+        // Su mismatch resta sulla scheda "Elaborazione" (errore chiaro); altrimenti va alla telecronaca.
+        SelectedTabIndex = _teamMismatchMessage is not null ? 0 : 1;
     }
 
     /// <summary>
@@ -1023,6 +1096,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     {
         RaisePropertyChanged(nameof(WorkflowStatus));
         RaisePropertyChanged(nameof(ProcessHint));
+        RaisePropertyChanged(nameof(HeaderStatus));
     }
 
 }

@@ -5,6 +5,8 @@
              StartupUri="MainWindow.xaml">
     <Application.Resources>
         <conv:StringToVisibilityConverter x:Key="StringToVis" />
+        <conv:IndexToVisibilityConverter x:Key="IndexToVis" />
+        <conv:IndexToBooleanConverter x:Key="IndexToBool" />
 
         <!-- Palette sobria (solo WPF standard, nessuna libreria esterna) -->
         <Color x:Key="AccentColor">#0B5FB0</Color>
@@ -15,6 +17,36 @@
         <SolidColorBrush x:Key="BorderBrushSoft" Color="#D0D7DE" />
         <SolidColorBrush x:Key="TextMutedBrush" Color="#57606A" />
         <SolidColorBrush x:Key="TextStrongBrush" Color="#1F2328" />
+
+        <!-- Scheda di navigazione in alto (RadioButton stile tab). Definito DOPO i brush
+             perché usa {StaticResource AccentBrushDark} (StaticResource non ammette forward reference). -->
+        <Style x:Key="TabRadio" TargetType="RadioButton">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Foreground" Value="#57606A" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Margin" Value="0,0,4,0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="Bd" Background="Transparent" CornerRadius="5" Padding="14,7"
+                                BorderBrush="Transparent" BorderThickness="1">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#EEF2F6" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#E7F0FA" />
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#B7D2EC" />
+                                <Setter Property="Foreground" Value="{StaticResource AccentBrushDark}" />
+                                <Setter Property="FontWeight" Value="SemiBold" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
 
         <!-- Card di sezione (un passo del flusso) -->
         <Style x:Key="SectionCard" TargetType="Border">
@@ -121,7 +153,7 @@
             <Setter Property="IsReadOnly" Value="True" />
             <Setter Property="CanUserAddRows" Value="False" />
             <Setter Property="CanUserResizeRows" Value="False" />
-            <Setter Property="CanUserSortColumns" Value="True" />
+            <Setter Property="CanUserSortColumns" Value="False" />
             <Setter Property="HeadersVisibility" Value="Column" />
             <Setter Property="GridLinesVisibility" Value="Horizontal" />
             <Setter Property="HorizontalGridLinesBrush" Value="#ECEFF2" />
@@ -140,6 +172,18 @@
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding DidNotPlay}" Value="True">
                                 <Setter Property="Foreground" Value="#9AA1A8" />
+                            </DataTrigger>
+                            <!-- Riga vuota di separazione: bassa e non selezionabile -->
+                            <DataTrigger Binding="{Binding IsSeparator}" Value="True">
+                                <Setter Property="IsHitTestVisible" Value="False" />
+                                <Setter Property="Height" Value="8" />
+                            </DataTrigger>
+                            <!-- Riga Totali: evidenziata, grassetto, non selezionabile -->
+                            <DataTrigger Binding="{Binding IsTotals}" Value="True">
+                                <Setter Property="IsHitTestVisible" Value="False" />
+                                <Setter Property="Background" Value="#E7F0FA" />
+                                <Setter Property="Foreground" Value="{StaticResource AccentBrushDark}" />
+                                <Setter Property="FontWeight" Value="Bold" />
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
