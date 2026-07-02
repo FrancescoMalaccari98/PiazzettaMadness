@@ -305,7 +305,7 @@ export function Home() {
             </Link>
 
             {/* Block 3: Fase a Gironi + prossima partita */}
-            <Link to="/match" className="md:col-span-5 bg-zinc-900/50 border-[4px] border-brand-blue p-8 flex flex-col justify-between group hover:-translate-y-1 transition-transform shadow-[8px_8px_0_var(--color-brand-blue)]">
+            <Link to="/match#gironi" className="md:col-span-5 bg-zinc-900/50 border-[4px] border-brand-blue p-8 flex flex-col justify-between group hover:-translate-y-1 transition-transform shadow-[8px_8px_0_var(--color-brand-blue)]">
               <div>
                 <Calendar className="text-brand-blue w-10 h-10 mb-6" />
                 <h3 className="font-display text-2xl sm:text-3xl uppercase text-white mb-2">1. Fase a Gironi</h3>
@@ -327,7 +327,7 @@ export function Home() {
             </Link>
 
             {/* Block 4: Playoff Bracket con squadre reali */}
-            <Link to="/match" className="md:col-span-7 bg-zinc-900/50 border-[4px] border-brand-orange p-8 flex flex-col justify-between group hover:-translate-y-1 transition-transform shadow-[8px_8px_0_var(--color-brand-orange)]">
+            <Link to="/match#playoff" className="md:col-span-7 bg-zinc-900/50 border-[4px] border-brand-orange p-8 flex flex-col justify-between group hover:-translate-y-1 transition-transform shadow-[8px_8px_0_var(--color-brand-orange)]">
               <div>
                 <Trophy className="text-brand-orange w-10 h-10 mb-6" />
                 <h3 className="font-display text-2xl sm:text-3xl uppercase text-white mb-2">2. Playoff Bracket</h3>

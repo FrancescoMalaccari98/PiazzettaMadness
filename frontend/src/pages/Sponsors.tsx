@@ -49,7 +49,7 @@ function SponsorCard({ sponsor, index }: { sponsor: Sponsor; index: number }) {
       {/* Logo */}
       <Wrapper
         {...wrapperProps}
-        className="flex items-center justify-center h-48 sm:h-64 p-8 relative cursor-pointer bg-zinc-200"
+        className="flex items-center justify-center h-48 sm:h-64 p-8 relative cursor-pointer bg-[#d1d1d1]"
       >
         <img
           src={sponsor.logo}
@@ -136,7 +136,7 @@ export function Sponsors() {
             <span className="text-brand-orange">Sponsor</span>
           </h1>
           <p className="font-sans text-zinc-400 text-base sm:text-lg max-w-xl mx-auto">
-            Senza di loro la Piazzetta Madness non esisterebbe.<br />Supporta chi ci supporta.
+            Senza di loro Piazzetta Madness non esisterebbe.
           </p>
         </div>
       </div>

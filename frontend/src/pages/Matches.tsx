@@ -663,7 +663,7 @@ export function Matches() {
         </div>
 
         {/* — FASE A GIRONI — */}
-        <div className="mb-24 order-2">
+        <div id="gironi" className="mb-24 order-2">
           <h2 className="font-display text-2xl sm:text-4xl md:text-5xl uppercase flex items-center gap-4 border-t-[6px] border-zinc-800 pt-6 pb-10 text-white">
             <Calendar className="w-6 h-6 sm:w-10 sm:h-10 text-brand-blue shrink-0" /> Fase a Gironi
           </h2>
@@ -706,7 +706,7 @@ export function Matches() {
         </div>
 
         {/* — PLAYOFF — solo se ci sono partite playoff nel DB — */}
-        <div className={`${gironiFiniti ? "order-1" : "order-3"}`}>
+        <div id="playoff" className={`${gironiFiniti ? "order-1" : "order-3"}`}>
         {(bracketMatches.semis.length > 0 || bracketMatches.final !== null || bracketMatches.third !== null) && (
         <div>
           <h2 className="font-display text-2xl sm:text-4xl md:text-5xl uppercase flex items-center gap-4 border-t-[6px] border-zinc-800 pt-6 pb-10 text-white">
