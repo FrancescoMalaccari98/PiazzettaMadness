@@ -50,7 +50,7 @@ function StaffCard({ member, index }: { member: StaffMember; index: number }) {
           <img
             src={member.foto}
             alt={member.nome}
-            className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500 scale-100 group-hover:scale-105"
+            className="w-full h-full object-cover transition-all duration-500 scale-100 group-hover:scale-105"
             referrerPolicy="no-referrer"
           />
         ) : (
