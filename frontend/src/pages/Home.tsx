@@ -220,7 +220,7 @@ export function Home() {
       {(kickoffState === null || kickoffState.show) && !countdown.over && (
         <section className="py-16 md:py-24 bg-brand-bg border-b-[4px] border-zinc-800">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <p className="font-display text-xs uppercase tracking-[0.35em] text-zinc-500 mb-8">La Madness inizia tra</p>
+            <p className="font-display text-xs uppercase tracking-[0.35em] text-zinc-500 mb-8">Il Madness inizia tra</p>
             <div className="flex items-start justify-center gap-1 sm:gap-4">
               <CountdownUnit value={countdown.days}    label="Giorni"  />
               <div className="w-px bg-zinc-800 self-stretch mt-1 mb-6 sm:mt-2 sm:mb-8 mx-0.5 sm:mx-2" />
