@@ -204,6 +204,11 @@ try {
         require_once __DIR__ . '/endpoints/foto.php';
         handle_foto();
 
+    // ── /merchandise ─────────────────────────────────────────
+    } elseif ($seg0 === 'merchandise') {
+        require_once __DIR__ . '/endpoints/merchandise.php';
+        handle_merchandise();
+
     // ── / (health check) ────────────────────────────────────
     } elseif ($seg0 === '' || $seg0 === 'health') {
         send_json([

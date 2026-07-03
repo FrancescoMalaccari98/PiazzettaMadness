@@ -105,11 +105,15 @@ export function Home() {
       })
       .catch(() => {});
 
-    fetch(`${API}/api-web/foto`)
+    fetch(`${API}/api-web/merchandise`)
       .then(r => r.ok ? r.json() as Promise<string[]> : null)
       .then(data => {
         if (!data?.length) return;
         const shuffled = [...data].sort(() => Math.random() - 0.5);
+        // Precarica tutte le foto in background: sono pesanti (foto originali,
+        // non ottimizzate), senza preload la rotazione ogni 5s mostra un flash
+        // nero mentre il browser scarica il gruppo successivo.
+        shuffled.forEach(url => { const img = new Image(); img.src = url; });
         setGalleryPhotos(shuffled);
         setGalleryGroup(Math.floor(Math.random() * Math.ceil(shuffled.length / 4)));
       })
@@ -131,12 +135,6 @@ export function Home() {
   const galleryNext = () => setGalleryGroup(g => (g + 1) % galleryTotalGroups);
   const galleryPrev = () => setGalleryGroup(g => (g - 1 + galleryTotalGroups) % galleryTotalGroups);
 
-  // Auto-slide gallery ogni 5 secondi
-  useEffect(() => {
-    if (galleryTotalGroups <= 1) return;
-    const id = setInterval(galleryNext, 5000);
-    return () => clearInterval(id);
-  }, [galleryTotalGroups]);
 
   const fallbackTarget = (() => {
     const now = new Date();
@@ -254,7 +252,7 @@ export function Home() {
                 <div className="absolute top-0 right-0 pointer-events-none opacity-10 group-hover:opacity-20 transition-opacity">
                   <img src="/logo.png" alt="" className="w-32 h-32 object-contain" />
                 </div>
-                <h3 className="font-display text-4xl md:text-5xl mb-3 text-white uppercase">The Court</h3>
+                <h2 className="font-display text-4xl md:text-5xl mb-3 text-white uppercase">The Court</h2>
                 <p className="font-sans text-zinc-400 text-lg md:text-xl max-w-md">Il tempio del basket di strada. Dove l'asfalto scotta e non ci sono regole scritte, solo rispetto.</p>
               </div>
 
@@ -415,6 +413,7 @@ export function Home() {
                   <div className="flex items-center justify-between mt-4">
                     <button
                       onClick={galleryPrev}
+                      aria-label="Foto precedenti"
                       className="p-2.5 border-[3px] border-zinc-700 text-zinc-400 hover:border-brand-orange hover:text-brand-orange transition-colors"
                     >
                       <ChevronLeft className="w-5 h-5" />
@@ -424,6 +423,7 @@ export function Home() {
                     </span>
                     <button
                       onClick={galleryNext}
+                      aria-label="Foto successive"
                       className="p-2.5 border-[3px] border-zinc-700 text-zinc-400 hover:border-brand-orange hover:text-brand-orange transition-colors"
                     >
                       <ChevronRight className="w-5 h-5" />
