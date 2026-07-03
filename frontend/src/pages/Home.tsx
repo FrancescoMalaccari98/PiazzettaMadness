@@ -141,8 +141,8 @@ export function Home() {
   const fallbackTarget = (() => {
     const now = new Date();
     const y = now.getFullYear();
-    const t = new Date(y, 6, 10, 20, 45, 0); // 10 Lug — stessa data della prima partita
-    return t > now ? t : new Date(y + 1, 6, 10, 20, 45, 0);
+    const t = new Date(y, 6, 8, 21, 0, 0); // 8 Lug 21:00
+    return t > now ? t : new Date(y + 1, 6, 8, 21, 0, 0);
   })();
   const countdown = useCountdown(kickoffState?.target ?? fallbackTarget);
   return (
