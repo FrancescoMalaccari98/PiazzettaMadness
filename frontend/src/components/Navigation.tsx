@@ -5,12 +5,12 @@ import { cn } from "../lib/utils";
 const navLinks: { name: string; path: string; live?: boolean }[] = [
   { name: "Home", path: "/" },
   { name: "Info", path: "/info" },
-  { name: "Foto", path: "/foto" },
-  { name: "Match", path: "/match" },
-  { name: "Stat.", path: "/statistiche" },
-  { name: "Staff", path: "/staff" },
-  { name: "Roster", path: "/giocatori" },
-  { name: "3PT", path: "/3pt" },
+  { name: "Pics", path: "/foto" },
+  { name: "Matches", path: "/match" },
+  { name: "Stats", path: "/statistiche" },
+  { name: "Crew", path: "/staff" },
+  { name: "Rosters", path: "/giocatori" },
+  { name: "3PTs", path: "/3pt" },
   { name: "Sponsor", path: "/sponsor" },
   { name: "Live", path: "/live", live: true },
 ];
