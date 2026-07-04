@@ -15,7 +15,7 @@ type StaffMember = {
 
 const CATEGORIE: { key: string; label: string }[] = [
   { key: "founders",      label: "Founders" },
-  { key: "social",        label: "Social" },
+  { key: "social",        label: "Visual" },
   { key: "it",            label: "IT" },
   { key: "collaboratori", label: "Collaboratori" },
 ];

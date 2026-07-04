@@ -176,7 +176,7 @@ export function Home() {
             transition={{ duration: 0.6 }}
           >
             <h1 className="font-display leading-[0.85] mb-6 tracking-[-2px] md:tracking-[-4px]">
-              <span className="block text-5xl sm:text-6xl md:text-[100px] lg:text-[120px] text-white">PRONTI PER LA</span>
+              <span className="block text-5xl sm:text-6xl md:text-[100px] lg:text-[120px] text-white">PRONTI PER IL</span>
               <span className="block text-5xl sm:text-6xl md:text-[100px] lg:text-[120px] text-brand-orange">MADNESS?</span>
             </h1>
           </motion.div>

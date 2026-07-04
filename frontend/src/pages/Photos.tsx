@@ -58,7 +58,7 @@ export function Photos() {
             Hall of Fame
           </h1>
           <p className="text-xl font-sans text-zinc-400">
-            I momenti più epici della Madness. Sudore, sangue e highlights.
+            I momenti più epici del Madness. Sudore, sangue e highlights.
           </p>
         </div>
       </motion.div>
