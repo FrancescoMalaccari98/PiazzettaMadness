@@ -598,12 +598,13 @@ export function Matches() {
         <div className="relative overflow-hidden border-b-[4px] border-zinc-800 mb-16">
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
             <span className="font-display font-black text-[18vw] uppercase text-white/[0.025] whitespace-nowrap tracking-tighter leading-none">
-              MATCH
+              MATCHES
             </span>
           </div>
           <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center pb-12">
+            <p className="font-display text-brand-orange uppercase tracking-[0.3em] text-sm mb-3">Piazzetta Madness 2026</p>
             <h1 className="font-display text-[56px] sm:text-[80px] md:text-[120px] text-brand-orange uppercase leading-[0.8] mb-6 tracking-[-2px] md:tracking-[-4px]">
-              Match
+              Matches
             </h1>
             <p className="text-base sm:text-xl font-sans text-zinc-400 max-w-2xl mx-auto">
               Dal girone all'italiana fino alla pazzesca finale dei playoff. Ripercorri ogni canestro.

@@ -38,7 +38,7 @@ export function Players() {
       <div className="relative overflow-hidden border-b-[4px] border-zinc-800 mb-12">
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden">
           <span className="font-display font-black text-[18vw] uppercase text-white/[0.025] whitespace-nowrap tracking-tighter leading-none">
-            PLAYERS
+            ROSTERS
           </span>
         </div>
         <motion.div
@@ -47,7 +47,7 @@ export function Players() {
         >
           <p className="font-display text-brand-orange uppercase tracking-[0.3em] text-sm mb-3">Piazzetta Madness 2026</p>
           <h1 className="font-display text-[56px] sm:text-[80px] md:text-[120px] uppercase leading-[0.8] tracking-[-2px] md:tracking-[-4px] text-brand-orange mb-6">
-            Players
+            Rosters
           </h1>
           <p className="font-sans text-zinc-400 text-base sm:text-lg max-w-xl mx-auto">
             {players.length} atleti, {teams.length} squadre. Clicca su un giocatore per vedere le sue statistiche.
