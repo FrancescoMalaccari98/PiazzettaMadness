@@ -51,7 +51,7 @@ type LiveData = {
 const POLL_LIVE_MS = 5000;
 const POLL_IDLE_MS = 15000;
 
-const FOUL_LIMIT = 5; // personal_foul_limit di default nel db
+const FOUL_LIMIT = 4; // personal_foul_limit di default nel db
 
 const PERIOD_LABELS: Record<number, string> = {
   1: "Tempo 1",
