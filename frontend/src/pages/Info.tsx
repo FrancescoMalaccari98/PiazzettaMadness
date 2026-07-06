@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { BadgeInfo, CalendarDays, Timer, Shield, Target, AlertTriangle, MessageSquare } from "lucide-react";
+import { BadgeInfo, CalendarDays, Timer, Shield, Target, AlertTriangle, MessageSquare, Trophy } from "lucide-react";
 
 function Section({ icon: Icon, title, children }: { icon: React.ElementType; title: string; children: React.ReactNode }) {
   return (
@@ -114,6 +114,62 @@ export function Info() {
                     <tr><td className="px-3 py-2 text-zinc-300">Premiazione</td><td className="px-3 py-2 text-center text-zinc-400">23:45</td><td className="px-3 py-2 text-center text-zinc-400">00:15</td></tr>
                   </tbody>
                 </table>
+              </div>
+            </div>
+          </Section>
+
+          {/* ── PREMI ── */}
+          <Section icon={Trophy} title="Premi">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="bg-zinc-950 border border-zinc-800 p-4 flex items-start gap-3">
+                <span className="text-2xl">🥇</span>
+                <div>
+                  <p className="font-display text-sm uppercase tracking-widest text-brand-yellow mb-1">1° Posto</p>
+                  <p className="text-white font-bold">Buono cena da "Ristorante Giamirma"</p>
+                </div>
+              </div>
+              <div className="bg-zinc-950 border border-zinc-800 p-4 flex items-start gap-3">
+                <span className="text-2xl">🥈</span>
+                <div>
+                  <p className="font-display text-sm uppercase tracking-widest text-zinc-400 mb-1">2° Posto</p>
+                  <p className="text-white font-bold">Buono cena da "Osteria del Moro"</p>
+                </div>
+              </div>
+              <div className="bg-zinc-950 border border-zinc-800 p-4 flex items-start gap-3">
+                <span className="text-2xl">🥉</span>
+                <div>
+                  <p className="font-display text-sm uppercase tracking-widest text-zinc-500 mb-1">3° Posto</p>
+                  <p className="text-white font-bold">Buono aperitivo da "Bar Marghé"</p>
+                </div>
+              </div>
+              <div className="bg-zinc-950 border border-zinc-800 p-4 flex items-start gap-3">
+                <span className="text-2xl">⭐</span>
+                <div>
+                  <p className="font-display text-sm uppercase tracking-widest text-brand-orange mb-1">MVP del Torneo</p>
+                  <p className="text-white font-bold">Buono cena da "Agriturismo Contrada San Savino"</p>
+                </div>
+              </div>
+              <div className="bg-zinc-950 border border-zinc-800 p-4 flex items-start gap-3">
+                <span className="text-2xl">🛡️</span>
+                <div>
+                  <p className="font-display text-sm uppercase tracking-widest text-brand-blue mb-1">Best Defensive Player</p>
+                  <p className="text-white font-bold">Buono spendibile da Quota CS Sport</p>
+                </div>
+              </div>
+              <div className="bg-zinc-950 border border-zinc-800 p-4 flex items-start gap-3">
+                <span className="text-2xl">🏀</span>
+                <div>
+                  <p className="font-display text-sm uppercase tracking-widest text-brand-yellow mb-1">3 Point Contest</p>
+                  <p className="text-white font-bold">Buono degustazione da "Cantina Andrea Giorgetti"</p>
+                  <p className="text-zinc-400 text-sm">2 menù + 1 bottiglia di vino</p>
+                </div>
+              </div>
+              <div className="bg-zinc-950 border border-zinc-800 p-4 flex items-start gap-3 sm:col-span-2">
+                <span className="text-2xl">⭐</span>
+                <div>
+                  <p className="font-display text-sm uppercase tracking-widest text-brand-orange mb-1">MVP di Giornata</p>
+                  <p className="text-white font-bold">Fusto di birra da 5L</p>
+                </div>
               </div>
             </div>
           </Section>
