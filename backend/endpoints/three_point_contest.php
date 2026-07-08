@@ -48,6 +48,7 @@ function handle_three_point_contest(PDO $pdo): void {
             t.name          AS team_name,
             t.short_name    AS team_short,
             t.primary_color AS team_color,
+            t.secondary_color AS team_secondary_color,
             tr.jersey_number
         FROM three_point_contest_entries e
         JOIN players p ON p.id = e.player_id
@@ -138,6 +139,7 @@ function handle_three_point_contest(PDO $pdo): void {
             'player'         => trim($e['first_name'] . ' ' . $e['last_name']),
             'jersey_number'  => $e['jersey_number'] !== null ? (int)$e['jersey_number'] : null,
             'team_color'     => $e['team_color'] ?? null,
+            'team_secondary_color' => $e['team_secondary_color'] ?? null,
             'team'           => $e['team_name'],
             'team_short'     => $e['team_short'],
             'seed_order'     => $e['seed_order'] !== null ? (int)$e['seed_order'] : null,

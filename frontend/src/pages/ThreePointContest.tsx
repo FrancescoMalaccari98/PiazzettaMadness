@@ -31,6 +31,7 @@ type Entry = {
   final_position: number | null;
   jersey_number: number | null;
   team_color: string | null;
+  team_secondary_color: string | null;
   rounds: Round[];
 };
 
@@ -115,8 +116,11 @@ function PlayerRow({ entry, pos, isCompleted, showRoundTypes }: {
       {/* Info giocatore */}
       <div className="flex items-center gap-2 sm:gap-4 px-3 sm:px-5 py-3 sm:py-4">
         <span
-          className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center font-display text-xs sm:text-sm font-bold shrink-0 text-white"
-          style={{ backgroundColor: entry.team_color ?? "#3f3f46" }}
+          className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center font-display text-xs sm:text-sm font-bold shrink-0"
+          style={{
+            backgroundColor: entry.team_color ?? "#3f3f46",
+            color: entry.team_secondary_color ?? "#ffffff",
+          }}
         >
           {pos}
         </span>
