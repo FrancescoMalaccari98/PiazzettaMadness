@@ -53,8 +53,93 @@ function handleAction(PDO $pdo, string $method, string $action)
         'replace_standings' => $method === 'PUT' ? replaceStandings($pdo) : respond(405, ['error' => 'Method not allowed']),
         'initialize_match_players' => $method === 'POST' ? initializeMatchPlayers($pdo) : respond(405, ['error' => 'Method not allowed']),
         'sync_live' => $method === 'POST' ? syncLive($pdo) : respond(405, ['error' => 'Method not allowed']),
+        'initialize_contest_shots' => $method === 'POST' ? initializeContestShots($pdo) : respond(405, ['error' => 'Method not allowed']),
+        'sync_contest' => $method === 'PUT' ? syncContest($pdo) : respond(405, ['error' => 'Method not allowed']),
         default => respond(400, ['error' => 'Unsupported action']),
     };
+}
+
+function initializeContestShots(PDO $pdo)
+{
+    $roundId = readId();
+    $check = $pdo->prepare('SELECT id FROM three_point_contest_rounds WHERE id = :id');
+    $check->execute([':id' => $roundId]);
+    if ($check->fetchColumn() === false) {
+        respond(404, ['error' => '3pt round not found']);
+    }
+
+    $statement = $pdo->prepare(
+        "INSERT IGNORE INTO three_point_contest_shots
+            (round_id, station_number, ball_number, point_value, result)
+         VALUES (:round_id, :station, :ball, :point_value, 'Pending')"
+    );
+    for ($station = 1; $station <= 5; $station++) {
+        for ($ball = 1; $ball <= 5; $ball++) {
+            $statement->execute([
+                ':round_id' => $roundId,
+                ':station' => $station,
+                ':ball' => $ball,
+                ':point_value' => $ball === 5 ? 2 : 1,
+            ]);
+        }
+    }
+
+    $statement = $pdo->prepare(
+        'SELECT id, round_id, station_number, ball_number, point_value, result
+         FROM three_point_contest_shots
+         WHERE round_id = :round_id
+         ORDER BY station_number, ball_number'
+    );
+    $statement->execute([':round_id' => $roundId]);
+    respond(200, $statement->fetchAll());
+}
+
+function syncContest(PDO $pdo)
+{
+    $body = readJsonBody();
+    $event = requireObject($body, 'competition_event');
+    $entry = requireObject($body, 'entry');
+    $round = requireObject($body, 'round');
+    $shots = $body['shots'] ?? null;
+    if (!is_array($shots)) {
+        respond(400, ['error' => 'shots array is required']);
+    }
+
+    $eventId = (int)($event['id'] ?? 0);
+    $entryId = (int)($entry['id'] ?? 0);
+    $roundId = (int)($round['id'] ?? 0);
+    if ($eventId < 1 || $entryId < 1 || $roundId < 1 ||
+        (int)($entry['competition_event_id'] ?? 0) !== $eventId ||
+        (int)($round['entry_id'] ?? 0) !== $entryId) {
+        respond(422, ['error' => 'Invalid 3pt contest payload']);
+    }
+
+    $pdo->beginTransaction();
+    try {
+        $savedEvent = writeRecord($pdo, 'competition_events', $event, $eventId);
+        $savedEntry = writeRecord($pdo, 'three_point_contest_entries', $entry, $entryId);
+        $savedRound = writeRecord($pdo, 'three_point_contest_rounds', $round, $roundId);
+        $savedShots = [];
+        foreach ($shots as $shot) {
+            if (!is_array($shot) || (int)($shot['round_id'] ?? 0) !== $roundId || (int)($shot['id'] ?? 0) < 1) {
+                throw new DomainException('Invalid 3pt shot payload');
+            }
+            $savedShots[] = writeRecord($pdo, 'three_point_contest_shots', $shot, (int)$shot['id']);
+        }
+        $pdo->commit();
+        respond(200, [
+            'competition_event' => $savedEvent,
+            'entry' => $savedEntry,
+            'round' => $savedRound,
+            'shots' => $savedShots,
+        ]);
+    } catch (DomainException $exception) {
+        $pdo->rollBack();
+        respond(422, ['error' => 'Invalid 3pt contest payload', 'detail' => $exception->getMessage()]);
+    } catch (Throwable $exception) {
+        $pdo->rollBack();
+        throw $exception;
+    }
 }
 
 function syncLive(PDO $pdo)
@@ -326,11 +411,33 @@ function replaceStandings(PDO $pdo)
     }
 }
 
+function validateConsoleActiveEdition(PDO $pdo, string $table, array $data, ?int $id): void
+{
+    if ($table !== 'editions' || (int)($data['is_console_active'] ?? 0) !== 1) {
+        return;
+    }
+
+    $sql = 'SELECT id FROM editions WHERE is_console_active = 1';
+    $params = [];
+    if ($id !== null) {
+        $sql .= ' AND id <> :id';
+        $params[':id'] = $id;
+    }
+    $sql .= ' LIMIT 1';
+
+    $statement = $pdo->prepare($sql);
+    $statement->execute($params);
+    if ($statement->fetchColumn()) {
+        respond(422, ['error' => 'Only one edition can be active for console']);
+    }
+}
+
 function writeRecord(PDO $pdo, string $table, array $body, ?int $id): array
 {
     $definition = tableDefinitions()[$table];
     $data = filterWritable($body, $definition['writable']);
     validateRow($table, $data);
+    validateConsoleActiveEdition($pdo, $table, $data, $id);
     if ($data === []) {
         throw new RuntimeException("No writable fields for $table");
     }
@@ -455,8 +562,8 @@ function tableDefinitions(): array
             'order' => '`name`, `id`',
         ],
         'editions' => [
-            'columns' => ['id', 'tournament_id', 'name', 'year', 'start_date', 'end_date', 'status', 'created_at', 'updated_at'],
-            'writable' => ['tournament_id', 'name', 'year', 'start_date', 'end_date', 'status'],
+            'columns' => ['id', 'tournament_id', 'name', 'year', 'start_date', 'end_date', 'status', 'is_console_active', 'created_at', 'updated_at'],
+            'writable' => ['tournament_id', 'name', 'year', 'start_date', 'end_date', 'status', 'is_console_active'],
             'order' => '`year` DESC, `name`, `id`',
         ],
         'courts' => [
@@ -467,6 +574,11 @@ function tableDefinitions(): array
         'sponsors' => [
             'columns' => ['id', 'name', 'description', 'image_path', 'is_active', 'sort_order', 'created_at', 'updated_at'],
             'writable' => ['name', 'description', 'image_path', 'is_active', 'sort_order'],
+            'order' => '`sort_order`, `name`, `id`',
+        ],
+        'merchandise_items' => [
+            'columns' => ['id', 'name', 'description', 'price', 'image_path', 'is_active', 'sort_order', 'created_at', 'updated_at'],
+            'writable' => ['name', 'description', 'price', 'image_path', 'is_active', 'sort_order'],
             'order' => '`sort_order`, `name`, `id`',
         ],
         'teams' => [
@@ -528,6 +640,11 @@ function tableDefinitions(): array
             'columns' => ['id', 'entry_id', 'round_number', 'round_type', 'station1_score', 'station2_score', 'station3_score', 'station4_score', 'station5_score', 'total_score', 'notes'],
             'writable' => ['entry_id', 'round_number', 'round_type', 'station1_score', 'station2_score', 'station3_score', 'station4_score', 'station5_score', 'total_score', 'notes'],
             'order' => '`entry_id`, `round_number`, `round_type`, `id`',
+        ],
+        'three_point_contest_shots' => [
+            'columns' => ['id', 'round_id', 'station_number', 'ball_number', 'point_value', 'result'],
+            'writable' => ['round_id', 'station_number', 'ball_number', 'point_value', 'result'],
+            'order' => 'round_id, station_number, ball_number, id',
         ],
         'forfeit_results' => [
             'columns' => ['id', 'match_id', 'winning_team_id', 'losing_team_id', 'home_assigned_score', 'away_assigned_score', 'reason', 'notes', 'created_at'],
@@ -692,6 +809,10 @@ function validateRow(string $table, array $data): void
         respond(422, ['error' => 'Sponsor name is required']);
     }
 
+    if ($table === 'merchandise_items' && trim((string)($data['name'] ?? '')) === '') {
+        respond(422, ['error' => 'Merchandise item name is required']);
+    }
+
     if ($table === 'teams') {
         if ((int)($data['edition_id'] ?? 0) < 1 || trim((string)($data['name'] ?? '')) === '') {
             respond(422, ['error' => 'Team edition_id and name are required']);
@@ -761,6 +882,18 @@ function validateRow(string $table, array $data): void
     if ($table === 'three_point_contest_rounds') {
         if ((int)($data['entry_id'] ?? 0) < 1 || (int)($data['round_number'] ?? 0) < 1 || trim((string)($data['round_type'] ?? '')) === '') {
             respond(422, ['error' => '3pt round entry_id, round_number and round_type are required']);
+        }
+    }
+
+    if ($table === 'three_point_contest_shots') {
+        $station = (int)($data['station_number'] ?? 0);
+        $ball = (int)($data['ball_number'] ?? 0);
+        $value = (int)($data['point_value'] ?? 0);
+        $result = (string)($data['result'] ?? '');
+        if ((int)($data['round_id'] ?? 0) < 1 || $station < 1 || $station > 5 ||
+            $ball < 1 || $ball > 5 || !in_array($value, [1, 2], true) ||
+            !in_array($result, ['Pending', 'Made', 'Missed'], true)) {
+            respond(422, ['error' => 'Invalid 3pt shot']);
         }
     }
 

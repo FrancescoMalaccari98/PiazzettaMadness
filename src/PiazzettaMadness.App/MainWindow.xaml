@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
+        Icon="Assets/PM_logo.ico"
         Title="Piazzetta Madness - Console"
         Height="720"
         Width="1500"
@@ -11,6 +12,73 @@
         MinWidth="1200"
         Background="#f4f6f8"
         PreviewKeyDown="MainWindow_PreviewKeyDown">
+        <Window.Resources>
+            <Style x:Key="LivePlayersTextCellStyle" TargetType="TextBlock">
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="Padding" Value="2,0" />
+                <Setter Property="FontSize" Value="13" />
+            </Style>
+
+            <Style x:Key="LivePlayersGridStyle" TargetType="DataGrid">
+                <Setter Property="GridLinesVisibility" Value="None" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="RowBackground" Value="Transparent" />
+                <Setter Property="AlternatingRowBackground" Value="#f8fafc" />
+                <Setter Property="RowHeaderWidth" Value="0" />
+                <Setter Property="CanUserResizeRows" Value="False" />
+                <Setter Property="ColumnHeaderStyle">
+                    <Setter.Value>
+                        <Style TargetType="DataGridColumnHeader">
+                            <Setter Property="Background" Value="#f1f5f9" />
+                            <Setter Property="Foreground" Value="#475569" />
+                            <Setter Property="FontWeight" Value="SemiBold" />
+                            <Setter Property="FontSize" Value="13" />
+                            <Setter Property="BorderBrush" Value="#e2e8f0" />
+                            <Setter Property="BorderThickness" Value="0,0,0,1" />
+                            <Setter Property="Padding" Value="4,6" />
+                        </Style>
+                    </Setter.Value>
+                </Setter>
+                <Setter Property="CellStyle">
+                    <Setter.Value>
+                        <Style TargetType="DataGridCell">
+                            <Setter Property="BorderThickness" Value="0" />
+                            <Setter Property="Padding" Value="2,1" />
+                            <Setter Property="Background" Value="Transparent" />
+                            <Setter Property="Foreground" Value="#111827" />
+                            <Setter Property="VerticalContentAlignment" Value="Center" />
+                            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                            <Style.Triggers>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="Foreground" Value="#111827" />
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Setter.Value>
+                </Setter>
+                <Setter Property="RowStyle">
+                    <Setter.Value>
+                        <Style TargetType="DataGridRow">
+                            <Setter Property="BorderThickness" Value="0" />
+                            <Setter Property="Foreground" Value="#111827" />
+                            <Setter Property="VerticalContentAlignment" Value="Center" />
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#f1f5f9" />
+                                </Trigger>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="#e0f2fe" />
+                                    <Setter Property="Foreground" Value="#111827" />
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+        </Window.Resources>
+
         <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -49,7 +117,7 @@
 
                     <DockPanel Grid.Row="0" Grid.ColumnSpan="3" Margin="0,0,0,12">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="Modalità" VerticalAlignment="Center" Margin="0,0,8,0" />
+                            <TextBlock Text="Modalita" VerticalAlignment="Center" Margin="0,0,8,0" />
                             <ComboBox x:Name="LiveModeCombo"
                                       Width="120"
                                       SelectedIndex="0"
@@ -98,22 +166,35 @@
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
                                 <StackPanel>
-                                    <TextBlock x:Name="HomeNameText" Text="A2" FontSize="25" FontWeight="Bold" />
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Border x:Name="HomeTeamColorChip" Width="24" Height="24" Margin="0,0,8,0" Background="#f77f00" BorderBrush="#64748b" BorderThickness="1" />
+                                        <TextBlock x:Name="HomeNameText" Text="A2" FontSize="25" FontWeight="Bold" VerticalAlignment="Center" />
+                                    </StackPanel>
                                     <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
                                         <TextBlock x:Name="HomeScoreText" Text="0" FontSize="50" FontWeight="Bold" />
-                                        <TextBlock x:Name="HomeFoulsText" Text="Falli 0" Margin="14,23,0,0" FontSize="18" FontWeight="SemiBold" Foreground="#475569" />
+                                        <StackPanel Margin="14,14,0,0">
+                                            <TextBlock x:Name="HomeFoulsText" Text="Falli 0" FontSize="18" FontWeight="SemiBold" Foreground="#475569" />
+                                            <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                                                <TextBlock x:Name="HomeTimeoutsText" Text="Timeout 0/2" FontSize="15" FontWeight="SemiBold" Foreground="#475569" VerticalAlignment="Center" />
+                                                <Button Content="TO+" Width="42" Height="26" Margin="8,0,4,0" FontSize="12" Click="HomeTimeoutPlus_Click" />
+                                                <Button Content="TO-" Width="42" Height="26" FontSize="12" Click="HomeTimeoutMinus_Click" />
+                                            </StackPanel>
+                                        </StackPanel>
                                     </StackPanel>
                                 </StackPanel>
-                                <WrapPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                    <Button Content="+1" Width="54" Height="34" FontSize="15" Margin="0,0,6,6" Click="HomePlusOne_Click" />
-                                    <Button Content="+2" Width="54" Height="34" FontSize="15" Margin="0,0,6,6" Click="HomePlusTwo_Click" />
-                                    <Button Content="+3" Width="54" Height="34" FontSize="15" Margin="0,0,6,6" Click="HomePlusThree_Click" />
-                                    <Button Content="-1" Width="54" Height="34" FontSize="15" Margin="0,0,6,6" Click="HomeMinusOne_Click" />
-                                    <Button Content="F+" Width="54" Height="34" FontSize="15" Margin="0,0,6,6" Click="HomeTeamFoulPlus_Click" />
-                                    <Button Content="F-" Width="54" Height="34" FontSize="15" Margin="0,0,0,6" Click="HomeTeamFoulMinus_Click" />
-                                </WrapPanel>
+                                <Expander Grid.Column="1" Header="Comandi squadra" IsExpanded="False" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                    <WrapPanel Margin="0,6,0,0" HorizontalAlignment="Right">
+                                        <Button Content="+1" Width="54" Height="34" FontSize="15" Margin="0,0,6,6" Click="HomePlusOne_Click" />
+                                        <Button Content="+2" Width="54" Height="34" FontSize="15" Margin="0,0,6,6" Click="HomePlusTwo_Click" />
+                                        <Button Content="+3" Width="54" Height="34" FontSize="15" Margin="0,0,6,6" Click="HomePlusThree_Click" />
+                                        <Button Content="-1" Width="54" Height="34" FontSize="15" Margin="0,0,6,6" Click="HomeMinusOne_Click" />
+                                        <Button Content="F+" Width="54" Height="34" FontSize="15" Margin="0,0,6,6" Click="HomeTeamFoulPlus_Click" />
+                                        <Button Content="F-" Width="54" Height="34" FontSize="15" Margin="0,0,0,6" Click="HomeTeamFoulMinus_Click" />
+                                    </WrapPanel>
+                                </Expander>
                             </Grid>
                             <DataGrid x:Name="HomeLivePlayersGrid"
+                                      Style="{StaticResource LivePlayersGridStyle}"
                                       Grid.Row="1"
                                       AutoGenerateColumns="False"
                                       CanUserAddRows="False"
@@ -123,39 +204,39 @@
                                       RowHeight="42"
                                       AlternatingRowBackground="#f9fafb">
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Header="#" Binding="{Binding JerseyNumber}" Width="34" />
-                                    <DataGridTemplateColumn Header="Giocatore" Width="112">
+                                    <DataGridTextColumn Header="#" Binding="{Binding JerseyNumber}" Width="34" ElementStyle="{StaticResource LivePlayersTextCellStyle}" />
+                                    <DataGridTemplateColumn Header="Giocatore" Width="124">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <TextBlock Text="{Binding PlayerName}" TextWrapping="Wrap" FontSize="12" LineHeight="14" />
+                                                <TextBlock Text="{Binding PlayerName}" TextWrapping="Wrap" FontSize="13" LineHeight="15" VerticalAlignment="Center" Padding="2,0" />
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTextColumn Header="Pt" Binding="{Binding Points}" Width="36" />
-                                    <DataGridTextColumn Header="F" Binding="{Binding Fouls}" Width="32" />
-                                    <DataGridTemplateColumn Header="Punti" Width="184">
+                                    <DataGridTextColumn Header="Pt" Binding="{Binding Points}" Width="40" ElementStyle="{StaticResource LivePlayersTextCellStyle}" />
+                                    <DataGridTextColumn Header="F" Binding="{Binding Fouls}" Width="36" ElementStyle="{StaticResource LivePlayersTextCellStyle}" />
+                                    <DataGridTemplateColumn Header="Punti" Width="206">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <StackPanel Orientation="Horizontal">
-                                                    <Button Content="+1" Width="40" Height="32" FontSize="14" Margin="0,0,5,0" Click="PlayerPlusOne_Click" />
-                                                    <Button Content="+2" Width="40" Height="32" FontSize="14" Margin="0,0,5,0" Click="PlayerPlusTwo_Click" />
-                                                    <Button Content="+3" Width="40" Height="32" FontSize="14" Margin="0,0,5,0" Click="PlayerPlusThree_Click" />
-                                                    <Button Content="-1" Width="40" Height="32" FontSize="14" Click="PlayerMinusOne_Click" />
+                                                <StackPanel Orientation="Horizontal" Margin="12,0,0,0">
+                                                    <Button Content="+1" Width="42" Height="34" FontSize="15" Margin="0,0,5,0" Click="PlayerPlusOne_Click" />
+                                                    <Button Content="+2" Width="42" Height="34" FontSize="15" Margin="0,0,5,0" Click="PlayerPlusTwo_Click" />
+                                                    <Button Content="+3" Width="42" Height="34" FontSize="15" Margin="0,0,13,0" Click="PlayerPlusThree_Click" />
+                                                    <Button Content="-1" Width="42" Height="34" FontSize="15" Click="PlayerMinusOne_Click" />
                                                 </StackPanel>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTemplateColumn Header="Falli" Width="92">
+                                    <DataGridTemplateColumn Header="Falli" Width="106">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <StackPanel Orientation="Horizontal">
-                                                    <Button Content="+" Width="40" Height="32" FontSize="16" Margin="0,0,5,0" Click="PlayerFoulPlus_Click" />
-                                                    <Button Content="-" Width="40" Height="32" FontSize="16" Click="PlayerFoulMinus_Click" />
+                                                <StackPanel Orientation="Horizontal" Margin="12,0,0,0">
+                                                    <Button Content="+" Width="42" Height="34" FontSize="17" Margin="0,0,5,0" Click="PlayerFoulPlus_Click" />
+                                                    <Button Content="-" Width="42" Height="34" FontSize="17" Click="PlayerFoulMinus_Click" />
                                                 </StackPanel>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTemplateColumn Header="Azioni" Width="158">
+                                    <DataGridTemplateColumn Header="Azioni" Width="158" Visibility="Collapsed">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <StackPanel Orientation="Horizontal">
@@ -192,13 +273,15 @@
                                     <ComboBoxItem Content="Tempo 1" Tag="1" IsSelected="True" />
                                     <ComboBoxItem Content="Tempo 2" Tag="2" />
                                     <ComboBoxItem Content="Overtime" Tag="3" />
+                                    <ComboBoxItem Content="Intervallo" Tag="4" />
+                                    <ComboBoxItem Content="Riscaldamento" Tag="5" />
                                 </ComboBox>
                             </Border>
                             <TextBlock x:Name="PeriodText" Text="1" Visibility="Collapsed" />
                             <TextBlock Text="Tempo partita" Margin="0,12,0,0" Foreground="#cbd5e1" HorizontalAlignment="Center" FontSize="14" />
                             <TextBlock x:Name="GameClockText" Text="12:00" Foreground="White" HorizontalAlignment="Center" FontSize="44" FontWeight="Bold" />
                             <Button x:Name="StartPauseButton"
-                                    Content="▶ Start / Pausa [Spazio]"
+                                    Content="Start / Pausa [Spazio]"
                                     Height="36"
                                     Margin="0,8,0,10"
                                     Background="#16a34a"
@@ -208,7 +291,7 @@
                             <TextBlock Text="24 secondi" Margin="0,10,0,0" Foreground="#cbd5e1" HorizontalAlignment="Center" FontSize="14" />
                             <TextBlock x:Name="ShotClockText" Text="24" Foreground="#fca5a5" HorizontalAlignment="Center" FontSize="52" FontWeight="Bold" />
                             <Button x:Name="ShotStartPauseButton"
-                                    Content="▶ Start / Pausa 24 [0]"
+                                    Content="Start / Pausa 24 [0]"
                                     Height="36"
                                     Margin="0,6,0,10"
                                     Background="#16a34a"
@@ -227,14 +310,22 @@
                             <TextBlock x:Name="TeamFoulsText" Text="Falli 0 - 0" Visibility="Collapsed" Margin="0,7,0,0" Foreground="#cbd5e1" HorizontalAlignment="Center" FontSize="15" />
                             </StackPanel>
                         </ScrollViewer>
-                            <Border Grid.Row="1" Margin="0,10,0,0" Padding="8" Background="#1f2937" BorderBrush="#475569" BorderThickness="1">
-                                <StackPanel>
-                                    <TextBlock Text="Correzioni e reset" Foreground="#cbd5e1" HorizontalAlignment="Center" Margin="0,0,0,6" FontSize="12" />
-                                    <Button Content="Reset tempo partita" Height="32" Background="#f59e0b" Foreground="#111827" FontSize="12" FontWeight="SemiBold" Click="ResetGameClock_Click" />
-                                    <Button Content="Imposta tempo manualmente" Height="32" Margin="0,5,0,0" Background="#e5e7eb" Foreground="#111827" FontSize="12" FontWeight="SemiBold" Click="SetGameClock_Click" />
-                                    <Button Content="Reset partita" Height="32" Margin="0,5,0,0" Background="#dc2626" Foreground="White" FontSize="12" FontWeight="SemiBold" Click="ResetGame_Click" />
-                                </StackPanel>
-                            </Border>
+                            <StackPanel Grid.Row="1" Margin="0,10,0,0">
+                                <Border Padding="8" Background="#1f2937" BorderBrush="#475569" BorderThickness="1">
+                                    <StackPanel>
+                                        <TextBlock Text="Reset falli" Foreground="#cbd5e1" HorizontalAlignment="Center" Margin="0,0,0,6" FontSize="12" />
+                                        <Button Content="Reset falli cambio tempo" Height="32" Background="#dbeafe" Foreground="#111827" FontSize="12" FontWeight="SemiBold" Click="ResetPeriodFouls_Click" />
+                                    </StackPanel>
+                                </Border>
+                                <Border Margin="0,8,0,0" Padding="8" Background="#1f2937" BorderBrush="#475569" BorderThickness="1">
+                                    <StackPanel>
+                                        <TextBlock Text="Correzioni e reset" Foreground="#cbd5e1" HorizontalAlignment="Center" Margin="0,0,0,6" FontSize="12" />
+                                        <Button Content="Reset tempo partita" Height="32" Background="#f59e0b" Foreground="#111827" FontSize="12" FontWeight="SemiBold" Click="ResetGameClock_Click" />
+                                        <Button Content="Imposta tempo manualmente" Height="32" Margin="0,5,0,0" Background="#e5e7eb" Foreground="#111827" FontSize="12" FontWeight="SemiBold" Click="SetGameClock_Click" />
+                                        <Button Content="Reset partita" Height="32" Margin="0,5,0,0" Background="#dc2626" Foreground="White" FontSize="12" FontWeight="SemiBold" Click="ResetGame_Click" />
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
                         </Grid>
                     </Border>
 
@@ -250,22 +341,35 @@
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
                                 <StackPanel>
-                                    <TextBlock x:Name="AwayNameText" Text="A4" FontSize="25" FontWeight="Bold" />
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Border x:Name="AwayTeamColorChip" Width="24" Height="24" Margin="0,0,8,0" Background="#457b9d" BorderBrush="#64748b" BorderThickness="1" />
+                                        <TextBlock x:Name="AwayNameText" Text="A4" FontSize="25" FontWeight="Bold" VerticalAlignment="Center" />
+                                    </StackPanel>
                                     <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
                                         <TextBlock x:Name="AwayScoreText" Text="0" FontSize="50" FontWeight="Bold" />
-                                        <TextBlock x:Name="AwayFoulsText" Text="Falli 0" Margin="14,23,0,0" FontSize="18" FontWeight="SemiBold" Foreground="#475569" />
+                                        <StackPanel Margin="14,14,0,0">
+                                            <TextBlock x:Name="AwayFoulsText" Text="Falli 0" FontSize="18" FontWeight="SemiBold" Foreground="#475569" />
+                                            <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                                                <TextBlock x:Name="AwayTimeoutsText" Text="Timeout 0/2" FontSize="15" FontWeight="SemiBold" Foreground="#475569" VerticalAlignment="Center" />
+                                                <Button Content="TO+" Width="42" Height="26" Margin="8,0,4,0" FontSize="12" Click="AwayTimeoutPlus_Click" />
+                                                <Button Content="TO-" Width="42" Height="26" FontSize="12" Click="AwayTimeoutMinus_Click" />
+                                            </StackPanel>
+                                        </StackPanel>
                                     </StackPanel>
                                 </StackPanel>
-                                <WrapPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                    <Button Content="+1" Width="54" Height="34" FontSize="15" Margin="0,0,6,6" Click="AwayPlusOne_Click" />
-                                    <Button Content="+2" Width="54" Height="34" FontSize="15" Margin="0,0,6,6" Click="AwayPlusTwo_Click" />
-                                    <Button Content="+3" Width="54" Height="34" FontSize="15" Margin="0,0,6,6" Click="AwayPlusThree_Click" />
-                                    <Button Content="-1" Width="54" Height="34" FontSize="15" Margin="0,0,6,6" Click="AwayMinusOne_Click" />
-                                    <Button Content="F+" Width="54" Height="34" FontSize="15" Margin="0,0,6,6" Click="AwayTeamFoulPlus_Click" />
-                                    <Button Content="F-" Width="54" Height="34" FontSize="15" Margin="0,0,0,6" Click="AwayTeamFoulMinus_Click" />
-                                </WrapPanel>
+                                <Expander Grid.Column="1" Header="Comandi squadra" IsExpanded="False" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                    <WrapPanel Margin="0,6,0,0" HorizontalAlignment="Right">
+                                        <Button Content="+1" Width="54" Height="34" FontSize="15" Margin="0,0,6,6" Click="AwayPlusOne_Click" />
+                                        <Button Content="+2" Width="54" Height="34" FontSize="15" Margin="0,0,6,6" Click="AwayPlusTwo_Click" />
+                                        <Button Content="+3" Width="54" Height="34" FontSize="15" Margin="0,0,6,6" Click="AwayPlusThree_Click" />
+                                        <Button Content="-1" Width="54" Height="34" FontSize="15" Margin="0,0,6,6" Click="AwayMinusOne_Click" />
+                                        <Button Content="F+" Width="54" Height="34" FontSize="15" Margin="0,0,6,6" Click="AwayTeamFoulPlus_Click" />
+                                        <Button Content="F-" Width="54" Height="34" FontSize="15" Margin="0,0,0,6" Click="AwayTeamFoulMinus_Click" />
+                                    </WrapPanel>
+                                </Expander>
                             </Grid>
                             <DataGrid x:Name="AwayLivePlayersGrid"
+                                      Style="{StaticResource LivePlayersGridStyle}"
                                       Grid.Row="1"
                                       AutoGenerateColumns="False"
                                       CanUserAddRows="False"
@@ -275,39 +379,39 @@
                                       RowHeight="42"
                                       AlternatingRowBackground="#f9fafb">
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Header="#" Binding="{Binding JerseyNumber}" Width="34" />
-                                    <DataGridTemplateColumn Header="Giocatore" Width="112">
+                                    <DataGridTextColumn Header="#" Binding="{Binding JerseyNumber}" Width="34" ElementStyle="{StaticResource LivePlayersTextCellStyle}" />
+                                    <DataGridTemplateColumn Header="Giocatore" Width="124">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <TextBlock Text="{Binding PlayerName}" TextWrapping="Wrap" FontSize="12" LineHeight="14" />
+                                                <TextBlock Text="{Binding PlayerName}" TextWrapping="Wrap" FontSize="13" LineHeight="15" VerticalAlignment="Center" Padding="2,0" />
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTextColumn Header="Pt" Binding="{Binding Points}" Width="36" />
-                                    <DataGridTextColumn Header="F" Binding="{Binding Fouls}" Width="32" />
-                                    <DataGridTemplateColumn Header="Punti" Width="184">
+                                    <DataGridTextColumn Header="Pt" Binding="{Binding Points}" Width="40" ElementStyle="{StaticResource LivePlayersTextCellStyle}" />
+                                    <DataGridTextColumn Header="F" Binding="{Binding Fouls}" Width="36" ElementStyle="{StaticResource LivePlayersTextCellStyle}" />
+                                    <DataGridTemplateColumn Header="Punti" Width="206">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <StackPanel Orientation="Horizontal">
-                                                    <Button Content="+1" Width="40" Height="32" FontSize="14" Margin="0,0,5,0" Click="PlayerPlusOne_Click" />
-                                                    <Button Content="+2" Width="40" Height="32" FontSize="14" Margin="0,0,5,0" Click="PlayerPlusTwo_Click" />
-                                                    <Button Content="+3" Width="40" Height="32" FontSize="14" Margin="0,0,5,0" Click="PlayerPlusThree_Click" />
-                                                    <Button Content="-1" Width="40" Height="32" FontSize="14" Click="PlayerMinusOne_Click" />
+                                                <StackPanel Orientation="Horizontal" Margin="12,0,0,0">
+                                                    <Button Content="+1" Width="42" Height="34" FontSize="15" Margin="0,0,5,0" Click="PlayerPlusOne_Click" />
+                                                    <Button Content="+2" Width="42" Height="34" FontSize="15" Margin="0,0,5,0" Click="PlayerPlusTwo_Click" />
+                                                    <Button Content="+3" Width="42" Height="34" FontSize="15" Margin="0,0,13,0" Click="PlayerPlusThree_Click" />
+                                                    <Button Content="-1" Width="42" Height="34" FontSize="15" Click="PlayerMinusOne_Click" />
                                                 </StackPanel>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTemplateColumn Header="Falli" Width="92">
+                                    <DataGridTemplateColumn Header="Falli" Width="106">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <StackPanel Orientation="Horizontal">
-                                                    <Button Content="+" Width="40" Height="32" FontSize="16" Margin="0,0,5,0" Click="PlayerFoulPlus_Click" />
-                                                    <Button Content="-" Width="40" Height="32" FontSize="16" Click="PlayerFoulMinus_Click" />
+                                                <StackPanel Orientation="Horizontal" Margin="12,0,0,0">
+                                                    <Button Content="+" Width="42" Height="34" FontSize="17" Margin="0,0,5,0" Click="PlayerFoulPlus_Click" />
+                                                    <Button Content="-" Width="42" Height="34" FontSize="17" Click="PlayerFoulMinus_Click" />
                                                 </StackPanel>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTemplateColumn Header="Azioni" Width="158">
+                                    <DataGridTemplateColumn Header="Azioni" Width="158" Visibility="Collapsed">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <StackPanel Orientation="Horizontal">
@@ -356,36 +460,35 @@
                         </Border.Resources>
                         <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="1.2*" />
-                                <ColumnDefinition Width="1.1*" />
-                                <ColumnDefinition Width="1.2*" />
+                                <ColumnDefinition Width="360" />
+                                <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <Border Padding="18" Margin="0,0,12,0" Background="White" BorderBrush="#d1d5db" BorderThickness="1">
+                            <Border Padding="14" Margin="0,0,12,0" Background="White" BorderBrush="#d1d5db" BorderThickness="1">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                             <StackPanel>
-                                <TextBlock Text="3 Point Contest" Foreground="#111827" FontSize="28" FontWeight="Bold" />
-                                <TextBlock Text="Selezione prova" Foreground="#6b7280" Margin="0,4,0,12" />
-                                <TextBlock Text="Evento" Foreground="#374151" FontWeight="SemiBold" Margin="0,8,0,6" />
-                                <ComboBox x:Name="ContestEventCombo" Height="38" DisplayMemberPath="Name" SelectionChanged="ContestEventCombo_SelectionChanged" />
-                                <TextBlock Text="Tiratore" Foreground="#374151" FontWeight="SemiBold" Margin="0,16,0,6" />
-                                <ComboBox x:Name="ContestEntryCombo" Height="38" DisplayMemberPath="DisplayName" SelectionChanged="ContestEntryCombo_SelectionChanged" />
-                                <TextBlock Text="Prova / fase" Foreground="#374151" FontWeight="SemiBold" Margin="0,16,0,6" />
-                                <ComboBox x:Name="ContestRoundCombo" Height="38" DisplayMemberPath="DisplayName" SelectionChanged="ContestRoundCombo_SelectionChanged" />
-                                <TextBlock x:Name="ContestDataMessageText" Text="" Foreground="#b45309" TextWrapping="Wrap" Margin="0,14,0,0" />
-                                <TextBlock x:Name="ContestStatusText" Text="Stato: pronto" Foreground="#111827" FontSize="18" FontWeight="SemiBold" Margin="0,14,0,0" />
-                            </StackPanel>
-                            </Border>
-                            <Border Grid.Column="1" Padding="18" Margin="0,0,12,0" Background="White" BorderBrush="#d1d5db" BorderThickness="1">
-                            <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Center">
-                                <TextBlock Text="TEMPO" Foreground="#6b7280" HorizontalAlignment="Center" FontSize="16" FontWeight="SemiBold" />
-                                <TextBlock x:Name="ContestClockText" Text="60" Foreground="#111827" HorizontalAlignment="Center" FontSize="96" FontWeight="Bold" />
-                                <UniformGrid Columns="2" Margin="0,14,0,0">
-                                    <Button x:Name="ContestStartPauseButton" Content="Inizia" Height="54" Margin="0,0,6,0" Background="#ea6324" Foreground="White" FontSize="17" FontWeight="SemiBold" Click="ContestStartPause_Click" />
-                                    <Button Content="Concludi" Height="54" Margin="6,0,0,0" FontSize="17" FontWeight="SemiBold" Click="ContestFinish_Click" />
+                                <TextBlock Text="3 Point Contest" Foreground="#111827" FontSize="24" FontWeight="Bold" />
+                                <TextBlock Text="Selezione prova" Foreground="#6b7280" Margin="0,2,0,8" />
+                                <TextBlock Text="Evento" Foreground="#374151" FontSize="12" FontWeight="SemiBold" Margin="0,6,0,4" />
+                                <ComboBox x:Name="ContestEventCombo" Height="30" FontSize="12" DisplayMemberPath="Name" SelectionChanged="ContestEventCombo_SelectionChanged" />
+                                <TextBlock Text="Prova / fase" Foreground="#374151" FontSize="12" FontWeight="SemiBold" Margin="0,10,0,4" />
+                                <ComboBox x:Name="ContestRoundCombo" Height="30" FontSize="12" DisplayMemberPath="DisplayName" SelectionChanged="ContestRoundCombo_SelectionChanged" />
+                                <TextBlock Text="Tiratore" Foreground="#374151" FontSize="12" FontWeight="SemiBold" Margin="0,10,0,4" />
+                                <ComboBox x:Name="ContestEntryCombo" Height="30" FontSize="12" DisplayMemberPath="DisplayName" SelectionChanged="ContestEntryCombo_SelectionChanged" />
+                                <TextBlock x:Name="ContestDataMessageText" Text="" Foreground="#b45309" TextWrapping="Wrap" Margin="0,10,0,0" FontSize="12" />
+                                <TextBlock x:Name="ContestStatusText" Text="Stato: pronto" Foreground="#111827" FontSize="15" FontWeight="SemiBold" Margin="0,10,0,0" />
+                                <Border Height="1" Margin="0,14,0,10" Background="#e5e7eb" />
+                                <TextBlock Text="TEMPO" Foreground="#6b7280" HorizontalAlignment="Center" FontSize="14" FontWeight="SemiBold" />
+                                <TextBlock x:Name="ContestClockText" Text="90.0" Foreground="#111827" HorizontalAlignment="Center" FontSize="72" FontWeight="Bold" />
+                                <UniformGrid Columns="2" Margin="0,10,0,0">
+                                    <Button x:Name="ContestStartPauseButton" Content="Inizia" Height="42" Margin="0,0,6,0" Background="#ea6324" Foreground="White" FontSize="14" FontWeight="SemiBold" Click="ContestStartPause_Click" />
+                                    <Button x:Name="ContestFinishButton" Content="Concludi" Height="42" Margin="6,0,0,0" FontSize="14" FontWeight="SemiBold" Click="ContestFinish_Click" />
                                 </UniformGrid>
-                                <Button Content="Reset prova" Height="44" Margin="0,12,0,0" FontWeight="SemiBold" Click="ContestReset_Click" />
+                                <Button Content="Reset prova" Height="36" Margin="0,8,0,0" FontSize="13" FontWeight="SemiBold" Click="ContestReset_Click" />
                             </StackPanel>
+                            </ScrollViewer>
                             </Border>
-                            <Border Grid.Column="2" Padding="18" Background="White" BorderBrush="#d1d5db" BorderThickness="1">
+                            <Border Grid.Column="1" Padding="18" Background="White" BorderBrush="#d1d5db" BorderThickness="1">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                             <StackPanel>
                                 <TextBlock Text="POSTAZIONE" Foreground="#6b7280" HorizontalAlignment="Center" FontSize="16" FontWeight="SemiBold" />
                                 <UniformGrid Columns="5" Margin="0,12,0,0">
@@ -397,12 +500,139 @@
                                 </UniformGrid>
                                 <TextBlock x:Name="ContestCurrentStationText" Text="Postazione 1: 0" Foreground="#374151" HorizontalAlignment="Center" FontSize="22" FontWeight="SemiBold" Margin="0,18,0,0" />
                                 <TextBlock x:Name="ContestTotalScoreText" Text="Totale: 0" Foreground="#ea6324" HorizontalAlignment="Center" FontSize="44" FontWeight="Bold" Margin="0,8,0,18" />
-                                <UniformGrid Columns="3">
-                                    <Button Content="+1" Height="72" Margin="0,0,6,0" FontSize="26" FontWeight="Bold" Background="#ea6324" Foreground="White" Click="ContestPlusOne_Click" />
-                                    <Button Content="+2" Height="72" Margin="6,0" FontSize="26" FontWeight="Bold" Background="#ea6324" Foreground="White" Click="ContestPlusTwo_Click" />
-                                    <Button Content="-1" Height="72" Margin="6,0,0,0" FontSize="26" FontWeight="Bold" Click="ContestMinusOne_Click" />
-                                </UniformGrid>
-                                <UniformGrid Columns="5" Margin="0,20,0,0">
+                                <TextBlock Text="Scorciatoie: S = canestro, X = errore" Foreground="#64748b" HorizontalAlignment="Center" FontSize="13" FontWeight="SemiBold" Margin="0,-8,0,12" />
+                                <TextBlock x:Name="ContestShotsMessageText"
+                                           Text="Caricamento tiri..."
+                                           Visibility="Collapsed"
+                                           Margin="0,4,0,12"
+                                           Padding="10"
+                                           Background="#fef3c7"
+                                           Foreground="#92400e"
+                                           TextAlignment="Center"
+                                           TextWrapping="Wrap"
+                                           FontWeight="SemiBold" />
+                                <ItemsControl x:Name="ContestShotsItemsControl" Margin="0,0,0,16">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <UniformGrid Columns="5" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Margin="4"
+                                                    Padding="7"
+                                                    CornerRadius="7">
+                                                <Border.Style>
+                                                    <Style TargetType="Border">
+                                                        <Setter Property="Background" Value="#f8fafc" />
+                                                        <Setter Property="BorderBrush" Value="#cbd5e1" />
+                                                        <Setter Property="BorderThickness" Value="2" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsBonus}" Value="True">
+                                                                <Setter Property="Background" Value="#fff7d6" />
+                                                                <Setter Property="BorderBrush" Value="#f59e0b" />
+                                                                <Setter Property="BorderThickness" Value="3" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Border.Style>
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding BallLabel}"
+                                                               HorizontalAlignment="Center"
+                                                               Foreground="#475569"
+                                                               FontSize="11"
+                                                               FontWeight="Bold" />
+                                                    <Border Width="46"
+                                                            Height="46"
+                                                            Margin="0,6"
+                                                            HorizontalAlignment="Center"
+                                                            CornerRadius="23"
+                                                            BorderThickness="3">
+                                                        <Border.Style>
+                                                            <Style TargetType="Border">
+                                                                <Setter Property="Background" Value="#cbd5e1" />
+                                                                <Setter Property="BorderBrush" Value="#64748b" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsBonus}" Value="True">
+                                                                        <Setter Property="Background" Value="#f59e0b" />
+                                                                        <Setter Property="BorderBrush" Value="#78350f" />
+                                                                    </DataTrigger>
+                                                                    <DataTrigger Binding="{Binding Result}" Value="Made">
+                                                                        <Setter Property="Background" Value="#22c55e" />
+                                                                        <Setter Property="BorderBrush" Value="#166534" />
+                                                                    </DataTrigger>
+                                                                    <DataTrigger Binding="{Binding Result}" Value="Missed">
+                                                                        <Setter Property="Background" Value="#ef4444" />
+                                                                        <Setter Property="BorderBrush" Value="#991b1b" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Border.Style>
+                                                        <TextBlock HorizontalAlignment="Center"
+                                                                   VerticalAlignment="Center"
+                                                                   Foreground="White"
+                                                                   FontSize="18"
+                                                                   FontWeight="Bold">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Setter Property="Text" Value="{Binding Shot.PointValue}" />
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding Result}" Value="Missed">
+                                                                            <Setter Property="Text" Value="X" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
+                                                    </Border>
+                                                    <UniformGrid Columns="2">
+                                                        <Button Content="{Binding MadeLabel}"
+                                                                Tag="Made"
+                                                                CommandParameter="{Binding}"
+                                                                Height="36"
+                                                                Margin="0,0,3,0"
+                                                                FontWeight="Bold"
+                                                                Click="ContestShotResult_Click">
+                                                            <Button.Style>
+                                                                <Style TargetType="Button">
+                                                                    <Setter Property="Background" Value="#e2e8f0" />
+                                                                    <Setter Property="Foreground" Value="#111827" />
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding Result}" Value="Made">
+                                                                            <Setter Property="Background" Value="#16a34a" />
+                                                                            <Setter Property="Foreground" Value="White" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Button.Style>
+                                                        </Button>
+                                                        <Button Content="X"
+                                                                Tag="Missed"
+                                                                CommandParameter="{Binding}"
+                                                                Height="36"
+                                                                Margin="3,0,0,0"
+                                                                FontWeight="Bold"
+                                                                Click="ContestShotResult_Click">
+                                                            <Button.Style>
+                                                                <Style TargetType="Button">
+                                                                    <Setter Property="Background" Value="#e2e8f0" />
+                                                                    <Setter Property="Foreground" Value="#111827" />
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding Result}" Value="Missed">
+                                                                            <Setter Property="Background" Value="#dc2626" />
+                                                                            <Setter Property="Foreground" Value="White" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Button.Style>
+                                                        </Button>
+                                                    </UniformGrid>
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <UniformGrid Columns="5" Margin="0,4,0,0">
                                     <TextBlock x:Name="ContestStation1Text" Text="1: 0" Foreground="#4b5563" FontWeight="SemiBold" HorizontalAlignment="Center" />
                                     <TextBlock x:Name="ContestStation2Text" Text="2: 0" Foreground="#4b5563" FontWeight="SemiBold" HorizontalAlignment="Center" />
                                     <TextBlock x:Name="ContestStation3Text" Text="3: 0" Foreground="#4b5563" FontWeight="SemiBold" HorizontalAlignment="Center" />
@@ -410,6 +640,7 @@
                                     <TextBlock x:Name="ContestStation5Text" Text="5: 0" Foreground="#4b5563" FontWeight="SemiBold" HorizontalAlignment="Center" />
                                 </UniformGrid>
                             </StackPanel>
+                            </ScrollViewer>
                             </Border>
                         </Grid>
                     </Border>
@@ -434,24 +665,37 @@
                             <StackPanel>
                                 <TextBlock Text="Cosa vuoi mostrare?" FontSize="17" FontWeight="SemiBold" Foreground="#111827" />
                                 <RadioButton x:Name="ShowScoreboardRadio" GroupName="DisplayMode" Content="Partita e punteggi" Margin="0,18,0,14" FontSize="16" IsChecked="True" />
-                                <RadioButton x:Name="ShowSponsorsRadio" GroupName="DisplayMode" Content="Carosello sponsor" Margin="0,0,0,14" FontSize="16" />
-                                <StackPanel Margin="28,-4,0,14" Orientation="Horizontal">
-                                    <TextBlock Text="Cambio ogni" VerticalAlignment="Center" Foreground="#4b5563" />
+                                <RadioButton x:Name="ShowPlayerStatsRadio" GroupName="DisplayMode" Content="Statistiche giocatori" Margin="0,0,0,8" FontSize="16" />
+                                <TextBlock Text="Le statistiche sono disponibili solo durante una partita in corso o in pausa."
+                                           Margin="28,0,0,14"
+                                           Foreground="#6b7280"
+                                           TextWrapping="Wrap" />
+                                <RadioButton x:Name="ShowQrCodeRadio" GroupName="DisplayMode" Content="QR code sito" Margin="0,0,0,14" FontSize="16" />
+                                <RadioButton x:Name="ShowSponsorsRadio" GroupName="DisplayMode" Content="Carosello sponsor" Margin="0,0,0,8" FontSize="16" />
+                                <StackPanel Margin="28,0,0,14" Orientation="Horizontal">
+                                    <TextBlock Text="Cambio sponsor ogni" VerticalAlignment="Center" Foreground="#4b5563" />
                                     <TextBox x:Name="SponsorIntervalSecondsBox"
                                              Width="56"
                                              Height="30"
                                              Margin="8,0"
-                                             Text="7"
+                                             Text="2"
                                              HorizontalContentAlignment="Center"
                                              VerticalContentAlignment="Center" />
                                     <TextBlock Text="secondi" VerticalAlignment="Center" Foreground="#4b5563" />
                                 </StackPanel>
-                                <RadioButton x:Name="ShowPlayerStatsRadio" GroupName="DisplayMode" Content="Statistiche giocatori" FontSize="16" />
-                                <RadioButton x:Name="ShowContestRadio" GroupName="DisplayMode" Content="3 Point Contest" Margin="0,14,0,0" FontSize="16" />
-                                <TextBlock Text="Le statistiche sono disponibili solo durante una partita in corso o in pausa."
-                                           Margin="28,8,0,0"
-                                           Foreground="#6b7280"
-                                           TextWrapping="Wrap" />
+                                <RadioButton x:Name="ShowMerchandiseRadio" GroupName="DisplayMode" Content="Carosello merchandising" Margin="0,0,0,8" FontSize="16" />
+                                <StackPanel Margin="28,0,0,14" Orientation="Horizontal">
+                                    <TextBlock Text="Cambio merchandising ogni" VerticalAlignment="Center" Foreground="#4b5563" />
+                                    <TextBox x:Name="MerchandiseIntervalSecondsBox"
+                                             Width="56"
+                                             Height="30"
+                                             Margin="8,0"
+                                             Text="8"
+                                             HorizontalContentAlignment="Center"
+                                             VerticalContentAlignment="Center" />
+                                    <TextBlock Text="secondi" VerticalAlignment="Center" Foreground="#4b5563" />
+                                </StackPanel>
+                                <RadioButton x:Name="ShowContestRadio" GroupName="DisplayMode" Content="3 Point Contest" Margin="0,0,0,0" FontSize="16" />
                             </StackPanel>
                         </Border>
 
@@ -520,7 +764,7 @@
 
                             <StackPanel Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Center">
                                 <TextBlock Text="Tempo" Foreground="#cbd5e1" HorizontalAlignment="Center" FontSize="18" />
-                                <TextBlock x:Name="ContestClockText" Text="60" Foreground="White" HorizontalAlignment="Center" FontSize="92" FontWeight="Bold" />
+                                <TextBlock x:Name="ContestClockText" Text="90.0" Foreground="White" HorizontalAlignment="Center" FontSize="92" FontWeight="Bold" />
                                 <UniformGrid Columns="2" Margin="0,14,0,0">
                                     <Button x:Name="ContestStartPauseButton" Content="Inizia" Height="46" Margin="0,0,6,0" Background="#16a34a" Foreground="White" FontWeight="SemiBold" Click="ContestStartPause_Click" />
                                     <Button Content="Concludi" Height="46" Margin="6,0,0,0" Background="#2563eb" Foreground="White" FontWeight="SemiBold" Click="ContestFinish_Click" />
@@ -662,6 +906,7 @@
                                         <DataGridTextColumn Header="Inizio" Binding="{Binding Edition.StartDate}" Width="110" />
                                         <DataGridTextColumn Header="Fine" Binding="{Binding Edition.EndDate}" Width="110" />
                                         <DataGridTextColumn Header="Stato" Binding="{Binding Edition.Status}" Width="110" />
+                                        <DataGridCheckBoxColumn Header="Console" Binding="{Binding Edition.IsConsoleActive}" Width="80" />
                                     </DataGrid.Columns>
                                 </DataGrid>
                             </Grid>
@@ -1083,6 +1328,27 @@
                             </Grid>
                         </TabItem>
 
+                        <TabItem Header="Merchandising" Tag="Special">
+                            <Grid Margin="0,12,0,0">
+                                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                    <Button Content="Nuovo articolo" Width="130" Height="34" Margin="0,0,8,0" Click="AddMerchandiseItem_Click" />
+                                    <Button Content="Modifica" Width="90" Height="34" Margin="0,0,8,0" Click="EditMerchandiseItem_Click" />
+                                    <Button Content="Elimina selezionato" Width="150" Height="34" Click="DeleteMerchandiseItem_Click" />
+                                </StackPanel>
+                                <DataGrid x:Name="MerchandiseItemsGrid" Grid.Row="1" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" SelectionMode="Single" MouseDoubleClick="MerchandiseItemsGrid_MouseDoubleClick" HeadersVisibility="Column" AlternatingRowBackground="#f9fafb">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Id" Binding="{Binding Id}" Width="60" />
+                                        <DataGridTextColumn Header="Nome" Binding="{Binding Name}" Width="2*" />
+                                        <DataGridTextColumn Header="Descrizione" Binding="{Binding Description}" Width="3*" />
+                                        <DataGridTextColumn Header="Prezzo" Binding="{Binding Price}" Width="90" />
+                                        <DataGridCheckBoxColumn Header="Attivo" Binding="{Binding IsActive}" Width="80" />
+                                        <DataGridTextColumn Header="Ordine" Binding="{Binding SortOrder}" Width="80" />
+                                        <DataGridTextColumn Header="Immagine" Binding="{Binding ImagePath}" Width="3*" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </Grid>
+                        </TabItem>
                         <TabItem Header="Classifiche" Tag="Report">
                             <Grid Margin="0,12,0,0">
                                 <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>

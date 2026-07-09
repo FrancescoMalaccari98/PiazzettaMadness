@@ -115,10 +115,16 @@ Le operazioni `GET`, `POST`, `PUT` e `DELETE` sono disponibili per:
 | `competition_events` | Eventi aggiuntivi del torneo |
 | `three_point_contest_entries` | Partecipanti alla gara da tre punti |
 | `three_point_contest_rounds` | Round della gara da tre punti |
+| `three_point_contest_shots` | Esiti delle cinque palle per ciascuna postazione |
 
 Le tabelle `match_player_stats` e `match_team_stats` non sono esposte da questo endpoint. Sono gestite dal programma dedicato alle statistiche.
 
 ## Azioni speciali
+
+Per il 3 Point Contest sono disponibili:
+
+- `POST /api/entities.php?action=initialize_contest_shots&id=ROUND_ID`: crea, se mancanti, i 25 tiri della prova.
+- `PUT /api/entities.php?action=sync_contest`: sincronizza evento, partecipante, round e 25 tiri in una transazione.
 
 Queste operazioni aggiornano piu tabelle insieme e sono preferibili alle singole chiamate quando si gestiscono partite, risultati a tavolino e classifiche.
 

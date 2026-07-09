@@ -86,6 +86,16 @@ public sealed class ScoreboardBroadcaster
         });
     }
 
+    public Task ShowMerchandiseAsync(IReadOnlyList<MerchandiseSlide> items, int intervalMs)
+    {
+        return PostAsync(new
+        {
+            type = "displayMode",
+            mode = "merchandise",
+            merchandise = items,
+            merchandiseIntervalMs = intervalMs
+        });
+    }
     public Task ShowPlayerStatsAsync()
     {
         return PostAsync(new
@@ -101,6 +111,15 @@ public sealed class ScoreboardBroadcaster
         {
             type = "displayMode",
             mode = "contest"
+        });
+    }
+
+    public Task ShowQrCodeAsync()
+    {
+        return PostAsync(new
+        {
+            type = "displayMode",
+            mode = "qrCode"
         });
     }
 

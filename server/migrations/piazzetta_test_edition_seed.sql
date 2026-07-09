@@ -1,4 +1,4 @@
-﻿-- ============================================================
+-- ============================================================
 -- Piazzetta Madness - seed soli dati
 -- Generato da dump phpMyAdmin, senza CREATE/ALTER TABLE.
 -- Richiede struttura gia presente: server/migrations/db_struttura.sql
@@ -13,6 +13,7 @@ START TRANSACTION;
 -- Pulizia dati esistenti: il seed usa ID espliciti, quindi va importato su tabelle vuote.
 -- L'ordine e inverso rispetto alle dipendenze tra tabelle.
 DELETE FROM `match_events`;
+DELETE FROM `three_point_contest_shots`;
 DELETE FROM `three_point_contest_rounds`;
 DELETE FROM `three_point_contest_entries`;
 DELETE FROM `competition_events`;
@@ -24,6 +25,7 @@ DELETE FROM `team_rosters`;
 DELETE FROM `standings`;
 DELETE FROM `group_teams`;
 DELETE FROM `staff`;
+DELETE FROM `merchandise_items`;
 DELETE FROM `sponsors`;
 DELETE FROM `players`;
 DELETE FROM `teams`;
@@ -37,8 +39,8 @@ INSERT INTO `tournaments` (`id`, `name`, `description`, `created_at`, `updated_a
 (4, 'Piazzetta Madness', 'Torneo estivo di basket organizzato alla Piazzetta Verde.', '2026-06-16 16:27:35', '2026-06-16 16:27:35');
 
 -- Dati tabella editions
-INSERT INTO `editions` (`id`, `tournament_id`, `name`, `year`, `start_date`, `end_date`, `status`, `created_at`, `updated_at`) VALUES
-(4, 4, 'Piazzetta Madness 2026 - Test 8 Squadre', 2026, '2026-07-08', '2026-07-11', 'Active', '2026-06-16 16:27:35', '2026-06-16 16:27:35');
+INSERT INTO `editions` (`id`, `tournament_id`, `name`, `year`, `start_date`, `end_date`, `status`, `is_console_active`, `created_at`, `updated_at`) VALUES
+(4, 4, 'Piazzetta Madness 2026 - Test 8 Squadre', 2026, '2026-07-08', '2026-07-11', 'Active', 1, '2026-06-16 16:27:35', '2026-06-16 16:27:35');
 
 -- Dati tabella courts
 INSERT INTO `courts` (`id`, `edition_id`, `name`, `location`) VALUES
@@ -532,7 +534,7 @@ INSERT INTO `three_point_contest_entries` (`id`, `competition_event_id`, `team_i
 
 -- Dati tabella three_point_contest_rounds
 INSERT INTO `three_point_contest_rounds` (`id`, `entry_id`, `round_number`, `round_type`, `station1_score`, `station2_score`, `station3_score`, `station4_score`, `station5_score`, `total_score`, `notes`) VALUES
-(1, 1, 1, 'Qualification', 0, 0, 0, 0, 0, 0, '{\"Status\":\"Ready\",\"Station\":1,\"ClockMs\":60000}'),
+(1, 1, 1, 'Qualification', 0, 0, 0, 0, 0, 0, '{\"Status\":\"Ready\",\"Station\":1,\"ClockMs\":90000}'),
 (2, 2, 1, 'Qualification', 0, 0, 0, 0, 0, 0, NULL),
 (3, 3, 1, 'Qualification', 0, 0, 0, 0, 0, 0, NULL),
 (4, 4, 1, 'Qualification', 0, 0, 0, 0, 0, 0, NULL);

@@ -17,6 +17,7 @@ public partial class EditionFormWindow : Window
         NameBox.Text = edition.Name;
         YearBox.Text = edition.Year == 0 ? DateTime.Now.Year.ToString(CultureInfo.InvariantCulture) : edition.Year.ToString(CultureInfo.InvariantCulture);
         StatusCombo.Text = string.IsNullOrWhiteSpace(edition.Status) ? "Draft" : edition.Status;
+        ConsoleActiveBox.IsChecked = edition.IsConsoleActive;
 
         if (DateTime.TryParseExact(edition.StartDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var start))
         {
@@ -70,6 +71,7 @@ public partial class EditionFormWindow : Window
         Edition.StartDate = startDate;
         Edition.EndDate = endDate;
         Edition.Status = StatusCombo.Text;
+        Edition.IsConsoleActive = ConsoleActiveBox.IsChecked == true;
         DialogResult = true;
     }
 

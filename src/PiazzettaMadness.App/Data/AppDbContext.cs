@@ -12,10 +12,12 @@ public sealed class AppDbContext : DbContext
     public DbSet<CompetitionEvent> CompetitionEvents => Set<CompetitionEvent>();
     public DbSet<ThreePointContestEntry> ThreePointContestEntries => Set<ThreePointContestEntry>();
     public DbSet<ThreePointContestRound> ThreePointContestRounds => Set<ThreePointContestRound>();
+    public DbSet<ThreePointContestShot> ThreePointContestShots => Set<ThreePointContestShot>();
     public DbSet<ForfeitResult> ForfeitResults => Set<ForfeitResult>();
     public DbSet<Standing> Standings => Set<Standing>();
     public DbSet<Team> Teams => Set<Team>();
     public DbSet<Sponsor> Sponsors => Set<Sponsor>();
+    public DbSet<MerchandiseItem> MerchandiseItems => Set<MerchandiseItem>();
     public DbSet<Player> Players => Set<Player>();
     public DbSet<TeamRoster> TeamRosters => Set<TeamRoster>();
     public DbSet<Match> Matches => Set<Match>();
@@ -40,10 +42,12 @@ public sealed class AppDbContext : DbContext
         modelBuilder.Entity<CompetitionEvent>().ToTable("competition_events");
         modelBuilder.Entity<ThreePointContestEntry>().ToTable("three_point_contest_entries");
         modelBuilder.Entity<ThreePointContestRound>().ToTable("three_point_contest_rounds");
+        modelBuilder.Entity<ThreePointContestShot>().ToTable("three_point_contest_shots");
         modelBuilder.Entity<ForfeitResult>().ToTable("forfeit_results");
         modelBuilder.Entity<Standing>().ToTable("standings");
         modelBuilder.Entity<Team>().ToTable("teams");
         modelBuilder.Entity<Sponsor>().ToTable("sponsors");
+        modelBuilder.Entity<MerchandiseItem>().ToTable("merchandise_items");
         modelBuilder.Entity<Player>().ToTable("players");
         modelBuilder.Entity<TeamRoster>().ToTable("team_rosters");
         modelBuilder.Entity<Match>().ToTable("matches");
@@ -61,10 +65,12 @@ public sealed class AppDbContext : DbContext
         ConfigureCompetitionEvent(modelBuilder);
         ConfigureThreePointContestEntry(modelBuilder);
         ConfigureThreePointContestRound(modelBuilder);
+        ConfigureThreePointContestShot(modelBuilder);
         ConfigureForfeitResult(modelBuilder);
         ConfigureStanding(modelBuilder);
         ConfigureTeam(modelBuilder);
         ConfigureSponsor(modelBuilder);
+        ConfigureMerchandiseItem(modelBuilder);
         ConfigurePlayer(modelBuilder);
         ConfigureTeamRoster(modelBuilder);
         ConfigureMatch(modelBuilder);
@@ -98,6 +104,7 @@ public sealed class AppDbContext : DbContext
             entity.Property(x => x.StartDate).HasColumnName("start_date");
             entity.Property(x => x.EndDate).HasColumnName("end_date");
             entity.Property(x => x.Status).HasColumnName("status");
+            entity.Property(x => x.IsConsoleActive).HasColumnName("is_console_active");
             entity.Property(x => x.CreatedAt).HasColumnName("created_at");
             entity.Property(x => x.UpdatedAt).HasColumnName("updated_at");
         });
@@ -183,6 +190,20 @@ public sealed class AppDbContext : DbContext
         });
     }
 
+    private static void ConfigureThreePointContestShot(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<ThreePointContestShot>(entity =>
+        {
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.RoundId).HasColumnName("round_id");
+            entity.Property(x => x.StationNumber).HasColumnName("station_number");
+            entity.Property(x => x.BallNumber).HasColumnName("ball_number");
+            entity.Property(x => x.PointValue).HasColumnName("point_value");
+            entity.Property(x => x.Result).HasColumnName("result");
+            entity.HasIndex(x => new { x.RoundId, x.StationNumber, x.BallNumber }).IsUnique();
+        });
+    }
+
     private static void ConfigureForfeitResult(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<ForfeitResult>(entity =>
@@ -241,6 +262,21 @@ public sealed class AppDbContext : DbContext
             entity.Property(x => x.Id).HasColumnName("id");
             entity.Property(x => x.Name).HasColumnName("name");
             entity.Property(x => x.Description).HasColumnName("description");
+            entity.Property(x => x.ImagePath).HasColumnName("image_path");
+            entity.Property(x => x.IsActive).HasColumnName("is_active");
+            entity.Property(x => x.SortOrder).HasColumnName("sort_order");
+            entity.Property(x => x.CreatedAt).HasColumnName("created_at");
+            entity.Property(x => x.UpdatedAt).HasColumnName("updated_at");
+        });
+    }
+    private static void ConfigureMerchandiseItem(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<MerchandiseItem>(entity =>
+        {
+            entity.Property(x => x.Id).HasColumnName("id");
+            entity.Property(x => x.Name).HasColumnName("name");
+            entity.Property(x => x.Description).HasColumnName("description");
+            entity.Property(x => x.Price).HasColumnName("price");
             entity.Property(x => x.ImagePath).HasColumnName("image_path");
             entity.Property(x => x.IsActive).HasColumnName("is_active");
             entity.Property(x => x.SortOrder).HasColumnName("sort_order");

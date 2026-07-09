@@ -143,7 +143,7 @@ Flusso:
 - selezionare modalita `3 Point Contest`;
 - selezionare evento, tiratore e prova;
 - registrare punteggio per postazione con `+1`, `+2`, `-1`;
-- usare timer da 60 secondi;
+- usare timer da 90 secondi;
 - mostrare grafica dedicata sul tabellone.
 
 Non vengono registrati i singoli palloni, solo il punteggio totale delle 5 postazioni.

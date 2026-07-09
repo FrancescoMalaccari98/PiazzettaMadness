@@ -18,6 +18,7 @@ public sealed class Edition
     public string? StartDate { get; set; }
     public string? EndDate { get; set; }
     public string Status { get; set; } = "Draft";
+    public bool IsConsoleActive { get; set; }
     public string CreatedAt { get; set; } = "";
     public string UpdatedAt { get; set; } = "";
 }
@@ -40,6 +41,19 @@ public sealed class Sponsor
     public int Id { get; set; }
     public string Name { get; set; } = "";
     public string? Description { get; set; }
+    public string? ImagePath { get; set; }
+    public bool IsActive { get; set; } = true;
+    public int SortOrder { get; set; }
+    public string CreatedAt { get; set; } = "";
+    public string UpdatedAt { get; set; } = "";
+}
+
+public sealed class MerchandiseItem
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = "";
+    public string? Description { get; set; }
+    public decimal? Price { get; set; }
     public string? ImagePath { get; set; }
     public bool IsActive { get; set; } = true;
     public int SortOrder { get; set; }
@@ -107,6 +121,16 @@ public sealed class ThreePointContestRound
     public int Station5Score { get; set; }
     public int TotalScore { get; set; }
     public string? Notes { get; set; }
+}
+
+public sealed class ThreePointContestShot
+{
+    public int Id { get; set; }
+    public int RoundId { get; set; }
+    public int StationNumber { get; set; }
+    public int BallNumber { get; set; }
+    public int PointValue { get; set; }
+    public string Result { get; set; } = "Pending";
 }
 
 public sealed class ForfeitResult

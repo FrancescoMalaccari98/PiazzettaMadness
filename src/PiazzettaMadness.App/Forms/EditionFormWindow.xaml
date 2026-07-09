@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Edizione"
         Width="560"
-        Height="460"
+        Height="500"
         ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner"
         Background="#f4f6f8">
@@ -29,6 +29,7 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
             <TextBlock Text="Torneo *" Grid.Row="0" VerticalAlignment="Center" Margin="0,0,12,14" />
@@ -47,12 +48,15 @@
             <DatePicker x:Name="EndDatePicker" Grid.Row="4" Grid.Column="1" Height="34" Margin="0,0,0,14" DateValidationError="DatePicker_DateValidationError" />
 
             <TextBlock Text="Stato" Grid.Row="5" VerticalAlignment="Center" Margin="0,0,12,0" />
-            <ComboBox x:Name="StatusCombo" Grid.Row="5" Grid.Column="1" Height="34">
+            <ComboBox x:Name="StatusCombo" Grid.Row="5" Grid.Column="1" Height="34" Margin="0,0,0,14">
                 <ComboBoxItem Content="Draft" />
                 <ComboBoxItem Content="Active" />
                 <ComboBoxItem Content="Completed" />
                 <ComboBoxItem Content="Cancelled" />
             </ComboBox>
+
+            <TextBlock Text="Console" Grid.Row="6" VerticalAlignment="Center" Margin="0,0,12,0" />
+            <CheckBox x:Name="ConsoleActiveBox" Grid.Row="6" Grid.Column="1" Content="Usa questa edizione nella console" VerticalAlignment="Center" />
         </Grid>
         </ScrollViewer>
 

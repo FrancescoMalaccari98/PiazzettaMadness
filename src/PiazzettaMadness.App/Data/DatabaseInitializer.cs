@@ -30,7 +30,7 @@ public static class DatabaseInitializer
 
         using var transaction = connection.BeginTransaction();
         var tournamentId = ExecuteScalarLong(connection, transaction, "INSERT INTO tournaments (name, description) VALUES ('Piazzetta Madness', 'Torneo basket locale'); SELECT last_insert_rowid();");
-        var editionId = ExecuteScalarLong(connection, transaction, $"INSERT INTO editions (tournament_id, name, year, status) VALUES ({tournamentId}, 'Piazzetta Madness 2026', 2026, 'Draft'); SELECT last_insert_rowid();");
+        var editionId = ExecuteScalarLong(connection, transaction, $"INSERT INTO editions (tournament_id, name, year, status, is_console_active) VALUES ({tournamentId}, 'Piazzetta Madness 2026', 2026, 'Draft', 1); SELECT last_insert_rowid();");
         var courtId = ExecuteScalarLong(connection, transaction, $"INSERT INTO courts (edition_id, name, location) VALUES ({editionId}, 'Piazzetta Verde', 'Porto Potenza Picena'); SELECT last_insert_rowid();");
         var groupAId = ExecuteScalarLong(connection, transaction, $"INSERT INTO tournament_groups (edition_id, name, code, sort_order) VALUES ({editionId}, 'Girone A', 'A', 1); SELECT last_insert_rowid();");
         var groupBId = ExecuteScalarLong(connection, transaction, $"INSERT INTO tournament_groups (edition_id, name, code, sort_order) VALUES ({editionId}, 'Girone B', 'B', 2); SELECT last_insert_rowid();");
@@ -611,7 +611,17 @@ public static class DatabaseInitializer
         AddColumnIfMissing(connection, "players", "address", "TEXT NULL");
         AddColumnIfMissing(connection, "players", "phone_number", "TEXT NULL");
         AddColumnIfMissing(connection, "players", "email", "TEXT NULL");
+        AddColumnIfMissing(connection, "editions", "is_console_active", "INTEGER NOT NULL DEFAULT 0 CHECK (is_console_active IN (0, 1))");
+        CreateUniqueIndexIfMissing(connection, "ux_editions_console_active", "CREATE UNIQUE INDEX ux_editions_console_active ON editions(is_console_active) WHERE is_console_active = 1;");
         CreateSponsorsTableIfMissing(connection);
+        CreateMerchandiseItemsTableIfMissing(connection);
+    }
+
+    private static void CreateUniqueIndexIfMissing(SqliteConnection connection, string indexName, string sql)
+    {
+        using var command = connection.CreateCommand();
+        command.CommandText = sql.Replace("CREATE UNIQUE INDEX ", "CREATE UNIQUE INDEX IF NOT EXISTS ");
+        command.ExecuteNonQuery();
     }
 
     private static void CreateSponsorsTableIfMissing(SqliteConnection connection)
@@ -632,6 +642,25 @@ public static class DatabaseInitializer
         command.ExecuteNonQuery();
     }
 
+
+    private static void CreateMerchandiseItemsTableIfMissing(SqliteConnection connection)
+    {
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            CREATE TABLE IF NOT EXISTS merchandise_items (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                description TEXT NULL,
+                price REAL NULL,
+                image_path TEXT NULL,
+                is_active INTEGER NOT NULL DEFAULT 1 CHECK (is_active IN (0, 1)),
+                sort_order INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            );
+            """;
+        command.ExecuteNonQuery();
+    }
     private static void AddColumnIfMissing(SqliteConnection connection, string tableName, string columnName, string definition)
     {
         using var check = connection.CreateCommand();

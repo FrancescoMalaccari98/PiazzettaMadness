@@ -64,6 +64,7 @@ CREATE TABLE `editions` (
   `start_date` date DEFAULT NULL,
   `end_date` date DEFAULT NULL,
   `status` enum('Draft','Active','Completed','Cancelled') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Draft',
+  `is_console_active` tinyint(1) NOT NULL DEFAULT '0',
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -354,6 +355,23 @@ CREATE TABLE `sponsors` (
 -- --------------------------------------------------------
 
 --
+-- Struttura della tabella `merchandise_items`
+--
+
+CREATE TABLE `merchandise_items` (
+  `id` int UNSIGNED NOT NULL,
+  `name` varchar(160) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `price` decimal(10,2) DEFAULT NULL,
+  `image_path` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `sort_order` int NOT NULL DEFAULT '0',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- --------------------------------------------------------
+
+--
 -- Struttura della tabella `staff`
 --
 
@@ -463,6 +481,21 @@ CREATE TABLE `three_point_contest_rounds` (
 -- --------------------------------------------------------
 
 --
+-- Struttura della tabella `three_point_contest_shots`
+--
+
+CREATE TABLE `three_point_contest_shots` (
+  `id` int UNSIGNED NOT NULL,
+  `round_id` int UNSIGNED NOT NULL,
+  `station_number` tinyint UNSIGNED NOT NULL,
+  `ball_number` tinyint UNSIGNED NOT NULL,
+  `point_value` tinyint UNSIGNED NOT NULL,
+  `result` enum('Pending','Made','Missed') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Pending'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Struttura della tabella `tournaments`
 --
 
@@ -511,7 +544,8 @@ ALTER TABLE `courts`
 --
 ALTER TABLE `editions`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `ix_editions_tournament_id` (`tournament_id`);
+  ADD KEY `ix_editions_tournament_id` (`tournament_id`),
+  ADD UNIQUE KEY `ux_editions_console_active` ((CASE WHEN `is_console_active` = 1 THEN `is_console_active` ELSE NULL END));
 
 --
 -- Indici per le tabelle `forfeit_results`
@@ -607,6 +641,12 @@ ALTER TABLE `scoreboard_states`
   ADD KEY `ix_scoreboard_states_possession_team_id` (`possession_team_id`);
 
 --
+-- Indici per le tabelle `merchandise_items`
+--
+ALTER TABLE `merchandise_items`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `ix_merchandise_items_active_sort` (`is_active`,`sort_order`);
+--
 -- Indici per le tabelle `sponsors`
 --
 ALTER TABLE `sponsors`
@@ -660,6 +700,13 @@ ALTER TABLE `three_point_contest_entries`
 ALTER TABLE `three_point_contest_rounds`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `ux_three_point_rounds_entry_round_type` (`entry_id`,`round_number`,`round_type`);
+
+--
+-- Indici per le tabelle `three_point_contest_shots`
+--
+ALTER TABLE `three_point_contest_shots`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `ux_three_point_shots_round_station_ball` (`round_id`,`station_number`,`ball_number`);
 
 --
 -- Indici per le tabelle `tournaments`
@@ -758,6 +805,11 @@ ALTER TABLE `scoreboard_states`
   MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT per la tabella `merchandise_items`
+--
+ALTER TABLE `merchandise_items`
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
+--
 -- AUTO_INCREMENT per la tabella `sponsors`
 --
 ALTER TABLE `sponsors`
@@ -797,6 +849,12 @@ ALTER TABLE `three_point_contest_entries`
 -- AUTO_INCREMENT per la tabella `three_point_contest_rounds`
 --
 ALTER TABLE `three_point_contest_rounds`
+  MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT per la tabella `three_point_contest_shots`
+--
+ALTER TABLE `three_point_contest_shots`
   MODIFY `id` int UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
@@ -936,6 +994,12 @@ ALTER TABLE `three_point_contest_entries`
 --
 ALTER TABLE `three_point_contest_rounds`
   ADD CONSTRAINT `fk_three_point_rounds_entry` FOREIGN KEY (`entry_id`) REFERENCES `three_point_contest_entries` (`id`) ON DELETE CASCADE;
+
+--
+-- Limiti per la tabella `three_point_contest_shots`
+--
+ALTER TABLE `three_point_contest_shots`
+  ADD CONSTRAINT `fk_three_point_shots_round` FOREIGN KEY (`round_id`) REFERENCES `three_point_contest_rounds` (`id`) ON DELETE CASCADE;
 
 --
 -- Limiti per la tabella `tournament_groups`

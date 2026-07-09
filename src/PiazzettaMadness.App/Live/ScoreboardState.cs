@@ -4,8 +4,12 @@ public sealed class ScoreboardState
 {
     public string HomeName { get; set; } = "A2";
     public string AwayName { get; set; } = "A4";
+    public string HomeShortName { get; set; } = "A2";
+    public string AwayShortName { get; set; } = "A4";
     public string HomeColor { get; set; } = "#f77f00";
     public string AwayColor { get; set; } = "#457b9d";
+    public string HomeSecondaryColor { get; set; } = "#fffefd";
+    public string AwaySecondaryColor { get; set; } = "#fffefd";
     public int HomeScore { get; set; }
     public int AwayScore { get; set; }
     public int HomeFouls { get; set; }
@@ -34,6 +38,13 @@ public sealed class ThreePointContestDisplayState
     public int Score { get; set; }
     public int CurrentStation { get; set; } = 1;
     public int[] StationScores { get; set; } = [0, 0, 0, 0, 0];
-    public int ClockMs { get; set; } = 60000;
+    public List<ContestShotDisplayState> Shots { get; set; } = [];
+    public int ClockMs { get; set; } = 90000;
     public string Status { get; set; } = "Ready";
 }
+
+public sealed record ContestShotDisplayState(
+    int StationNumber,
+    int BallNumber,
+    int PointValue,
+    string Result);

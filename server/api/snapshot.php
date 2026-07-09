@@ -60,10 +60,11 @@ function tableColumns(): array
 {
     return [
         'tournaments' => ['id', 'name', 'description', 'created_at', 'updated_at'],
-        'editions' => ['id', 'tournament_id', 'name', 'year', 'start_date', 'end_date', 'status', 'created_at', 'updated_at'],
+        'editions' => ['id', 'tournament_id', 'name', 'year', 'start_date', 'end_date', 'status', 'is_console_active', 'created_at', 'updated_at'],
         'courts' => ['id', 'edition_id', 'name', 'location'],
         'teams' => ['id', 'edition_id', 'name', 'short_name', 'primary_color', 'secondary_color', 'logo_path', 'created_at', 'updated_at'],
         'sponsors' => ['id', 'name', 'description', 'image_path', 'is_active', 'sort_order', 'created_at', 'updated_at'],
+        'merchandise_items' => ['id', 'name', 'description', 'price', 'image_path', 'is_active', 'sort_order', 'created_at', 'updated_at'],
         'players' => ['id', 'first_name', 'last_name', 'nickname', 'fiscal_code', 'address', 'phone_number', 'email', 'birth_date', 'photo_path', 'created_at', 'updated_at'],
         'team_rosters' => ['id', 'team_id', 'player_id', 'jersey_number', 'role', 'is_captain', 'is_active', 'created_at', 'updated_at'],
         'tournament_groups' => ['id', 'edition_id', 'name', 'code', 'sort_order'],
@@ -77,6 +78,7 @@ function tableColumns(): array
         'competition_events' => ['id', 'edition_id', 'event_type', 'name', 'scheduled_start_at', 'scheduled_end_at', 'status'],
         'three_point_contest_entries' => ['id', 'competition_event_id', 'team_id', 'player_id', 'seed_order', 'total_score', 'final_position'],
         'three_point_contest_rounds' => ['id', 'entry_id', 'round_number', 'round_type', 'station1_score', 'station2_score', 'station3_score', 'station4_score', 'station5_score', 'total_score', 'notes'],
+        'three_point_contest_shots' => ['id', 'round_id', 'station_number', 'ball_number', 'point_value', 'result'],
         'forfeit_results' => ['id', 'match_id', 'winning_team_id', 'losing_team_id', 'home_assigned_score', 'away_assigned_score', 'reason', 'notes', 'created_at'],
     ];
 }

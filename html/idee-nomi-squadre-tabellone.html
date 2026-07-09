@@ -1,0 +1,279 @@
+﻿<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Idee nomi squadre tabellone</title>
+  <style>
+    :root {
+      --ink: #0d0c0b;
+      --box: #131110;
+      --bone: #fffefd;
+      --orange: #ea6324;
+      --blue: #2875bb;
+      --purple: #7726db;
+      --offset: 10px;
+      --display: "Arial Narrow", "Segoe UI", Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #090807;
+      color: var(--bone);
+      font-family: var(--display);
+      padding: 28px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      color: var(--orange);
+      font-size: 30px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .intro {
+      max-width: 980px;
+      margin: 0 0 28px;
+      color: #b8b1aa;
+      font-family: Consolas, monospace;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(430px, 1fr));
+      gap: 28px;
+    }
+
+    .sample {
+      border: 2px solid #2a2521;
+      background: #111;
+      padding: 18px;
+    }
+
+    .sample h2 {
+      margin: 0 0 14px;
+      color: #cfc7bf;
+      font-family: Consolas, monospace;
+      font-size: 14px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .team-panel {
+      --team: var(--blue);
+      height: 210px;
+      border: 3px solid var(--team);
+      background: linear-gradient(180deg, color-mix(in srgb, var(--team) 14%, var(--box)), var(--box) 42%);
+      box-shadow: var(--offset) var(--offset) 0 var(--team);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .score-preview {
+      flex: 1;
+      display: grid;
+      place-items: center;
+      color: var(--bone);
+      font-size: 82px;
+      font-weight: 900;
+      line-height: .8;
+      text-shadow: 0 3px 0 rgba(0, 0, 0, .35);
+    }
+
+    .name {
+      min-height: 94px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: var(--bone);
+      font-size: clamp(36px, 6vw, 58px);
+      font-weight: 900;
+      line-height: .92;
+      text-transform: uppercase;
+      text-shadow: 0 3px 4px rgba(0, 0, 0, .55);
+      letter-spacing: .01em;
+    }
+
+    .idea-1 .name {
+      background:
+        linear-gradient(rgba(0, 0, 0, .58), rgba(0, 0, 0, .58)),
+        var(--team);
+      border-bottom: 2px solid color-mix(in srgb, var(--team) 70%, white 15%);
+    }
+
+    .idea-2 .name {
+      padding: 10px 14px;
+      background: var(--team);
+    }
+
+    .idea-2 .name span {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 16px;
+      background: var(--box);
+      border: 2px solid color-mix(in srgb, var(--team) 78%, transparent);
+    }
+
+    .idea-3 .name {
+      justify-content: flex-start;
+      gap: 18px;
+      padding: 0 26px;
+      background: var(--box);
+      border-bottom: 2px solid color-mix(in srgb, var(--team) 45%, transparent);
+    }
+
+    .idea-3 .name::before {
+      content: "";
+      align-self: stretch;
+      width: 18px;
+      background: var(--team);
+      box-shadow: 8px 0 0 color-mix(in srgb, var(--team) 36%, transparent);
+    }
+
+    .idea-4 .name {
+      margin: 10px;
+      min-height: 84px;
+      background: var(--box);
+      border: 3px solid var(--team);
+      outline: 3px solid color-mix(in srgb, var(--team) 28%, transparent);
+      outline-offset: -10px;
+    }
+
+    .idea-5 .name {
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+      background: var(--box);
+      border-bottom: 3px solid var(--team);
+    }
+
+    .idea-5 .name::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background:
+        linear-gradient(118deg, var(--team) 0 28%, transparent 28.5% 100%),
+        linear-gradient(298deg, color-mix(in srgb, var(--team) 60%, transparent) 0 14%, transparent 14.5% 100%);
+      opacity: .85;
+    }
+
+    .idea-5 .name span {
+      padding: 6px 20px;
+      background: rgba(13, 12, 11, .78);
+    }
+
+    .idea-6 .name {
+      min-height: 82px;
+      margin: 0 12px 0;
+      transform: translateY(12px);
+      background: #0d0c0b;
+      border-left: 7px solid var(--team);
+      border-right: 7px solid var(--team);
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--team) 42%, transparent);
+    }
+
+    .two-teams {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 22px;
+      margin-top: 18px;
+    }
+
+    .two-teams .team-panel {
+      height: 145px;
+      box-shadow: 7px 7px 0 var(--team);
+    }
+
+    .two-teams .name {
+      min-height: 76px;
+      font-size: 34px;
+    }
+
+    .two-teams .score-preview {
+      font-size: 48px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Idee nomi squadre tabellone</h1>
+  <p class="intro">
+    Prove statiche per aumentare la leggibilita dei nomi squadra da lontano. Il colore squadra resta come cornice/bordo,
+    mentre il testo resta sempre bianco su fondo scuro o oscurato.
+  </p>
+
+  <main class="grid">
+    <section class="sample idea-1">
+      <h2>1. Overlay scuro sopra colore squadra</h2>
+      <div class="team-panel" style="--team:#2875bb">
+        <div class="name"><span>Charlotte Horny</span></div>
+        <div class="score-preview">19</div>
+      </div>
+    </section>
+
+    <section class="sample idea-2">
+      <h2>2. Placca scura interna con cornice squadra</h2>
+      <div class="team-panel" style="--team:#2875bb">
+        <div class="name"><span>Charlotte Horny</span></div>
+        <div class="score-preview">19</div>
+      </div>
+    </section>
+
+    <section class="sample idea-3">
+      <h2>3. Fascia scura con barra colore laterale</h2>
+      <div class="team-panel" style="--team:#7726db">
+        <div class="name"><span>Nebula Bears</span></div>
+        <div class="score-preview">21</div>
+      </div>
+    </section>
+
+    <section class="sample idea-4">
+      <h2>4. Doppia cornice interna</h2>
+      <div class="team-panel" style="--team:#ea6324">
+        <div class="name"><span>Saluta Antonio Spurs</span></div>
+        <div class="score-preview">32</div>
+      </div>
+    </section>
+
+    <section class="sample idea-5">
+      <h2>5. Diagonale sportiva</h2>
+      <div class="team-panel" style="--team:#2875bb">
+        <div class="name"><span>Aurora Lynx</span></div>
+        <div class="score-preview">45</div>
+      </div>
+    </section>
+
+    <section class="sample idea-6">
+      <h2>6. Box compatto sospeso</h2>
+      <div class="team-panel" style="--team:#7726db">
+        <div class="name"><span>Gooners</span></div>
+        <div class="score-preview">8</div>
+      </div>
+    </section>
+  </main>
+
+  <section class="sample" style="margin-top:28px">
+    <h2>Confronto rapido casa / ospite</h2>
+    <div class="two-teams idea-2">
+      <div class="team-panel" style="--team:#2875bb">
+        <div class="name"><span>Charlotte Horny</span></div>
+        <div class="score-preview">19</div>
+      </div>
+      <div class="team-panel" style="--team:#7726db">
+        <div class="name"><span>Nebula Bears</span></div>
+        <div class="score-preview">21</div>
+      </div>
+    </div>
+  </section>
+</body>
+</html>

@@ -10,6 +10,7 @@ DROP TABLE IF EXISTS match_timeouts;
 DROP TABLE IF EXISTS match_periods;
 DROP TABLE IF EXISTS online_sync_log;
 
+DELETE FROM three_point_contest_shots;
 DELETE FROM three_point_contest_rounds;
 DELETE FROM three_point_contest_entries;
 DELETE FROM match_player_stats;
@@ -28,10 +29,12 @@ DELETE FROM tournament_groups;
 DELETE FROM courts;
 DELETE FROM teams;
 DELETE FROM players;
+DELETE FROM merchandise_items;
 DELETE FROM sponsors;
 DELETE FROM editions;
 DELETE FROM tournaments;
 
+ALTER TABLE three_point_contest_shots AUTO_INCREMENT = 1;
 ALTER TABLE three_point_contest_rounds AUTO_INCREMENT = 1;
 ALTER TABLE three_point_contest_entries AUTO_INCREMENT = 1;
 ALTER TABLE match_player_stats AUTO_INCREMENT = 1;
@@ -50,6 +53,7 @@ ALTER TABLE tournament_groups AUTO_INCREMENT = 1;
 ALTER TABLE courts AUTO_INCREMENT = 1;
 ALTER TABLE teams AUTO_INCREMENT = 1;
 ALTER TABLE players AUTO_INCREMENT = 1;
+ALTER TABLE merchandise_items AUTO_INCREMENT = 1;
 ALTER TABLE sponsors AUTO_INCREMENT = 1;
 ALTER TABLE editions AUTO_INCREMENT = 1;
 ALTER TABLE tournaments AUTO_INCREMENT = 1;

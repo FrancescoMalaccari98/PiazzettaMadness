@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
@@ -17,13 +18,20 @@ namespace PiazzettaMadness.App;
 
 public partial class MainWindow : Window
 {
+    private const int ContestDurationMs = 90000;
+
     private readonly GameClock _gameClock = new(720000);
     private readonly GameClock _shotClock = new(24000);
-    private readonly GameClock _contestClock = new(60000);
+    private readonly GameClock _contestClock = new(ContestDurationMs);
+    private readonly MediaPlayer _buzzerSound = new();
+    private readonly MediaPlayer _sirenSound = new();
+    private readonly MediaPlayer _freeThrowSound = new();
+    private readonly MediaPlayer _threePointSound = new();
     private readonly ScoreboardBroadcaster _broadcaster = new();
     private readonly OnlineEntityClient? _onlineEntities = OnlineEntityClient.TryCreate();
     private readonly DispatcherTimer _timer;
     private readonly DispatcherTimer _liveSyncTimer;
+    private long _lastClockBroadcastAtMs;
     private readonly ScoreboardState _state = new();
     private AppDbContext _db = new();
     private ObservableCollection<Tournament> _tournaments = [];
@@ -46,6 +54,7 @@ public partial class MainWindow : Window
     private ObservableCollection<ForfeitRow> _forfeitRows = [];
     private ObservableCollection<StandingRow> _standingRows = [];
     private ObservableCollection<Sponsor> _sponsors = [];
+    private ObservableCollection<MerchandiseItem> _merchandiseItems = [];
     private ObservableCollection<ScoreboardDisplayInfo> _openDisplays = [];
     private int? _currentEditionId;
     private int? _currentLiveMatchId;
@@ -59,6 +68,10 @@ public partial class MainWindow : Window
     private string _contestStatus = "Ready";
     private ThreePointContestRound? _currentContestRound;
     private ThreePointContestEntry? _currentContestEntry;
+    private ObservableCollection<ContestShotOption> _contestShotOptions = [];
+    private bool _isContestSyncing;
+    private bool _contestSyncPending;
+    private int _contestLoadVersion;
     private bool _isRenderingState;
     private int _nextScoreboardDisplayId = 1;
     private readonly Dictionary<int, int> _onlineScoreboardStateIds = [];
@@ -74,6 +87,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        InitializeSoundEffects();
         DatabasePathText.Text = $"Sessione live locale: {AppPaths.LiveDatabasePath}";
 
         if (_onlineEntities is null)
@@ -136,11 +150,58 @@ public partial class MainWindow : Window
         _ = BroadcastAsync();
     }
 
+    private void InitializeSoundEffects()
+    {
+        OpenSound(_buzzerSound, "Buzzer.mp3");
+        OpenSound(_sirenSound, "Siren.mp3");
+        OpenSound(_freeThrowSound, "MarioSound.mp3");
+        OpenSound(_threePointSound, "nycRadio.mp3");
+    }
+
+    private static void OpenSound(MediaPlayer player, string fileName)
+    {
+        var path = Path.Combine(AppContext.BaseDirectory, "sound", fileName);
+        if (File.Exists(path))
+        {
+            player.Open(new System.Uri(path, System.UriKind.Absolute));
+        }
+    }
+
+    private static void PlaySound(MediaPlayer player)
+    {
+        if (player.Source is null)
+        {
+            return;
+        }
+
+        player.Stop();
+        player.Position = TimeSpan.Zero;
+        player.Play();
+    }
+
     private void MainWindow_PreviewKeyDown(object sender, KeyEventArgs e)
     {
         if (!LiveTabItem.IsSelected || e.IsRepeat || Keyboard.Modifiers != ModifierKeys.None ||
             IsKeyboardInputControl(e.OriginalSource as DependencyObject))
         {
+            return;
+        }
+
+        if (_isThreePointContestMode)
+        {
+            switch (e.Key)
+            {
+                case Key.S:
+                    RegisterNextContestShot("Made");
+                    break;
+                case Key.X:
+                    RegisterNextContestShot("Missed");
+                    break;
+                default:
+                    return;
+            }
+
+            e.Handled = true;
             return;
         }
 
@@ -218,8 +279,12 @@ public partial class MainWindow : Window
             return;
         }
 
+        var wasRunning = _shotClock.IsRunning;
         _shotClock.Reset(durationMs);
-        _shotClock.Start();
+        if (wasRunning)
+        {
+            _shotClock.Start();
+        }
 
         PersistLiveState();
         RenderLocalState();
@@ -345,6 +410,16 @@ public partial class MainWindow : Window
 
     private int GetCurrentMatchPeriodDurationMs()
     {
+        if (_state.Period is 3 or 4)
+        {
+            return 120000;
+        }
+
+        if (_state.Period == 5)
+        {
+            return 300000;
+        }
+
         if (_currentLiveMatchId is null)
         {
             return 720000;
@@ -375,7 +450,7 @@ public partial class MainWindow : Window
             (_currentLiveMatchId is null || _currentLiveMatchStatus is not ("Live" or "Paused")))
         {
             MessageBox.Show(
-                "Il reset completo è disponibile solo per una partita in corso o in pausa.",
+                "Il reset completo e disponibile solo per una partita in corso o in pausa.",
                 "Reset partita",
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);
@@ -383,7 +458,7 @@ public partial class MainWindow : Window
         }
 
         if (MessageBox.Show(
-                "Questa operazione annullerà la sessione live, riporterà la partita allo stato Scheduled e azzererà punteggi, falli, timeout, periodo e cronometri. La cronologia resterà disponibile. Continuare?",
+                "Questa operazione annullera la sessione live, riportera la partita allo stato Scheduled e azzerera punteggi, falli, timeout, periodo e cronometri. La cronologia restera disponibile. Continuare?",
                 "Reset partita",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Warning) != MessageBoxResult.Yes)
@@ -491,6 +566,11 @@ public partial class MainWindow : Window
 
     private void AddScore(bool home, int points, LiveScorerOption? scorer)
     {
+        if (scorer is not null && points < 0 && scorer.Points <= 0)
+        {
+            return;
+        }
+
         if (home)
         {
             _state.HomeScore = Math.Max(0, _state.HomeScore + points);
@@ -517,6 +597,11 @@ public partial class MainWindow : Window
     private void HomeTeamFoulMinus_Click(object sender, RoutedEventArgs e) => AddTeamFoul(home: true, delta: -1, scorer: null);
     private void AwayTeamFoulPlus_Click(object sender, RoutedEventArgs e) => AddTeamFoul(home: false, delta: 1, scorer: null);
     private void AwayTeamFoulMinus_Click(object sender, RoutedEventArgs e) => AddTeamFoul(home: false, delta: -1, scorer: null);
+    private void ResetPeriodFouls_Click(object sender, RoutedEventArgs e) => ResetPeriodFouls();
+    private void HomeTimeoutPlus_Click(object sender, RoutedEventArgs e) => AddTeamTimeout(home: true, delta: 1);
+    private void HomeTimeoutMinus_Click(object sender, RoutedEventArgs e) => AddTeamTimeout(home: true, delta: -1);
+    private void AwayTimeoutPlus_Click(object sender, RoutedEventArgs e) => AddTeamTimeout(home: false, delta: 1);
+    private void AwayTimeoutMinus_Click(object sender, RoutedEventArgs e) => AddTeamTimeout(home: false, delta: -1);
 
     private void AddScoreFromButton(
         object sender,
@@ -536,6 +621,15 @@ public partial class MainWindow : Window
 
         var home = scorer.TeamId == _currentHomeTeamId;
         AddScore(home, points, scorer);
+
+        if (points == 1)
+        {
+            PlaySound(_freeThrowSound);
+        }
+        else if (points == 3)
+        {
+            PlaySound(_threePointSound);
+        }
 
         if (AnimationsEnabledCheckBox.IsChecked == true && showThreePointCelebration)
         {
@@ -611,6 +705,53 @@ public partial class MainWindow : Window
         _ = BroadcastAsync();
     }
 
+    private void ResetPeriodFouls()
+    {
+        if (!EnsureLiveInteractionAllowed())
+        {
+            return;
+        }
+
+        if (_state.HomeFouls == 0 && _state.AwayFouls == 0)
+        {
+            return;
+        }
+
+        _state.HomeFouls = 0;
+        _state.AwayFouls = 0;
+        PersistPeriodFoulsReset();
+        RenderLocalState();
+        _ = BroadcastAsync();
+    }
+
+    private void AddTeamTimeout(bool home, int delta)
+    {
+        if (!EnsureLiveInteractionAllowed())
+        {
+            return;
+        }
+
+        var current = home ? _state.HomeTimeouts : _state.AwayTimeouts;
+        var next = Math.Clamp(current + delta, 0, 2);
+        if (next == current)
+        {
+            return;
+        }
+
+        if (home)
+        {
+            _state.HomeTimeouts = next;
+        }
+        else
+        {
+            _state.AwayTimeouts = next;
+        }
+
+        PersistTimeout(home, delta);
+        RenderLocalState();
+        _ = BroadcastAsync();
+    }
+
     private void PeriodCombo_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
     {
         if (_isRenderingState || HomeScoreText is null || PeriodCombo.SelectedItem is not System.Windows.Controls.ComboBoxItem item)
@@ -624,7 +765,20 @@ public partial class MainWindow : Window
             return;
         }
 
+        if (_gameClock.IsRunning)
+        {
+            MessageBox.Show(
+                "Ferma il cronometro partita prima di cambiare periodo.",
+                "Cambio periodo",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            RenderLocalState();
+            return;
+        }
+
         _state.Period = Convert.ToInt32(item.Tag);
+        _gameClock.Reset(GetCurrentMatchPeriodDurationMs());
+        _state.GameClockMs = _gameClock.Update();
         PersistLiveState();
         RenderLocalState();
         _ = BroadcastAsync();
@@ -709,9 +863,11 @@ public partial class MainWindow : Window
                 var events = await _onlineEntities.GetCompetitionEventsAsync();
                 var entries = await _onlineEntities.GetThreePointContestEntriesAsync();
                 var rounds = await _onlineEntities.GetThreePointContestRoundsAsync();
+                var shots = await _onlineEntities.GetThreePointContestShotsAsync();
                 UpsertLocalCompetitionEvents(events);
                 UpsertLocalThreePointContestEntries(entries);
                 UpsertLocalThreePointContestRounds(rounds);
+                UpsertLocalThreePointContestShots(shots);
                 _db.SaveChanges();
                 LiveSyncStatusText.Text = "Sinc: contest";
             }
@@ -722,14 +878,10 @@ public partial class MainWindow : Window
         }
 
         _isLoadingContest = true;
-        ContestEventCombo.ItemsSource = _db.CompetitionEvents
-            .Where(x => x.EventType == "ThreePointContest" && x.Status != "Cancelled")
-            .OrderBy(x => x.ScheduledStartAt)
-            .ThenBy(x => x.Name)
-            .ToList();
+        ContestEventCombo.ItemsSource = GetConsoleThreePointContestEvents(includeCancelled: false);
         ContestEventCombo.SelectedItem ??= ContestEventCombo.Items.Cast<CompetitionEvent>().FirstOrDefault();
         _isLoadingContest = false;
-        LoadContestEntries();
+        LoadContestRoundPhases();
         RenderContestState();
         _ = BroadcastContestAsync();
     }
@@ -741,6 +893,31 @@ public partial class MainWindow : Window
             return;
         }
 
+        LoadContestRoundPhases();
+    }
+
+    private void LoadContestRoundPhases()
+    {
+        _isLoadingContest = true;
+        var eventId = (ContestEventCombo.SelectedItem as CompetitionEvent)?.Id;
+        var entryIds = eventId is null
+            ? []
+            : _db.ThreePointContestEntries
+                .Where(x => x.CompetitionEventId == eventId.Value)
+                .Select(x => x.Id)
+                .ToHashSet();
+
+        var options = _db.ThreePointContestRounds
+            .Where(x => entryIds.Contains(x.EntryId))
+            .GroupBy(x => new { x.RoundNumber, x.RoundType })
+            .OrderBy(x => x.Key.RoundNumber)
+            .ThenBy(x => x.Key.RoundType)
+            .Select(x => new ContestRoundOption(x.Key.RoundNumber, x.Key.RoundType))
+            .ToList();
+
+        ContestRoundCombo.ItemsSource = options;
+        ContestRoundCombo.SelectedItem = options.FirstOrDefault();
+        _isLoadingContest = false;
         LoadContestEntries();
     }
 
@@ -748,12 +925,20 @@ public partial class MainWindow : Window
     {
         _isLoadingContest = true;
         var eventId = (ContestEventCombo.SelectedItem as CompetitionEvent)?.Id;
+        var selectedPhase = ContestRoundCombo.SelectedItem as ContestRoundOption;
         var teams = _db.Teams.ToDictionary(x => x.Id);
         var players = _db.Players.ToDictionary(x => x.Id);
-        var options = eventId is null
+        var entryIdsForPhase = selectedPhase is null
+            ? []
+            : _db.ThreePointContestRounds
+                .Where(x => x.RoundNumber == selectedPhase.RoundNumber && x.RoundType == selectedPhase.RoundType)
+                .Select(x => x.EntryId)
+                .ToHashSet();
+
+        var options = eventId is null || selectedPhase is null
             ? []
             : _db.ThreePointContestEntries
-                .Where(x => x.CompetitionEventId == eventId.Value)
+                .Where(x => x.CompetitionEventId == eventId.Value && entryIdsForPhase.Contains(x.Id))
                 .OrderBy(x => x.SeedOrder)
                 .ThenBy(x => x.Id)
                 .ToList()
@@ -765,63 +950,102 @@ public partial class MainWindow : Window
         ContestEntryCombo.ItemsSource = options;
         ContestEntryCombo.SelectedItem = options.FirstOrDefault();
         _isLoadingContest = false;
-        _ = LoadContestRoundsAsync();
+        _ = LoadSelectedContestRoundAsync();
     }
 
     private void ContestEntryCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (!_isLoadingContest && _isThreePointContestMode)
         {
-            _ = LoadContestRoundsAsync();
+            _ = LoadSelectedContestRoundAsync();
         }
-    }
-
-    private Task LoadContestRoundsAsync()
-    {
-        _isLoadingContest = true;
-        _currentContestEntry = (ContestEntryCombo.SelectedItem as ContestEntryOption)?.Entry;
-        if (_currentContestEntry is null)
-        {
-            ContestRoundCombo.ItemsSource = null;
-            _currentContestRound = null;
-            _isLoadingContest = false;
-            RenderContestState();
-            return Task.CompletedTask;
-        }
-
-        var rounds = _db.ThreePointContestRounds
-            .Where(x => x.EntryId == _currentContestEntry.Id)
-            .OrderBy(x => x.RoundNumber)
-            .ThenBy(x => x.RoundType)
-            .ToList();
-        var options = rounds.Select(x => new ContestRoundOption(x)).ToList();
-        ContestRoundCombo.ItemsSource = options;
-        ContestRoundCombo.SelectedItem = options.FirstOrDefault();
-        _isLoadingContest = false;
-        LoadSelectedContestRound();
-        return Task.CompletedTask;
     }
 
     private void ContestRoundCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (!_isLoadingContest && _isThreePointContestMode)
         {
-            LoadSelectedContestRound();
+            LoadContestEntries();
         }
     }
 
-    private void LoadSelectedContestRound()
+    private async Task LoadSelectedContestRoundAsync()
     {
-        _currentContestRound = (ContestRoundCombo.SelectedItem as ContestRoundOption)?.Round;
-        var live = DeserializeContestLiveState(_currentContestRound?.Notes);
+        var loadVersion = ++_contestLoadVersion;
+        _currentContestEntry = (ContestEntryCombo.SelectedItem as ContestEntryOption)?.Entry;
+        var selectedPhase = ContestRoundCombo.SelectedItem as ContestRoundOption;
+        var selectedRound = _currentContestEntry is null || selectedPhase is null
+            ? null
+            : _db.ThreePointContestRounds.FirstOrDefault(x =>
+                x.EntryId == _currentContestEntry.Id &&
+                x.RoundNumber == selectedPhase.RoundNumber &&
+                x.RoundType == selectedPhase.RoundType);
+
+        ContestShotsItemsControl.IsEnabled = false;
+        ContestShotsItemsControl.Visibility = Visibility.Collapsed;
+        ContestShotsMessageText.Visibility = Visibility.Visible;
+        ContestShotsMessageText.Text = selectedRound is null
+            ? "Seleziona prova/fase e tiratore per caricare i tiri."
+            : "Caricamento dei 25 tiri in corso...";
+
+        var shots = new List<ThreePointContestShot>();
+        if (selectedRound is not null)
+        {
+            shots = _db.ThreePointContestShots
+                .Where(x => x.RoundId == selectedRound.Id)
+                .OrderBy(x => x.StationNumber)
+                .ThenBy(x => x.BallNumber)
+                .ToList();
+            if (shots.Count != 25 && _onlineEntities is not null)
+            {
+                try
+                {
+                    shots = await _onlineEntities.InitializeThreePointContestShotsAsync(selectedRound.Id);
+                    if (loadVersion != _contestLoadVersion)
+                    {
+                        return;
+                    }
+                    UpsertLocalThreePointContestShots(shots, reconcile: false);
+                }
+                catch (Exception)
+                {
+                    if (loadVersion != _contestLoadVersion)
+                    {
+                        return;
+                    }
+                    LiveSyncStatusText.Text = "Sinc: errore tiri";
+                }
+            }
+        }
+
+        var currentPhase = ContestRoundCombo.SelectedItem as ContestRoundOption;
+        var currentEntry = (ContestEntryCombo.SelectedItem as ContestEntryOption)?.Entry;
+        if (loadVersion != _contestLoadVersion ||
+            currentEntry?.Id != _currentContestEntry?.Id ||
+            currentPhase?.RoundNumber != selectedPhase?.RoundNumber ||
+            currentPhase?.RoundType != selectedPhase?.RoundType)
+        {
+            return;
+        }
+
+        _currentContestRound = selectedRound;
+        _contestShotOptions = new ObservableCollection<ContestShotOption>(
+            shots.OrderBy(x => x.StationNumber).ThenBy(x => x.BallNumber).Select(x => new ContestShotOption(x)));
+        ContestShotsItemsControl.ItemsSource = _contestShotOptions;
+
+        var live = DeserializeContestLiveState(selectedRound?.Notes);
         _contestStatus = live.Status;
-        _contestStation = Math.Clamp(live.Station, 1, 5);
-        _contestClock.Reset(Math.Clamp(live.ClockMs, 0, 60000));
+        _contestStation = live.Status is "Live" or "Paused"
+            ? Math.Clamp(live.Station, 1, 5)
+            : 1;
+        _contestClock.Reset(Math.Clamp(live.ClockMs, 0, ContestDurationMs));
         if (_contestStatus == "Live" && _contestClock.RemainingMs > 0)
         {
             _contestClock.Start();
         }
 
+        ContestShotsItemsControl.IsEnabled = shots.Count == 25;
+        RefreshContestShotList();
         RenderContestState();
         _ = BroadcastContestAsync();
     }
@@ -834,24 +1058,115 @@ public partial class MainWindow : Window
         }
 
         _contestStation = station;
+        RefreshContestShotList();
         PersistContestState();
     }
 
-    private void ContestPlusOne_Click(object sender, RoutedEventArgs e) => ChangeContestScore(1);
-    private void ContestPlusTwo_Click(object sender, RoutedEventArgs e) => ChangeContestScore(2);
-    private void ContestMinusOne_Click(object sender, RoutedEventArgs e) => ChangeContestScore(-1);
-
-    private void ChangeContestScore(int delta)
+    private void RefreshContestShotList()
     {
-        if (_currentContestRound is null || _contestStatus == "Ready")
+        ContestShotsItemsControl.Items.Filter = item =>
+            item is ContestShotOption option && option.Shot.StationNumber == _contestStation;
+        ContestShotsItemsControl.Items.Refresh();
+
+        var stationShotCount = _contestShotOptions.Count(x => x.Shot.StationNumber == _contestStation);
+        ContestShotsItemsControl.Visibility = stationShotCount == 5 ? Visibility.Visible : Visibility.Collapsed;
+        ContestShotsMessageText.Visibility = stationShotCount == 5 ? Visibility.Collapsed : Visibility.Visible;
+        ContestShotsMessageText.Text = _currentContestRound is null
+            ? "Seleziona una prova per caricare i tiri."
+            : "I 25 tiri non sono disponibili. Verifica che la migrazione SQL e i file API aggiornati siano stati pubblicati sul server.";
+    }
+
+    private void ContestShotResult_Click(object sender, RoutedEventArgs e)
+    {
+        if (_currentContestRound is null)
         {
-            MessageBox.Show("Avvia prima la prova.", "3 Point Contest", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("Seleziona prima una prova.", "3 Point Contest", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
-        SetContestStationScore(_currentContestRound, _contestStation, Math.Max(0, GetContestStationScore(_currentContestRound, _contestStation) + delta));
-        _currentContestRound.TotalScore = GetContestStationScores(_currentContestRound).Sum();
+        if (sender is not Button { CommandParameter: ContestShotOption option } button)
+        {
+            MessageBox.Show("Impossibile identificare il tiro selezionato.", "3 Point Contest", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        var result = button.Tag?.ToString();
+        if (result is not ("Made" or "Missed"))
+        {
+            return;
+        }
+
+        SetContestShotResult(option, option.Result == result ? "Pending" : result, advance: false);
+    }
+
+    private void RegisterNextContestShot(string result)
+    {
+        if (_currentContestRound is null || _contestStatus != "Live" || result is not ("Made" or "Missed"))
+        {
+            return;
+        }
+
+        var option = _contestShotOptions
+            .Where(x => x.Shot.StationNumber == _contestStation && x.Result == "Pending")
+            .OrderBy(x => x.Shot.BallNumber)
+            .FirstOrDefault();
+        option ??= _contestShotOptions
+            .Where(x => x.Shot.StationNumber > _contestStation && x.Result == "Pending")
+            .OrderBy(x => x.Shot.StationNumber)
+            .ThenBy(x => x.Shot.BallNumber)
+            .FirstOrDefault();
+
+        if (option is null)
+        {
+            ContestDataMessageText.Text = "Tutti i tiri della prova sono gia stati registrati.";
+            return;
+        }
+
+        if (option.Shot.StationNumber != _contestStation)
+        {
+            _contestStation = option.Shot.StationNumber;
+        }
+
+        SetContestShotResult(option, result, advance: true);
+    }
+
+    private void SetContestShotResult(ContestShotOption option, string result, bool advance)
+    {
+        option.Result = result;
+        RecalculateContestScores();
+
+        if (advance)
+        {
+            AdvanceContestStationAfterShot(option);
+        }
+
+        RefreshContestShotList();
+        RenderContestState();
         PersistContestState();
+        ContestDataMessageText.Text = result switch
+        {
+            "Made" => $"{option.BallLabel}: canestro registrato ({option.MadeLabel}).",
+            "Missed" => $"{option.BallLabel}: errore registrato (X).",
+            _ => $"{option.BallLabel}: selezione rimossa."
+        };
+    }
+
+    private void AdvanceContestStationAfterShot(ContestShotOption option)
+    {
+        var station = option.Shot.StationNumber;
+        var hasPendingInStation = _contestShotOptions.Any(x => x.Shot.StationNumber == station && x.Result == "Pending");
+        if (hasPendingInStation)
+        {
+            _contestStation = station;
+            return;
+        }
+
+        var nextStation = _contestShotOptions
+            .Where(x => x.Shot.StationNumber > station && x.Result == "Pending")
+            .OrderBy(x => x.Shot.StationNumber)
+            .Select(x => x.Shot.StationNumber)
+            .FirstOrDefault();
+        _contestStation = nextStation == 0 ? station : nextStation;
     }
 
     private void ContestStartPause_Click(object sender, RoutedEventArgs e)
@@ -866,7 +1181,7 @@ public partial class MainWindow : Window
         {
             if (_contestClock.RemainingMs == 0)
             {
-                _contestClock.Reset(60000);
+                _contestClock.Reset(ContestDurationMs);
             }
             _contestClock.Start();
             _contestStatus = "Live";
@@ -882,7 +1197,7 @@ public partial class MainWindow : Window
 
     private void ContestFinish_Click(object sender, RoutedEventArgs e)
     {
-        if (_currentContestRound is null) return;
+        if (_currentContestRound is null || _contestStatus == "Finished") return;
         _contestClock.Pause();
         _contestStatus = "Finished";
         PersistContestState();
@@ -896,11 +1211,14 @@ public partial class MainWindow : Window
             return;
         }
 
-        _contestClock.Reset(60000);
+        _contestClock.Reset(ContestDurationMs);
         _contestStatus = "Ready";
         _contestStation = 1;
-        for (var station = 1; station <= 5; station++) SetContestStationScore(_currentContestRound, station, 0);
-        _currentContestRound.TotalScore = 0;
+        foreach (var option in _contestShotOptions)
+        {
+            option.Result = "Pending";
+        }
+        RecalculateContestScores();
         PersistContestState();
     }
 
@@ -916,6 +1234,8 @@ public partial class MainWindow : Window
         _state.AwayName = "Ospite";
         _state.HomeColor = "#f77f00";
         _state.AwayColor = "#457b9d";
+        _state.HomeSecondaryColor = "#fffefd";
+        _state.AwaySecondaryColor = "#fffefd";
         _state.HomeScore = 0;
         _state.AwayScore = 0;
         _state.HomeFouls = 0;
@@ -950,7 +1270,7 @@ public partial class MainWindow : Window
 
         if (match.Status == "Finished")
         {
-            MessageBox.Show("La partita è già chiusa. Per modificarla va prima riaperta con una funzione dedicata.", "Partita live", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("La partita e gia chiusa. Per modificarla va prima riaperta con una funzione dedicata.", "Partita live", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
@@ -986,7 +1306,7 @@ public partial class MainWindow : Window
         if (match.Status is not ("Scheduled" or "Ready"))
         {
             MessageBox.Show(
-                $"La partita non può essere avviata dallo stato {FormatMatchStatus(match.Status)}.",
+                $"La partita non puo essere avviata dallo stato {FormatMatchStatus(match.Status)}.",
                 "Partita live",
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);
@@ -997,8 +1317,8 @@ public partial class MainWindow : Window
         if (otherActiveMatch is not null)
         {
             MessageBox.Show(
-                $"Esiste già un'altra partita attiva (ID {otherActiveMatch.Id}, stato {FormatMatchStatus(otherActiveMatch.Status)}). Chiudila prima di iniziare questa partita.",
-                "Partita già attiva",
+                $"Esiste gia un'altra partita attiva (ID {otherActiveMatch.Id}, stato {FormatMatchStatus(otherActiveMatch.Status)}). Chiudila prima di iniziare questa partita.",
+                "Partita gia attiva",
                 MessageBoxButton.OK,
                 MessageBoxImage.Warning);
             return;
@@ -1150,7 +1470,7 @@ public partial class MainWindow : Window
 
         if (_state.HomeScore == _state.AwayScore)
         {
-            MessageBox.Show("La partita è in parità. Gestisci prima overtime o regola di spareggio, poi chiudi.", "Chiudi partita", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show("La partita e in parita. Gestisci prima overtime o regola di spareggio, poi chiudi.", "Chiudi partita", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -1311,6 +1631,136 @@ public partial class MainWindow : Window
         }
     }
 
+    private async void AddMerchandiseItem_Click(object sender, RoutedEventArgs e)
+    {
+        var now = Now();
+        var item = new MerchandiseItem
+        {
+            IsActive = true,
+            SortOrder = _merchandiseItems.Count + 1,
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+
+        var form = new MerchandiseItemFormWindow(item, isNew: true) { Owner = this };
+        if (form.ShowDialog() != true)
+        {
+            return;
+        }
+
+        if (_onlineEntities is not null)
+        {
+            try
+            {
+                item = await _onlineEntities.CreateMerchandiseItemAsync(item);
+                UpsertLocalMerchandiseItem(item);
+                _db.SaveChanges();
+                LoadCrudData();
+                MerchandiseItemsGrid.SelectedItem = _merchandiseItems.FirstOrDefault(x => x.Id == item.Id);
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show(exception.Message, "Merchandising online", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+
+            return;
+        }
+
+        _db.MerchandiseItems.Add(item);
+        if (SaveChanges())
+        {
+            LoadCrudData();
+            MerchandiseItemsGrid.SelectedItem = _merchandiseItems.FirstOrDefault(x => x.Id == item.Id);
+        }
+    }
+
+    private async void EditMerchandiseItem_Click(object sender, RoutedEventArgs e)
+    {
+        if (MerchandiseItemsGrid.SelectedItem is not MerchandiseItem item)
+        {
+            MessageBox.Show("Seleziona un articolo da modificare.", "Merchandising", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        var form = new MerchandiseItemFormWindow(item, isNew: false) { Owner = this };
+        if (form.ShowDialog() == true)
+        {
+            item.UpdatedAt = Now();
+            if (_onlineEntities is not null)
+            {
+                try
+                {
+                    item = await _onlineEntities.UpdateMerchandiseItemAsync(item);
+                    UpsertLocalMerchandiseItem(item);
+                    _db.SaveChanges();
+                    LoadCrudData();
+                    MerchandiseItemsGrid.SelectedItem = _merchandiseItems.FirstOrDefault(x => x.Id == item.Id);
+                }
+                catch (Exception exception)
+                {
+                    MessageBox.Show(exception.Message, "Merchandising online", MessageBoxButton.OK, MessageBoxImage.Error);
+                    LoadCrudData();
+                }
+
+                return;
+            }
+
+            if (SaveChanges())
+            {
+                LoadCrudData();
+            }
+        }
+    }
+
+    private async void DeleteMerchandiseItem_Click(object sender, RoutedEventArgs e)
+    {
+        if (MerchandiseItemsGrid.SelectedItem is not MerchandiseItem item)
+        {
+            MessageBox.Show("Seleziona un articolo da eliminare.", "Merchandising", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        if (MessageBox.Show($"Eliminare l'articolo '{item.Name}'?", "Merchandising", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes)
+        {
+            return;
+        }
+
+        if (_onlineEntities is not null)
+        {
+            try
+            {
+                await _onlineEntities.DeleteMerchandiseItemAsync(item.Id);
+                var local = _db.MerchandiseItems.FirstOrDefault(x => x.Id == item.Id);
+                if (local is not null)
+                {
+                    _db.MerchandiseItems.Remove(local);
+                    _db.SaveChanges();
+                }
+
+                LoadCrudData();
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show(exception.Message, "Merchandising online", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+
+            return;
+        }
+
+        _db.MerchandiseItems.Remove(item);
+        if (SaveChanges())
+        {
+            LoadCrudData();
+        }
+    }
+
+    private void MerchandiseItemsGrid_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (MerchandiseItemsGrid.SelectedItem is MerchandiseItem)
+        {
+            EditMerchandiseItem_Click(sender, e);
+        }
+    }
     private void SponsorsGrid_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
         if (SponsorsGrid.SelectedItem is Sponsor)
@@ -1343,11 +1793,18 @@ public partial class MainWindow : Window
 
     private async Task ApplyScoreboardDisplayAsync()
     {
+        if (ShowQrCodeRadio.IsChecked == true)
+        {
+            await BroadcastAsync();
+            await _broadcaster.ShowQrCodeAsync();
+            ScoreboardDisplayStatusText.Text = "Contenuto attuale: QR code sito su tutti i tabelloni";
+            return;
+        }
         if (ShowContestRadio.IsChecked == true)
         {
             if (!_isThreePointContestMode || _currentContestRound is null)
             {
-                MessageBox.Show("Seleziona la modalità 3 Point Contest e un tiratore prima di mostrare il tabellone.", "Display tabelloni", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show("Seleziona la modalita 3 Point Contest e un tiratore prima di mostrare il tabellone.", "Display tabelloni", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
@@ -1375,9 +1832,20 @@ public partial class MainWindow : Window
             return;
         }
 
+        if (ShowMerchandiseRadio.IsChecked == true)
+        {
+            if (!TryGetCarouselIntervalMs(MerchandiseIntervalSecondsBox, "merchandising", out var merchandiseIntervalMs))
+            {
+                return;
+            }
+
+            await _broadcaster.ShowMerchandiseAsync(GetActiveMerchandiseSlides(), merchandiseIntervalMs);
+            ScoreboardDisplayStatusText.Text = $"Contenuto attuale: Carosello merchandising su tutti i tabelloni ({merchandiseIntervalMs / 1000}s)";
+            return;
+        }
         if (ShowSponsorsRadio.IsChecked == true)
         {
-            if (!TryGetSponsorIntervalMs(out var sponsorIntervalMs))
+            if (!TryGetCarouselIntervalMs(SponsorIntervalSecondsBox, "sponsor", out var sponsorIntervalMs))
             {
                 return;
             }
@@ -1392,6 +1860,16 @@ public partial class MainWindow : Window
         ScoreboardDisplayStatusText.Text = "Contenuto attuale: Partita e punteggi su tutti i tabelloni";
     }
 
+    private List<MerchandiseSlide> GetActiveMerchandiseSlides()
+    {
+        return _db.MerchandiseItems
+            .Where(x => x.IsActive)
+            .OrderBy(x => x.SortOrder)
+            .ThenBy(x => x.Name)
+            .ToList()
+            .Select(x => new MerchandiseSlide(x.Name, x.Description, x.Price, ImageAssetStore.ResolvePath(x.ImagePath)))
+            .ToList();
+    }
     private List<SponsorSlide> GetActiveSponsorSlides()
     {
         return _db.Sponsors
@@ -1403,19 +1881,19 @@ public partial class MainWindow : Window
             .ToList();
     }
 
-    private bool TryGetSponsorIntervalMs(out int intervalMs)
+    private static bool TryGetCarouselIntervalMs(TextBox input, string label, out int intervalMs)
     {
-        intervalMs = 7000;
-        var rawValue = SponsorIntervalSecondsBox.Text.Trim();
+        intervalMs = 4000;
+        var rawValue = input.Text.Trim();
         if (!int.TryParse(rawValue, out var seconds) || seconds < 1 || seconds > 60)
         {
             MessageBox.Show(
-                "Inserisci un intervallo sponsor valido tra 1 e 60 secondi.",
-                "Carosello sponsor",
+                $"Inserisci un intervallo {label} valido tra 1 e 60 secondi.",
+                $"Carosello {label}",
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);
-            SponsorIntervalSecondsBox.Focus();
-            SponsorIntervalSecondsBox.SelectAll();
+            input.Focus();
+            input.SelectAll();
             return false;
         }
 
@@ -1725,8 +2203,11 @@ public partial class MainWindow : Window
             _contestClock.Update();
             if (wasRunning && !_contestClock.IsRunning && _contestClock.RemainingMs == 0)
             {
+                PlaySound(_sirenSound);
                 _contestStatus = "Finished";
                 PersistContestState();
+                RenderContestState();
+                _ = BroadcastContestAsync();
             }
             else
             {
@@ -1736,12 +2217,31 @@ public partial class MainWindow : Window
             return;
         }
 
+        var wasGameClockRunning = _gameClock.IsRunning;
+        var wasShotClockRunning = _shotClock.IsRunning;
         _state.GameClockMs = _gameClock.Update();
         _state.ShotClockMs = _shotClock.Update();
+
+        if (wasGameClockRunning && !_gameClock.IsRunning && _state.GameClockMs == 0)
+        {
+            PlaySound(_sirenSound);
+        }
+
+        if (wasShotClockRunning && !_shotClock.IsRunning && _state.ShotClockMs == 0)
+        {
+            PlaySound(_buzzerSound);
+        }
+
         _state.IsGameClockRunning = _gameClock.IsRunning;
         _state.IsShotClockRunning = _shotClock.IsRunning;
         RenderLocalState();
-        _ = BroadcastAsync();
+
+        var nowMs = Environment.TickCount64;
+        if (nowMs - _lastClockBroadcastAtMs >= 200)
+        {
+            _lastClockBroadcastAtMs = nowMs;
+            _ = BroadcastAsync();
+        }
     }
 
     private void RenderContestState()
@@ -1750,7 +2250,7 @@ public partial class MainWindow : Window
             ContestDataMessageText is null ||
             ContestCurrentStationText is null || ContestTotalScoreText is null ||
             ContestStation1Text is null || ContestStation2Text is null || ContestStation3Text is null ||
-            ContestStation4Text is null || ContestStation5Text is null || ContestStartPauseButton is null ||
+            ContestStation4Text is null || ContestStation5Text is null || ContestStartPauseButton is null || ContestFinishButton is null ||
             ContestStation1Radio is null || ContestStation2Radio is null || ContestStation3Radio is null ||
             ContestStation4Radio is null || ContestStation5Radio is null)
         {
@@ -1758,7 +2258,7 @@ public partial class MainWindow : Window
         }
 
         var scores = _currentContestRound is null ? [0, 0, 0, 0, 0] : GetContestStationScores(_currentContestRound);
-        ContestClockText.Text = Math.Max(0, (int)Math.Ceiling(_contestClock.RemainingMs / 1000d)).ToString();
+        ContestClockText.Text = FormatContestClock(_contestClock.RemainingMs);
         ContestStatusText.Text = $"Stato: {FormatContestStatus(_contestStatus)}";
         var selectionLocked = _contestStatus is "Live" or "Paused";
         ContestEventCombo.IsEnabled = !selectionLocked;
@@ -1768,12 +2268,12 @@ public partial class MainWindow : Window
         DatabaseTabItem.IsEnabled = !selectionLocked;
         ContestDataMessageText.Text = ContestEventCombo.SelectedItem is null
             ? "Nessun evento 3 Point Contest disponibile. Crealo nella sezione Database."
-            : ContestEntryCombo.SelectedItem is null
-                ? "Nessun tiratore associato all'evento. Aggiungilo nel CRUD 3 Point Contest."
-                : ContestRoundCombo.SelectedItem is null
-                    ? "Nessuna prova disponibile per il tiratore selezionato. Creala nel CRUD 3 Point Contest."
+            : ContestRoundCombo.SelectedItem is null
+                ? "Nessuna prova/fase disponibile per l'evento. Creala nel CRUD 3 Point Contest."
+                : ContestEntryCombo.SelectedItem is null
+                    ? "Nessun tiratore disponibile per la prova/fase selezionata."
                     : "Dati collegati al database e pronti per la gestione live.";
-        ContestDataMessageText.Foreground = ContestRoundCombo.SelectedItem is null
+        ContestDataMessageText.Foreground = ContestRoundCombo.SelectedItem is null || ContestEntryCombo.SelectedItem is null
             ? new SolidColorBrush(Color.FromRgb(180, 83, 9))
             : new SolidColorBrush(Color.FromRgb(22, 101, 52));
         ContestCurrentStationText.Text = $"Postazione {_contestStation}: {scores[_contestStation - 1]}";
@@ -1785,6 +2285,7 @@ public partial class MainWindow : Window
         ContestStation5Text.Text = $"5: {scores[4]}";
         ContestStartPauseButton.Content = _contestStatus == "Live" ? "Pausa" : _contestStatus == "Paused" ? "Riprendi" : "Inizia";
         ContestStartPauseButton.IsEnabled = _currentContestRound is not null && _contestStatus != "Finished";
+        ContestFinishButton.IsEnabled = _currentContestRound is not null && _contestStatus != "Finished";
 
         _isLoadingContest = true;
         try
@@ -1806,7 +2307,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        _currentContestRound.TotalScore = GetContestStationScores(_currentContestRound).Sum();
+        RecalculateContestScores();
         _currentContestRound.Notes = SerializeContestLiveState();
         if (_currentContestEntry is not null)
         {
@@ -1839,31 +2340,45 @@ public partial class MainWindow : Window
 
     private async Task SaveContestOnlineAsync(CompetitionEvent? competitionEvent)
     {
-        if (_onlineEntities is null || _currentContestRound is null)
+        if (_onlineEntities is null || _currentContestRound is null ||
+            _currentContestEntry is null || competitionEvent is null || _contestShotOptions.Count != 25)
         {
             return;
         }
 
+        if (_isContestSyncing)
+        {
+            _contestSyncPending = true;
+            return;
+        }
+
+        _isContestSyncing = true;
         try
         {
-            var updatedRound = await _onlineEntities.UpdateThreePointContestRoundAsync(_currentContestRound);
-            CopyThreePointContestRound(updatedRound, _currentContestRound);
-            if (_currentContestEntry is not null)
+            do
             {
-                var updatedEntry = await _onlineEntities.UpdateThreePointContestEntryAsync(_currentContestEntry);
-                CopyThreePointContestEntry(updatedEntry, _currentContestEntry);
+                _contestSyncPending = false;
+                var bundle = await _onlineEntities.SyncThreePointContestAsync(
+                    competitionEvent,
+                    _currentContestEntry,
+                    _currentContestRound,
+                    _contestShotOptions.Select(x => x.Shot).ToList());
+                CopyThreePointContestRound(bundle.Round, _currentContestRound);
+                CopyThreePointContestEntry(bundle.Entry, _currentContestEntry);
+                CopyCompetitionEvent(bundle.CompetitionEvent, competitionEvent);
+                _db.SaveChanges();
+                RefreshThreePointContestCrudViews();
+                LiveSyncStatusText.Text = "Sinc: contest";
             }
-            if (competitionEvent is not null)
-            {
-                var updatedEvent = await _onlineEntities.UpdateCompetitionEventAsync(competitionEvent);
-                CopyCompetitionEvent(updatedEvent, competitionEvent);
-            }
-            _db.SaveChanges();
-            RefreshThreePointContestCrudViews();
+            while (_contestSyncPending);
         }
         catch (Exception)
         {
             LiveSyncStatusText.Text = "Sinc: errore";
+        }
+        finally
+        {
+            _isContestSyncing = false;
         }
     }
 
@@ -1882,6 +2397,13 @@ public partial class MainWindow : Window
             Score = scores.Sum(),
             CurrentStation = _contestStation,
             StationScores = scores,
+            Shots = _contestShotOptions
+                .Select(x => new ContestShotDisplayState(
+                    x.Shot.StationNumber,
+                    x.Shot.BallNumber,
+                    x.Shot.PointValue,
+                    x.Result))
+                .ToList(),
             ClockMs = _contestClock.Update(),
             Status = _contestStatus
         });
@@ -1900,7 +2422,7 @@ public partial class MainWindow : Window
         {
             try
             {
-                return JsonSerializer.Deserialize<ContestRoundLiveState>(notes) ?? new ContestRoundLiveState();
+                return NormalizeContestLiveState(JsonSerializer.Deserialize<ContestRoundLiveState>(notes) ?? new ContestRoundLiveState());
             }
             catch (JsonException)
             {
@@ -1910,10 +2432,35 @@ public partial class MainWindow : Window
         return new ContestRoundLiveState();
     }
 
+    private static ContestRoundLiveState NormalizeContestLiveState(ContestRoundLiveState live)
+    {
+        if (live.Status == "Ready" && live.ClockMs == 60000)
+        {
+            live.ClockMs = ContestDurationMs;
+        }
+
+        return live;
+    }
+
     private static int[] GetContestStationScores(ThreePointContestRound round) =>
         [round.Station1Score, round.Station2Score, round.Station3Score, round.Station4Score, round.Station5Score];
 
-    private static int GetContestStationScore(ThreePointContestRound round, int station) => GetContestStationScores(round)[station - 1];
+    private void RecalculateContestScores()
+    {
+        if (_currentContestRound is null)
+        {
+            return;
+        }
+
+        for (var station = 1; station <= 5; station++)
+        {
+            var score = _contestShotOptions
+                .Where(x => x.Shot.StationNumber == station && x.Result == "Made")
+                .Sum(x => x.Shot.PointValue);
+            SetContestStationScore(_currentContestRound, station, score);
+        }
+        _currentContestRound.TotalScore = GetContestStationScores(_currentContestRound).Sum();
+    }
 
     private static void SetContestStationScore(ThreePointContestRound round, int station, int score)
     {
@@ -1938,9 +2485,11 @@ public partial class MainWindow : Window
     private void RenderLocalState()
     {
         if (HomeScoreText is null || AwayScoreText is null || HomeFoulsText is null || AwayFoulsText is null ||
+            HomeTimeoutsText is null || AwayTimeoutsText is null ||
             PeriodText is null || PeriodCombo is null || GameClockText is null || ShotClockText is null ||
             TeamFoulsText is null || StartPauseButton is null || ShotStartPauseButton is null ||
-            LiveMatchStatusText is null || HomeLivePanel is null || ClockLivePanel is null || AwayLivePanel is null)
+            LiveMatchStatusText is null || HomeLivePanel is null || ClockLivePanel is null || AwayLivePanel is null ||
+            HomeTeamColorChip is null || AwayTeamColorChip is null)
         {
             return;
         }
@@ -1950,6 +2499,8 @@ public partial class MainWindow : Window
         AwayScoreText.Text = _state.AwayScore.ToString();
         HomeFoulsText.Text = $"Falli {_state.HomeFouls}";
         AwayFoulsText.Text = $"Falli {_state.AwayFouls}";
+        HomeTimeoutsText.Text = $"Timeout {_state.HomeTimeouts}/2";
+        AwayTimeoutsText.Text = $"Timeout {_state.AwayTimeouts}/2";
         PeriodText.Text = _state.Period.ToString();
         foreach (var item in PeriodCombo.Items.OfType<System.Windows.Controls.ComboBoxItem>())
         {
@@ -1960,11 +2511,13 @@ public partial class MainWindow : Window
             }
         }
 
+        PeriodCombo.IsEnabled = !_gameClock.IsRunning;
         GameClockText.Text = FormatGameClock(_state.GameClockMs);
         ShotClockText.Text = Math.Ceiling(_state.ShotClockMs / 1000d).ToString("0");
         TeamFoulsText.Text = $"Falli {_state.HomeFouls} - {_state.AwayFouls}";
-        SetClockButtonState(StartPauseButton, _gameClock.IsRunning, "▶ Start [Spazio]", "⏸ Pausa [Spazio]");
-        SetClockButtonState(ShotStartPauseButton, _shotClock.IsRunning, "▶ Start 24 [0]", "⏸ Pausa 24 [0]");
+        ApplyLiveTeamColors();
+        SetClockButtonState(StartPauseButton, _gameClock.IsRunning, "Start [Spazio]", "Pausa [Spazio]");
+        SetClockButtonState(ShotStartPauseButton, _shotClock.IsRunning, "Start 24 [0]", "Pausa 24 [0]");
         LiveMatchCombo.IsEnabled = !_isFreeLiveMode && !IsLiveSelectionLocked;
         LiveModeCombo.IsEnabled = !IsLiveSelectionLocked;
         DatabaseTabItem.IsEnabled = !IsOfficialLiveSessionLocked;
@@ -1972,13 +2525,38 @@ public partial class MainWindow : Window
         {
             MainTabControl.SelectedItem = LiveTabItem;
         }
-        LiveMatchStatusText.Text = _isFreeLiveMode ? "Modalità: libera" : $"Stato: {FormatMatchStatus(_currentLiveMatchStatus)}";
+        LiveMatchStatusText.Text = _isFreeLiveMode ? "Modalita: libera" : $"Stato: {FormatMatchStatus(_currentLiveMatchStatus)}";
         var liveEnabled = _isFreeLiveMode || _currentLiveMatchStatus == "Live";
         HomeLivePanel.IsEnabled = liveEnabled;
         ClockLivePanel.IsEnabled = liveEnabled;
         AwayLivePanel.IsEnabled = liveEnabled;
         UpdateOfficialMatchButtons();
         _isRenderingState = false;
+    }
+
+    private void ApplyLiveTeamColors()
+    {
+        var homeBrush = CreateBrush(_state.HomeColor, "#f77f00");
+        var awayBrush = CreateBrush(_state.AwayColor, "#457b9d");
+
+        HomeTeamColorChip.Background = homeBrush;
+        AwayTeamColorChip.Background = awayBrush;
+        HomeLivePanel.BorderBrush = homeBrush;
+        AwayLivePanel.BorderBrush = awayBrush;
+        HomeLivePanel.BorderThickness = new Thickness(3);
+        AwayLivePanel.BorderThickness = new Thickness(3);
+    }
+
+    private static SolidColorBrush CreateBrush(string? color, string fallback)
+    {
+        try
+        {
+            return new SolidColorBrush((Color)ColorConverter.ConvertFromString(string.IsNullOrWhiteSpace(color) ? fallback : color));
+        }
+        catch (FormatException)
+        {
+            return new SolidColorBrush((Color)ColorConverter.ConvertFromString(fallback));
+        }
     }
 
     private static void SetClockButtonState(Button button, bool isRunning, string startText, string pauseText)
@@ -2046,11 +2624,11 @@ public partial class MainWindow : Window
 
         var tournamentsById = _tournaments.ToDictionary(tournament => tournament.Id);
         var editions = LoadEditions();
-        _currentEditionId = editions
-            .OrderByDescending(edition => edition.Year)
-            .ThenBy(edition => edition.Id)
-            .Select(edition => (int?)edition.Id)
-            .FirstOrDefault();
+        _currentEditionId = ResolveConsoleEditionId(editions);
+        if (_currentEditionId is null)
+        {
+            DisableEditionScopedUi();
+        }
         _teams = LoadTeams();
         var editionsById = editions.ToDictionary(edition => edition.Id);
 
@@ -2062,12 +2640,14 @@ public partial class MainWindow : Window
 
         _courtRows = new ObservableCollection<CourtRow>(
             LoadCourts()
+                .Where(court => _currentEditionId is int editionId && court.EditionId == editionId)
                 .Select(court => new CourtRow(
                     court,
                     editionsById.TryGetValue(court.EditionId, out var edition) ? edition.Name : $"Edizione #{court.EditionId}")));
 
         _groupRows = new ObservableCollection<GroupRow>(
             LoadTournamentGroups()
+                .Where(group => _currentEditionId is int editionId && group.EditionId == editionId)
                 .Select(group => new GroupRow(
                     group,
                     editionsById.TryGetValue(group.EditionId, out var edition) ? edition.Name : $"Edizione #{group.EditionId}")));
@@ -2077,12 +2657,14 @@ public partial class MainWindow : Window
         var courtsById = _courtRows.ToDictionary(row => row.Court.Id);
         _groupTeamRows = new ObservableCollection<GroupTeamRow>(
             LoadGroupTeams()
+                .Where(groupTeam => groupsById.ContainsKey(groupTeam.GroupId))
                 .Select(groupTeam => new GroupTeamRow(
                     groupTeam,
                     groupsById.TryGetValue(groupTeam.GroupId, out var groupRow) ? groupRow.Group.Name : $"Girone #{groupTeam.GroupId}",
                     teamsById.TryGetValue(groupTeam.TeamId, out var team) ? team.Name : $"Squadra #{groupTeam.TeamId}")));
 
         var matches = LoadMatches()
+            .Where(match => _currentEditionId is int editionId && match.EditionId == editionId)
             .OrderBy(match => match.ScheduledStartAt)
             .ThenBy(match => match.Id)
             .ToList();
@@ -2105,6 +2687,7 @@ public partial class MainWindow : Window
 
         _competitionEventRows = new ObservableCollection<CompetitionEventRow>(
             LoadCompetitionEvents()
+                .Where(x => _currentEditionId is int editionId && x.EditionId == editionId)
                 .Where(x => x.EventType == "ThreePointContest")
                 .OrderBy(x => x.ScheduledStartAt)
                 .ThenBy(x => x.Name)
@@ -2117,6 +2700,7 @@ public partial class MainWindow : Window
         var allPlayersById = _db.Players.ToDictionary(x => x.Id);
         _threePointEntryRows = new ObservableCollection<ThreePointEntryRow>(
             LoadThreePointContestEntries()
+                .Where(x => eventsById.ContainsKey(x.CompetitionEventId))
                 .OrderBy(x => x.CompetitionEventId)
                 .ThenBy(x => x.SeedOrder)
                 .Select(entry => new ThreePointEntryRow(
@@ -2128,6 +2712,7 @@ public partial class MainWindow : Window
         var entriesById = _threePointEntryRows.ToDictionary(x => x.Entry.Id);
         _threePointRoundRows = new ObservableCollection<ThreePointRoundRow>(
             LoadThreePointContestRounds()
+                .Where(x => entriesById.ContainsKey(x.EntryId))
                 .OrderBy(x => x.EntryId).ThenBy(x => x.RoundNumber)
                 .Select(round => new ThreePointRoundRow(
                     round,
@@ -2136,6 +2721,7 @@ public partial class MainWindow : Window
         var matchesById = _matchRows.ToDictionary(x => x.Match.Id);
         _forfeitRows = new ObservableCollection<ForfeitRow>(
             LoadForfeitResults()
+                .Where(x => matchesById.ContainsKey(x.MatchId))
                 .OrderBy(x => x.MatchId)
                 .Select(forfeit => new ForfeitRow(
                     forfeit,
@@ -2146,6 +2732,7 @@ public partial class MainWindow : Window
         var allGroupsById = _db.TournamentGroups.ToDictionary(x => x.Id);
         _standingRows = new ObservableCollection<StandingRow>(
             LoadStandings()
+                .Where(x => allGroupsById.ContainsKey(x.GroupId))
                 .OrderBy(x => x.GroupId).ThenBy(x => x.Position)
                 .Select(standing => new StandingRow(
                     standing,
@@ -2153,6 +2740,7 @@ public partial class MainWindow : Window
                     allTeamsById.TryGetValue(standing.TeamId, out var team) ? team.Name : $"Squadra #{standing.TeamId}")));
 
         _sponsors = LoadSponsors();
+        _merchandiseItems = LoadMerchandiseItems();
 
         TournamentsGrid.ItemsSource = _tournaments;
         EditionsGrid.ItemsSource = _editionRows;
@@ -2166,6 +2754,7 @@ public partial class MainWindow : Window
         ForfeitsGrid.ItemsSource = _forfeitRows;
         StandingsGrid.ItemsSource = _standingRows;
         SponsorsGrid.ItemsSource = _sponsors;
+        MerchandiseItemsGrid.ItemsSource = _merchandiseItems;
         TeamsGrid.ItemsSource = _teams;
         PlayersGrid.ItemsSource = _players;
         RosterTeamCombo.ItemsSource = _teams;
@@ -2202,6 +2791,32 @@ public partial class MainWindow : Window
                 .ToList());
     }
 
+    private ObservableCollection<MerchandiseItem> LoadMerchandiseItems()
+    {
+        if (_onlineEntities is not null)
+        {
+            try
+            {
+                var items = _onlineEntities.GetMerchandiseItemsAsync().GetAwaiter().GetResult();
+                ReplaceLocalMerchandiseItems(items);
+                return new ObservableCollection<MerchandiseItem>(items);
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show(
+                    $"Lettura merchandising online non riuscita, uso i dati locali: {exception.Message}",
+                    "Merchandising online",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+            }
+        }
+
+        return new ObservableCollection<MerchandiseItem>(
+            _db.MerchandiseItems
+                .OrderBy(x => x.SortOrder)
+                .ThenBy(x => x.Name)
+                .ToList());
+    }
     private ObservableCollection<Sponsor> LoadSponsors()
     {
         if (_onlineEntities is not null)
@@ -2229,6 +2844,28 @@ public partial class MainWindow : Window
                 .ToList());
     }
 
+    private void ReplaceLocalMerchandiseItems(IReadOnlyCollection<MerchandiseItem> items)
+    {
+        _db.MerchandiseItems.RemoveRange(_db.MerchandiseItems);
+        foreach (var item in items)
+        {
+            _db.MerchandiseItems.Add(CloneMerchandiseItem(item));
+        }
+
+        _db.SaveChanges();
+    }
+
+    private void UpsertLocalMerchandiseItem(MerchandiseItem item)
+    {
+        var local = _db.MerchandiseItems.FirstOrDefault(x => x.Id == item.Id);
+        if (local is null)
+        {
+            _db.MerchandiseItems.Add(CloneMerchandiseItem(item));
+            return;
+        }
+
+        CopyMerchandiseItem(item, local);
+    }
     private void ReplaceLocalSponsors(IReadOnlyCollection<Sponsor> sponsors)
     {
         _db.Sponsors.RemoveRange(_db.Sponsors);
@@ -2269,6 +2906,25 @@ public partial class MainWindow : Window
         CopyPlayer(player, local);
     }
 
+    private static MerchandiseItem CloneMerchandiseItem(MerchandiseItem source)
+    {
+        var target = new MerchandiseItem();
+        CopyMerchandiseItem(source, target);
+        return target;
+    }
+
+    private static void CopyMerchandiseItem(MerchandiseItem source, MerchandiseItem target)
+    {
+        target.Id = source.Id;
+        target.Name = source.Name;
+        target.Description = source.Description;
+        target.Price = source.Price;
+        target.ImagePath = source.ImagePath;
+        target.IsActive = source.IsActive;
+        target.SortOrder = source.SortOrder;
+        target.CreatedAt = source.CreatedAt;
+        target.UpdatedAt = source.UpdatedAt;
+    }
     private static Sponsor CloneSponsor(Sponsor source)
     {
         var target = new Sponsor();
@@ -2342,6 +2998,96 @@ public partial class MainWindow : Window
         target.Description = source.Description;
         target.CreatedAt = source.CreatedAt;
         target.UpdatedAt = source.UpdatedAt;
+    }
+
+    private int? ResolveConsoleEditionId(IReadOnlyList<Edition> editions)
+    {
+        var consoleEditions = editions.Where(edition => edition.IsConsoleActive).ToList();
+        if (consoleEditions.Count == 1)
+        {
+            return consoleEditions[0].Id;
+        }
+
+        var message = consoleEditions.Count == 0
+            ? "Nessuna edizione e impostata per la console. Vai in Database > Edizioni e seleziona 'Usa questa edizione nella console'."
+            : "Sono presenti piu edizioni impostate per la console. Deve essercene una sola.";
+        MessageBox.Show(message, "Edizione console", MessageBoxButton.OK, MessageBoxImage.Warning);
+        return null;
+    }
+
+    private void DisableEditionScopedUi()
+    {
+        LiveMatchCombo.ItemsSource = Array.Empty<MatchOption>();
+        _liveMatchOptions = [];
+        _currentLiveMatchId = null;
+        _currentLiveMatchStatus = string.Empty;
+    }
+
+    private List<Edition> GetConsoleEditionList()
+    {
+        if (_currentEditionId is not int editionId)
+        {
+            MessageBox.Show("Imposta una sola edizione per la console prima di gestire questi dati.", "Edizione console", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return [];
+        }
+
+        return _editionRows
+            .Select(row => row.Edition)
+            .Where(edition => edition.Id == editionId)
+            .ToList();
+    }
+
+    private List<CompetitionEvent> GetConsoleThreePointContestEvents(bool includeCancelled)
+    {
+        if (_currentEditionId is not int editionId)
+        {
+            return [];
+        }
+
+        return _db.CompetitionEvents
+            .Where(evt => evt.EditionId == editionId)
+            .Where(evt => evt.EventType == "ThreePointContest")
+            .Where(evt => includeCancelled || evt.Status != "Cancelled")
+            .OrderBy(evt => evt.ScheduledStartAt)
+            .ThenBy(evt => evt.Name)
+            .ToList();
+    }
+
+    private List<TeamRoster> GetConsoleTeamRosters()
+    {
+        var teamIds = _teams.Select(team => team.Id).ToHashSet();
+        return _db.TeamRosters
+            .Where(roster => teamIds.Contains(roster.TeamId))
+            .OrderBy(roster => roster.TeamId)
+            .ThenBy(roster => roster.JerseyNumber)
+            .ToList();
+    }
+
+    private List<MatchTeam> GetConsoleMatchTeams()
+    {
+        var matchIds = _matchRows.Select(row => row.Match.Id).ToHashSet();
+        return _db.MatchTeams
+            .Where(matchTeam => matchIds.Contains(matchTeam.MatchId))
+            .ToList();
+    }
+
+    private bool ValidateSingleConsoleEdition(Edition edition)
+    {
+        if (!edition.IsConsoleActive)
+        {
+            return true;
+        }
+
+        var hasOtherConsoleEdition = _editionRows
+            .Select(row => row.Edition)
+            .Any(other => other.Id != edition.Id && other.IsConsoleActive);
+        if (!hasOtherConsoleEdition)
+        {
+            return true;
+        }
+
+        MessageBox.Show("Esiste gia un'altra edizione impostata per la console. Disattivala prima di abilitarne una nuova.", "Edizione console", MessageBoxButton.OK, MessageBoxImage.Warning);
+        return false;
     }
 
     private List<Edition> LoadEditions()
@@ -2507,6 +3253,7 @@ public partial class MainWindow : Window
         target.StartDate = source.StartDate;
         target.EndDate = source.EndDate;
         target.Status = source.Status;
+        target.IsConsoleActive = source.IsConsoleActive;
         target.CreatedAt = source.CreatedAt;
         target.UpdatedAt = source.UpdatedAt;
     }
@@ -3027,6 +3774,21 @@ public partial class MainWindow : Window
         ReconcileLocalRows(rounds, _db.ThreePointContestRounds, x => x.Id, UpsertLocalThreePointContestRound);
     }
 
+    private void UpsertLocalThreePointContestShots(IEnumerable<ThreePointContestShot> shots, bool reconcile = true)
+    {
+        if (reconcile)
+        {
+            ReconcileLocalRows(shots, _db.ThreePointContestShots, x => x.Id, UpsertLocalThreePointContestShot);
+            return;
+        }
+
+        foreach (var shot in shots)
+        {
+            UpsertLocalThreePointContestShot(shot);
+        }
+        _db.SaveChanges();
+    }
+
     private void UpsertLocalForfeitResults(IEnumerable<ForfeitResult> forfeits)
     {
         ReconcileLocalRows(forfeits, _db.ForfeitResults, x => x.Id, UpsertLocalForfeitResult);
@@ -3094,6 +3856,30 @@ public partial class MainWindow : Window
         }
 
         CopyThreePointContestRound(round, local);
+    }
+
+    private void UpsertLocalThreePointContestShot(ThreePointContestShot shot)
+    {
+        var local = _db.ThreePointContestShots.FirstOrDefault(x => x.Id == shot.Id);
+        if (local is null)
+        {
+            _db.ThreePointContestShots.Add(new ThreePointContestShot
+            {
+                Id = shot.Id,
+                RoundId = shot.RoundId,
+                StationNumber = shot.StationNumber,
+                BallNumber = shot.BallNumber,
+                PointValue = shot.PointValue,
+                Result = shot.Result
+            });
+            return;
+        }
+
+        local.RoundId = shot.RoundId;
+        local.StationNumber = shot.StationNumber;
+        local.BallNumber = shot.BallNumber;
+        local.PointValue = shot.PointValue;
+        local.Result = shot.Result;
     }
 
     private void UpsertLocalForfeitResult(ForfeitResult forfeit)
@@ -3400,6 +4186,11 @@ public partial class MainWindow : Window
             return;
         }
 
+        if (!ValidateSingleConsoleEdition(edition))
+        {
+            return;
+        }
+
         if (_onlineEntities is not null)
         {
             try
@@ -3437,6 +4228,13 @@ public partial class MainWindow : Window
         var form = new EditionFormWindow(row.Edition, _tournaments.ToList(), isNew: false) { Owner = this };
         if (form.ShowDialog() == true)
         {
+            if (!ValidateSingleConsoleEdition(row.Edition))
+            {
+                _db.ChangeTracker.Clear();
+                LoadCrudData();
+                return;
+            }
+
             row.Edition.UpdatedAt = Now();
             if (_onlineEntities is not null)
             {
@@ -3518,7 +4316,7 @@ public partial class MainWindow : Window
 
     private async void AddCourt_Click(object sender, RoutedEventArgs e)
     {
-        var editions = _editionRows.Select(row => row.Edition).ToList();
+        var editions = GetConsoleEditionList();
         if (editions.Count == 0)
         {
             MessageBox.Show("Crea prima almeno una edizione.", "Campi", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -3570,7 +4368,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        var form = new CourtFormWindow(row.Court, _editionRows.Select(x => x.Edition).ToList(), isNew: false) { Owner = this };
+        var form = new CourtFormWindow(row.Court, GetConsoleEditionList(), isNew: false) { Owner = this };
         if (form.ShowDialog() == true)
         {
             if (_onlineEntities is not null)
@@ -3653,7 +4451,7 @@ public partial class MainWindow : Window
 
     private async void AddGroup_Click(object sender, RoutedEventArgs e)
     {
-        var editions = _editionRows.Select(row => row.Edition).ToList();
+        var editions = GetConsoleEditionList();
         if (editions.Count == 0)
         {
             MessageBox.Show("Crea prima almeno una edizione.", "Gironi", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -3706,7 +4504,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        var form = new GroupFormWindow(row.Group, _editionRows.Select(x => x.Edition).ToList(), isNew: false) { Owner = this };
+        var form = new GroupFormWindow(row.Group, GetConsoleEditionList(), isNew: false) { Owner = this };
         if (form.ShowDialog() == true)
         {
             if (_onlineEntities is not null)
@@ -3790,7 +4588,7 @@ public partial class MainWindow : Window
     private async void AddGroupTeam_Click(object sender, RoutedEventArgs e)
     {
         var groupOptions = BuildGroupOptions();
-        var teams = _db.Teams.OrderBy(team => team.Name).ToList();
+        var teams = _teams.ToList();
 
         if (groupOptions.Count == 0 || teams.Count == 0)
         {
@@ -3804,7 +4602,7 @@ public partial class MainWindow : Window
             TeamId = teams[0].Id
         };
 
-        var form = new GroupTeamFormWindow(groupTeam, groupOptions, teams, isNew: true) { Owner = this };
+        var form = new GroupTeamFormWindow(groupTeam, groupOptions, _teams.ToList(), isNew: true) { Owner = this };
         if (form.ShowDialog() != true)
         {
             return;
@@ -3850,7 +4648,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        var form = new GroupTeamFormWindow(row.GroupTeam, BuildGroupOptions(), _db.Teams.OrderBy(team => team.Name).ToList(), isNew: false) { Owner = this };
+        var form = new GroupTeamFormWindow(row.GroupTeam, BuildGroupOptions(), _teams.ToList(), isNew: false) { Owner = this };
         if (form.ShowDialog() != true)
         {
             return;
@@ -3937,8 +4735,8 @@ public partial class MainWindow : Window
 
     private async void AddMatch_Click(object sender, RoutedEventArgs e)
     {
-        var editions = _editionRows.Select(row => row.Edition).ToList();
-        if (editions.Count == 0 || _db.Teams.Count() < 2)
+        var editions = GetConsoleEditionList();
+        if (editions.Count == 0 || _teams.Count < 2)
         {
             MessageBox.Show("Servono almeno una edizione e due squadre.", "Partite", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
@@ -3963,9 +4761,9 @@ public partial class MainWindow : Window
             null,
             null,
             editions,
-            _db.TournamentGroups.ToList(),
-            _db.Courts.ToList(),
-            _db.Teams.ToList(),
+            _groupRows.Select(row => row.Group).ToList(),
+            _courtRows.Select(row => row.Court).ToList(),
+            _teams.ToList(),
             isNew: true)
         { Owner = this };
 
@@ -4026,10 +4824,10 @@ public partial class MainWindow : Window
             row.Match,
             home,
             away,
-            _editionRows.Select(x => x.Edition).ToList(),
-            _db.TournamentGroups.ToList(),
-            _db.Courts.ToList(),
-            _db.Teams.ToList(),
+            GetConsoleEditionList(),
+            _groupRows.Select(groupRow => groupRow.Group).ToList(),
+            _courtRows.Select(courtRow => courtRow.Court).ToList(),
+            _teams.ToList(),
             isNew: false)
         { Owner = this };
 
@@ -4274,7 +5072,7 @@ public partial class MainWindow : Window
             if (!_liveSyncWarningShown)
             {
                 var message = ex is OnlineEntityClient.OnlineApiException { StatusCode: 429 }
-                    ? "Aruba ha temporaneamente limitato le richieste. I dati restano salvati in locale e la sincronizzazione verrà ritentata automaticamente tra un minuto."
+                    ? "Aruba ha temporaneamente limitato le richieste. I dati restano salvati in locale e la sincronizzazione verra ritentata automaticamente tra un minuto."
                     : $"Dati salvati localmente. Sincronizzazione online non riuscita: {ex.Message}";
                 MessageBox.Show(
                     message,
@@ -4427,8 +5225,14 @@ public partial class MainWindow : Window
 
     private List<GroupTeamFormWindow.GroupOption> BuildGroupOptions()
     {
+        if (_currentEditionId is not int editionId)
+        {
+            return [];
+        }
+
         var editionsById = _editionRows.ToDictionary(row => row.Edition.Id, row => row.Edition.Name);
         return _db.TournamentGroups
+            .Where(group => group.EditionId == editionId)
             .OrderBy(group => group.SortOrder)
             .ThenBy(group => group.Code)
             .ToList()
@@ -4529,21 +5333,38 @@ public partial class MainWindow : Window
         }
     }
 
-    private void RecalculateStandings()
+    private StandingsRecalculateResult? RecalculateStandings()
     {
-        _db.Standings.RemoveRange(_db.Standings);
+        if (_currentEditionId is not int editionId)
+        {
+            MessageBox.Show("Imposta una sola edizione per la console prima di ricalcolare le classifiche.", "Classifiche", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return null;
+        }
+
+        var groups = _db.TournamentGroups.Where(group => group.EditionId == editionId).ToList();
+        if (groups.Count == 0)
+        {
+            MessageBox.Show("Non ci sono gironi nell'edizione console selezionata.", "Classifiche", MessageBoxButton.OK, MessageBoxImage.Information);
+            return null;
+        }
+
+        var groupIds = groups.Select(group => group.Id).ToHashSet();
+        _db.Standings.RemoveRange(_db.Standings.Where(standing => groupIds.Contains(standing.GroupId)));
         SaveChanges();
 
-        var groups = _db.TournamentGroups.ToList();
+        var recalculated = new List<Standing>();
+        var finishedMatchesCount = 0;
         foreach (var group in groups)
         {
             var teamIds = _db.GroupTeams.Where(x => x.GroupId == group.Id).Select(x => x.TeamId).ToHashSet();
             var table = teamIds.ToDictionary(teamId => teamId, teamId => new Standing { GroupId = group.Id, TeamId = teamId });
             var matches = _db.Matches.Where(x => x.GroupId == group.Id && x.Status == "Finished").ToList();
+            var matchSidesById = matches.ToDictionary(match => match.Id, match => _db.MatchTeams.Where(x => x.MatchId == match.Id).ToList());
+            finishedMatchesCount += matches.Count;
 
             foreach (var match in matches)
             {
-                var sides = _db.MatchTeams.Where(x => x.MatchId == match.Id).ToList();
+                var sides = matchSidesById[match.Id];
                 var home = sides.FirstOrDefault(x => x.Side == "Home");
                 var away = sides.FirstOrDefault(x => x.Side == "Away");
                 if (home is null || away is null || !table.ContainsKey(home.TeamId) || !table.ContainsKey(away.TeamId)) continue;
@@ -4551,18 +5372,112 @@ public partial class MainWindow : Window
                 ApplyStandingGame(table[home.TeamId], table[away.TeamId], home.Score, away.Score);
             }
 
-            var ordered = table.Values
-                .OrderByDescending(x => x.RankingPoints)
-                .ThenByDescending(x => x.PointDifference)
-                .ThenByDescending(x => x.PointsFor)
-                .ToList();
+            var ordered = OrderStandings(table.Values, matches, matchSidesById);
 
             for (var i = 0; i < ordered.Count; i++)
             {
                 ordered[i].Position = i + 1;
                 _db.Standings.Add(ordered[i]);
+                recalculated.Add(ordered[i]);
             }
         }
+
+        SaveChanges();
+        return new StandingsRecalculateResult(groupIds, recalculated, finishedMatchesCount);
+    }
+
+    private async Task SyncConsoleStandingsOnlineAsync(StandingsRecalculateResult result)
+    {
+        var onlineStandings = await _onlineEntities!.GetStandingsAsync();
+        foreach (var standing in onlineStandings.Where(x => result.GroupIds.Contains(x.GroupId)).ToList())
+        {
+            await _onlineEntities.DeleteStandingAsync(standing.Id);
+        }
+
+        foreach (var standing in result.Standings.OrderBy(x => x.GroupId).ThenBy(x => x.Position).ThenBy(x => x.TeamId))
+        {
+            var payload = CloneStanding(standing);
+            payload.Id = 0;
+            await _onlineEntities.CreateStandingAsync(payload);
+        }
+    }
+
+    private static void ShowStandingsRecalculatedMessage(StandingsRecalculateResult result)
+    {
+        var message = string.Join(Environment.NewLine,
+            "Classifiche ricalcolate.",
+            "",
+            $"Gironi: {result.GroupIds.Count}",
+            $"Partite chiuse considerate: {result.FinishedMatchesCount}",
+            $"Righe classifica: {result.Standings.Count}");
+        MessageBox.Show(message, "Classifiche", MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
+    private sealed class StandingsRecalculateResult(HashSet<int> groupIds, List<Standing> standings, int finishedMatchesCount)
+    {
+        public HashSet<int> GroupIds { get; } = groupIds;
+        public List<Standing> Standings { get; } = standings;
+        public int FinishedMatchesCount { get; } = finishedMatchesCount;
+    }
+
+    private static List<Standing> OrderStandings(
+        IEnumerable<Standing> standings,
+        IReadOnlyList<Match> matches,
+        IReadOnlyDictionary<int, List<MatchTeam>> matchSidesById)
+    {
+        var result = new List<Standing>();
+        foreach (var pointsGroup in standings.GroupBy(x => x.RankingPoints).OrderByDescending(x => x.Key))
+        {
+            var tiedRows = pointsGroup.ToList();
+            if (tiedRows.Count == 1)
+            {
+                result.Add(tiedRows[0]);
+                continue;
+            }
+
+            var tiedTeamIds = tiedRows.Select(x => x.TeamId).ToHashSet();
+            result.AddRange(tiedRows
+                .OrderByDescending(x => CalculateHeadToHeadRankingPoints(x.TeamId, tiedTeamIds, matches, matchSidesById))
+                .ThenByDescending(x => x.PointDifference)
+                .ThenByDescending(x => x.PointsFor)
+                .ThenBy(x => x.TeamId));
+        }
+
+        return result;
+    }
+
+    private static int CalculateHeadToHeadRankingPoints(
+        int teamId,
+        HashSet<int> tiedTeamIds,
+        IReadOnlyList<Match> matches,
+        IReadOnlyDictionary<int, List<MatchTeam>> matchSidesById)
+    {
+        var points = 0;
+        foreach (var match in matches)
+        {
+            if (!matchSidesById.TryGetValue(match.Id, out var sides))
+            {
+                continue;
+            }
+
+            var home = sides.FirstOrDefault(x => x.Side == "Home");
+            var away = sides.FirstOrDefault(x => x.Side == "Away");
+            if (home is null || away is null || !tiedTeamIds.Contains(home.TeamId) || !tiedTeamIds.Contains(away.TeamId))
+            {
+                continue;
+            }
+
+            if (home.TeamId == teamId && home.Score > away.Score)
+            {
+                points += 2;
+            }
+            else if (away.TeamId == teamId && away.Score > home.Score)
+            {
+                points += 2;
+            }
+        }
+
+        return points;
     }
 
     private static void ApplyStandingGame(Standing home, Standing away, int homeScore, int awayScore)
@@ -4705,15 +5620,19 @@ public partial class MainWindow : Window
 
         if (home is not null)
         {
-            _state.HomeName = string.IsNullOrWhiteSpace(home.ShortName) ? home.Name : home.ShortName;
+            _state.HomeName = home.Name;
+            _state.HomeShortName = string.IsNullOrWhiteSpace(home.ShortName) ? home.Name : home.ShortName;
             _state.HomeColor = string.IsNullOrWhiteSpace(home.PrimaryColor) ? "#f77f00" : home.PrimaryColor;
+            _state.HomeSecondaryColor = string.IsNullOrWhiteSpace(home.SecondaryColor) ? "#fffefd" : home.SecondaryColor;
             HomeNameText.Text = _state.HomeName;
         }
 
         if (away is not null)
         {
-            _state.AwayName = string.IsNullOrWhiteSpace(away.ShortName) ? away.Name : away.ShortName;
+            _state.AwayName = away.Name;
+            _state.AwayShortName = string.IsNullOrWhiteSpace(away.ShortName) ? away.Name : away.ShortName;
             _state.AwayColor = string.IsNullOrWhiteSpace(away.PrimaryColor) ? "#457b9d" : away.PrimaryColor;
+            _state.AwaySecondaryColor = string.IsNullOrWhiteSpace(away.SecondaryColor) ? "#fffefd" : away.SecondaryColor;
             AwayNameText.Text = _state.AwayName;
         }
 
@@ -4726,11 +5645,37 @@ public partial class MainWindow : Window
         _liveMatchOptions = new ObservableCollection<MatchOption>(
             _matchRows
                 .Where(row => !string.IsNullOrWhiteSpace(row.HomeTeamName) && !string.IsNullOrWhiteSpace(row.AwayTeamName))
-                .Select(row => new MatchOption(
-                    row.Match.Id,
-                    $"{(statusesById.TryGetValue(row.Match.Id, out var status) ? status : row.Match.Status)} - {row.HomeTeamName} vs {row.AwayTeamName} ({row.Match.Phase})")));
+                .Select(row =>
+                {
+                    var status = statusesById.TryGetValue(row.Match.Id, out var currentStatus) ? currentStatus : row.Match.Status;
+                    return new MatchOption(row.Match.Id, status, FormatLiveMatchOption(row, status));
+                }));
 
         LiveMatchCombo.ItemsSource = _liveMatchOptions;
+    }
+
+    private static string FormatLiveMatchOption(MatchRow row, string status)
+    {
+        var dateText = FormatMatchSchedule(row.Match.ScheduledStartAt);
+        var groupText = string.IsNullOrWhiteSpace(row.GroupName) ? row.Match.Phase : row.GroupName;
+        return $"{FormatMatchStatus(status)} - {dateText} - {groupText} - {row.HomeTeamName} vs {row.AwayTeamName}";
+    }
+
+    private static string FormatMatchSchedule(string? scheduledStartAt)
+    {
+        if (string.IsNullOrWhiteSpace(scheduledStartAt))
+        {
+            return "senza data";
+        }
+
+        if (!DateTime.TryParse(scheduledStartAt, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AssumeLocal, out var value) &&
+            !DateTime.TryParse(scheduledStartAt, out value))
+        {
+            return scheduledStartAt;
+        }
+
+        var day = value.ToString("ddd", new System.Globalization.CultureInfo("it-IT"));
+        return $"{day} {value:dd/MM HH:mm}";
     }
 
     private void LoadSelectedLiveMatchOrDefault()
@@ -4744,9 +5689,10 @@ public partial class MainWindow : Window
             ? _liveMatchOptions.FirstOrDefault(x => x.Id == _currentLiveMatchId.Value)
             : null;
 
-        selected ??= _liveMatchOptions.FirstOrDefault(x => x.DisplayName.StartsWith("Live", StringComparison.OrdinalIgnoreCase))
-            ?? _liveMatchOptions.FirstOrDefault(x => x.DisplayName.StartsWith("Paused", StringComparison.OrdinalIgnoreCase))
-            ?? _liveMatchOptions.FirstOrDefault(x => x.DisplayName.StartsWith("Ready", StringComparison.OrdinalIgnoreCase))
+        selected ??= _liveMatchOptions.FirstOrDefault(x => x.Status == "Live")
+            ?? _liveMatchOptions.FirstOrDefault(x => x.Status == "Paused")
+            ?? _liveMatchOptions.FirstOrDefault(x => x.Status == "Ready")
+            ?? _liveMatchOptions.FirstOrDefault(x => x.Status == "Scheduled")
             ?? _liveMatchOptions.FirstOrDefault();
 
         LiveMatchCombo.SelectedItem = selected;
@@ -4798,10 +5744,14 @@ public partial class MainWindow : Window
         _shotClock.Pause();
 
         var scoreboardState = _db.ScoreboardStates.FirstOrDefault(x => x.MatchId == matchId);
-        _state.HomeName = string.IsNullOrWhiteSpace(homeTeam.ShortName) ? homeTeam.Name : homeTeam.ShortName;
-        _state.AwayName = string.IsNullOrWhiteSpace(awayTeam.ShortName) ? awayTeam.Name : awayTeam.ShortName;
+        _state.HomeName = homeTeam.Name;
+        _state.AwayName = awayTeam.Name;
+        _state.HomeShortName = string.IsNullOrWhiteSpace(homeTeam.ShortName) ? homeTeam.Name : homeTeam.ShortName;
+        _state.AwayShortName = string.IsNullOrWhiteSpace(awayTeam.ShortName) ? awayTeam.Name : awayTeam.ShortName;
         _state.HomeColor = string.IsNullOrWhiteSpace(homeTeam.PrimaryColor) ? "#f77f00" : homeTeam.PrimaryColor;
         _state.AwayColor = string.IsNullOrWhiteSpace(awayTeam.PrimaryColor) ? "#457b9d" : awayTeam.PrimaryColor;
+        _state.HomeSecondaryColor = string.IsNullOrWhiteSpace(homeTeam.SecondaryColor) ? "#fffefd" : homeTeam.SecondaryColor;
+        _state.AwaySecondaryColor = string.IsNullOrWhiteSpace(awayTeam.SecondaryColor) ? "#fffefd" : awayTeam.SecondaryColor;
         _state.HomeScore = scoreboardState?.HomeScore ?? homeSide.Score;
         _state.AwayScore = scoreboardState?.AwayScore ?? awaySide.Score;
         _state.HomeFouls = scoreboardState?.HomeFoulsCurrentPeriod ?? homeSide.FoulsCurrentPeriod;
@@ -4836,7 +5786,7 @@ public partial class MainWindow : Window
         var found = _db.Matches.FirstOrDefault(x => x.Id == _currentLiveMatchId.Value);
         if (found is null)
         {
-            MessageBox.Show("La partita selezionata non è più disponibile.", "Partita live", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show("La partita selezionata non e piu disponibile.", "Partita live", MessageBoxButton.OK, MessageBoxImage.Warning);
             return false;
         }
 
@@ -5056,6 +6006,66 @@ public partial class MainWindow : Window
         AwayLivePlayersGrid.Items.Refresh();
     }
 
+    private void PersistPeriodFoulsReset()
+    {
+        if (_isFreeLiveMode || _currentLiveMatchId is null)
+        {
+            return;
+        }
+
+        foreach (var side in _db.MatchTeams.Where(x => x.MatchId == _currentLiveMatchId.Value && (x.Side == "Home" || x.Side == "Away")))
+        {
+            side.FoulsCurrentPeriod = 0;
+        }
+
+        _db.MatchEvents.Add(new MatchEvent
+        {
+            MatchId = _currentLiveMatchId.Value,
+            Period = _state.Period,
+            PeriodType = "Regular",
+            GameClockMsRemaining = _gameClock.Update(),
+            ShotClockMsRemaining = _shotClock.Update(),
+            EventType = "TeamFoulsReset",
+            IsCorrection = true,
+            Description = "Reset falli squadra cambio tempo",
+            CreatedAt = Now()
+        });
+
+        PersistLiveState(saveChanges: false);
+        SaveChanges();
+    }
+
+    private void PersistTimeout(bool home, int delta)
+    {
+        if (_isFreeLiveMode || _currentLiveMatchId is null)
+        {
+            return;
+        }
+
+        var teamId = home ? _currentHomeTeamId : _currentAwayTeamId;
+        if (teamId is null)
+        {
+            return;
+        }
+
+        _db.MatchEvents.Add(new MatchEvent
+        {
+            MatchId = _currentLiveMatchId.Value,
+            Period = _state.Period,
+            PeriodType = "Regular",
+            GameClockMsRemaining = _gameClock.Update(),
+            ShotClockMsRemaining = _shotClock.Update(),
+            TeamId = teamId,
+            EventType = delta >= 0 ? "Timeout" : "TimeoutCorrection",
+            IsCorrection = delta < 0,
+            Description = $"{(home ? _state.HomeName : _state.AwayName)} timeout {(delta >= 0 ? "+1" : "-1")}",
+            CreatedAt = Now()
+        });
+
+        PersistLiveState(saveChanges: false);
+        SaveChanges();
+    }
+
     private void PersistLiveState(bool saveChanges = true)
     {
         if (_isFreeLiveMode || _currentLiveMatchId is null)
@@ -5091,6 +6101,7 @@ public partial class MainWindow : Window
             homeSide.Score = _state.HomeScore;
             homeSide.FoulsCurrentPeriod = _state.HomeFouls;
             homeSide.TimeoutsUsedTotal = _state.HomeTimeouts;
+            homeSide.TimeoutsUsedPeriod = _state.HomeTimeouts;
         }
 
         var awaySide = _db.MatchTeams.FirstOrDefault(x => x.MatchId == matchId && x.Side == "Away");
@@ -5099,6 +6110,7 @@ public partial class MainWindow : Window
             awaySide.Score = _state.AwayScore;
             awaySide.FoulsCurrentPeriod = _state.AwayFouls;
             awaySide.TimeoutsUsedTotal = _state.AwayTimeouts;
+            awaySide.TimeoutsUsedPeriod = _state.AwayTimeouts;
         }
 
         if (saveChanges)
@@ -5249,7 +6261,7 @@ public partial class MainWindow : Window
 
     private async void AddCompetitionEvent_Click(object sender, RoutedEventArgs e)
     {
-        var editions = _editionRows.Select(row => row.Edition).ToList();
+        var editions = GetConsoleEditionList();
         if (editions.Count == 0)
         {
             MessageBox.Show("Crea prima almeno una edizione.", "3 Point Contest", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -5301,7 +6313,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        var form = new CompetitionEventFormWindow(row.Event, _editionRows.Select(x => x.Edition).ToList(), isNew: false) { Owner = this };
+        var form = new CompetitionEventFormWindow(row.Event, GetConsoleEditionList(), isNew: false) { Owner = this };
         if (form.ShowDialog() != true)
         {
             return;
@@ -5379,7 +6391,7 @@ public partial class MainWindow : Window
 
     private async void AddThreePointEntry_Click(object sender, RoutedEventArgs e)
     {
-        var events = _db.CompetitionEvents.Where(x => x.EventType == "ThreePointContest").OrderBy(x => x.Name).ToList();
+        var events = GetConsoleThreePointContestEvents(includeCancelled: true);
         if (events.Count == 0)
         {
             MessageBox.Show("Crea prima un evento 3 Point Contest.", "3 Point Contest", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -5391,7 +6403,7 @@ public partial class MainWindow : Window
             CompetitionEventId = events[0].Id
         };
 
-        var form = new ThreePointEntryFormWindow(entry, events, _db.Teams.ToList(), _db.TeamRosters.ToList(), _db.Players.ToList(), isNew: true) { Owner = this };
+        var form = new ThreePointEntryFormWindow(entry, events, _teams.ToList(), GetConsoleTeamRosters(), _db.Players.ToList(), isNew: true) { Owner = this };
         if (form.ShowDialog() != true)
         {
             return;
@@ -5433,8 +6445,8 @@ public partial class MainWindow : Window
             return;
         }
 
-        var events = _db.CompetitionEvents.Where(x => x.EventType == "ThreePointContest").OrderBy(x => x.Name).ToList();
-        var form = new ThreePointEntryFormWindow(row.Entry, events, _db.Teams.ToList(), _db.TeamRosters.ToList(), _db.Players.ToList(), isNew: false) { Owner = this };
+        var events = GetConsoleThreePointContestEvents(includeCancelled: true);
+        var form = new ThreePointEntryFormWindow(row.Entry, events, _teams.ToList(), GetConsoleTeamRosters(), _db.Players.ToList(), isNew: false) { Owner = this };
         if (form.ShowDialog() != true)
         {
             return;
@@ -5650,7 +6662,7 @@ public partial class MainWindow : Window
         }
 
         var forfeit = new ForfeitResult { MatchId = options[0].Id, HomeAssignedScore = 20, AwayAssignedScore = 0, Reason = "OrganizerDecision", CreatedAt = Now() };
-        var form = new ForfeitFormWindow(forfeit, options, _db.MatchTeams.ToList(), _db.Teams.ToList(), isNew: true) { Owner = this };
+        var form = new ForfeitFormWindow(forfeit, options, GetConsoleMatchTeams(), _teams.ToList(), isNew: true) { Owner = this };
         if (form.ShowDialog() != true) return;
 
         if (_db.ForfeitResults.Any(x => x.MatchId == forfeit.MatchId))
@@ -5699,7 +6711,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        var form = new ForfeitFormWindow(row.Forfeit, BuildForfeitMatchOptions(), _db.MatchTeams.ToList(), _db.Teams.ToList(), isNew: false) { Owner = this };
+        var form = new ForfeitFormWindow(row.Forfeit, BuildForfeitMatchOptions(), GetConsoleMatchTeams(), _teams.ToList(), isNew: false) { Owner = this };
         if (form.ShowDialog() != true) return;
 
         if (_onlineEntities is not null)
@@ -5773,10 +6785,16 @@ public partial class MainWindow : Window
         {
             try
             {
-                RecalculateStandings();
-                var onlineStandings = await _onlineEntities.ReplaceStandingsAsync(_db.Standings.ToList());
-                ReplaceLocalStandings(onlineStandings);
+                var result = RecalculateStandings();
+                if (result is null)
+                {
+                    LoadCrudData();
+                    return;
+                }
+
+                await SyncConsoleStandingsOnlineAsync(result);
                 LoadCrudData();
+                ShowStandingsRecalculatedMessage(result);
             }
             catch (Exception exception)
             {
@@ -5787,8 +6805,12 @@ public partial class MainWindow : Window
             return;
         }
 
-        RecalculateStandings();
-        if (SaveChanges()) LoadCrudData();
+        var localResult = RecalculateStandings();
+        if (localResult is not null)
+        {
+            LoadCrudData();
+            ShowStandingsRecalculatedMessage(localResult);
+        }
     }
 
     private void LoadRosterForSelectedTeam()
@@ -5845,10 +6867,23 @@ public partial class MainWindow : Window
 
     private static string FormatGameClock(int ms)
     {
-        var totalSeconds = (int)Math.Ceiling(Math.Max(0, ms) / 1000d);
+        var remainingMs = Math.Max(0, ms);
+        if (remainingMs < 60000)
+        {
+            var totalTenths = Math.Min(599, (int)Math.Ceiling(remainingMs / 100d));
+            return (totalTenths / 10).ToString("00") + "." + (totalTenths % 10);
+        }
+
+        var totalSeconds = (int)Math.Ceiling(remainingMs / 1000d);
         var minutes = totalSeconds / 60;
         var seconds = totalSeconds % 60;
-        return $"{minutes:00}:{seconds:00}";
+        return minutes.ToString("00") + ":" + seconds.ToString("00");
+    }
+
+    private static string FormatContestClock(int ms)
+    {
+        var totalTenths = Math.Min(ContestDurationMs / 100, (int)Math.Ceiling(Math.Max(0, ms) / 100d));
+        return (totalTenths / 10).ToString("00") + "." + (totalTenths % 10);
     }
 
     private static string Now() => DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
@@ -5864,7 +6899,7 @@ public partial class MainWindow : Window
         if (IsOfficialLiveSessionLocked || _hasPendingLiveSync || _isSyncingLiveData)
         {
             var details = IsOfficialLiveSessionLocked
-                ? "La partita è ancora in corso o in pausa."
+                ? "La partita e ancora in corso o in pausa."
                 : "Esistono modifiche live non ancora confermate dal server.";
             var result = MessageBox.Show(
                 $"{details}\n\nChiudendo ora i dati restano nel salvataggio locale e saranno ritentati al prossimo avvio. Vuoi chiudere comunque?",
@@ -5983,13 +7018,15 @@ public partial class MainWindow : Window
 
     private sealed class MatchOption
     {
-        public MatchOption(int id, string displayName)
+        public MatchOption(int id, string status, string displayName)
         {
             Id = id;
+            Status = status;
             DisplayName = displayName;
         }
 
         public int Id { get; }
+        public string Status { get; }
         public string DisplayName { get; }
     }
 
@@ -6032,11 +7069,44 @@ public partial class MainWindow : Window
         public string DisplayName => $"{PlayerName} - {TeamName}";
     }
 
+    private sealed class ContestShotOption : INotifyPropertyChanged
+    {
+        public ContestShotOption(ThreePointContestShot shot) => Shot = shot;
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        public ThreePointContestShot Shot { get; }
+        public string BallLabel => Shot.BallNumber == 5 ? "BONUS" : $"PALLA {Shot.BallNumber}";
+        public string MadeLabel => Shot.PointValue == 2 ? "+2" : "+1";
+        public bool IsBonus => Shot.BallNumber == 5;
+
+        public string Result
+        {
+            get => Shot.Result;
+            set
+            {
+                if (Shot.Result == value)
+                {
+                    return;
+                }
+
+                Shot.Result = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Result)));
+            }
+        }
+    }
+
     private sealed class ContestRoundOption
     {
-        public ContestRoundOption(ThreePointContestRound round) => Round = round;
-        public ThreePointContestRound Round { get; }
-        public string DisplayName => $"{FormatRoundType(Round.RoundType)} - Prova {Round.RoundNumber}";
+        public ContestRoundOption(int roundNumber, string roundType)
+        {
+            RoundNumber = roundNumber;
+            RoundType = roundType;
+        }
+
+        public int RoundNumber { get; }
+        public string RoundType { get; }
+        public string DisplayName => $"{FormatRoundType(RoundType)} - Prova {RoundNumber}";
 
         private static string FormatRoundType(string roundType) => roundType switch
         {
@@ -6050,7 +7120,7 @@ public partial class MainWindow : Window
     {
         public string Status { get; set; } = "Ready";
         public int Station { get; set; } = 1;
-        public int ClockMs { get; set; } = 60000;
+        public int ClockMs { get; set; } = ContestDurationMs;
     }
 
     private sealed class CompetitionEventRow

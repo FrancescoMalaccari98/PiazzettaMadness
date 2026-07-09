@@ -22,6 +22,7 @@ Descrizione semplice delle tabelle presenti nel database di Piazzetta Madness.
 | `competition_events` | Eventi non partita: 3 Point Contest, premiazioni, intervalli. |
 | `three_point_contest_entries` | Partecipanti alla gara da tre punti. |
 | `three_point_contest_rounds` | Prove/fasi della gara da tre punti e punteggi per postazione. |
+| `three_point_contest_shots` | I 25 tiri di ogni prova: postazione, numero palla, valore ed esito. |
 | `sponsors` | Sponsor mostrati nell'app e nei tabelloni. |
 | `staff` | Persone e ruoli mostrati sul sito. |
 | `match_player_stats` | Statistiche complete dei giocatori. Gestita dal programma statistiche. |

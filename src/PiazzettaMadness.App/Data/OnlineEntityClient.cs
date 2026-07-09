@@ -12,7 +12,7 @@ public sealed class OnlineEntityClient
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
         PropertyNameCaseInsensitive = true,
         DefaultIgnoreCondition = JsonIgnoreCondition.Never,
-        Converters = { new FlexibleBooleanJsonConverter() }
+        Converters = { new FlexibleBooleanJsonConverter(), new NullableDecimalJsonConverter() }
     };
 
     private readonly HttpClient _httpClient;
@@ -53,6 +53,11 @@ public sealed class OnlineEntityClient
     public Task<Sponsor> CreateSponsorAsync(Sponsor sponsor) => CreateAsync("sponsors", sponsor);
     public Task<Sponsor> UpdateSponsorAsync(Sponsor sponsor) => UpdateAsync("sponsors", sponsor.Id, sponsor);
     public Task DeleteSponsorAsync(int id) => DeleteAsync("sponsors", id);
+
+    public Task<List<MerchandiseItem>> GetMerchandiseItemsAsync() => GetListAsync<MerchandiseItem>("merchandise_items");
+    public Task<MerchandiseItem> CreateMerchandiseItemAsync(MerchandiseItem item) => CreateAsync("merchandise_items", item);
+    public Task<MerchandiseItem> UpdateMerchandiseItemAsync(MerchandiseItem item) => UpdateAsync("merchandise_items", item.Id, item);
+    public Task DeleteMerchandiseItemAsync(int id) => DeleteAsync("merchandise_items", id);
 
     public Task<List<Team>> GetTeamsAsync() => GetListAsync<Team>("teams");
     public Task<Team> CreateTeamAsync(Team team) => CreateAsync("teams", team);
@@ -139,6 +144,29 @@ public sealed class OnlineEntityClient
     public Task<ThreePointContestRound> CreateThreePointContestRoundAsync(ThreePointContestRound round) => CreateAsync("three_point_contest_rounds", round);
     public Task<ThreePointContestRound> UpdateThreePointContestRoundAsync(ThreePointContestRound round) => UpdateAsync("three_point_contest_rounds", round.Id, round);
     public Task DeleteThreePointContestRoundAsync(int id) => DeleteAsync("three_point_contest_rounds", id);
+
+    public Task<List<ThreePointContestShot>> GetThreePointContestShotsAsync() => GetListAsync<ThreePointContestShot>("three_point_contest_shots");
+
+    public async Task<List<ThreePointContestShot>> InitializeThreePointContestShotsAsync(int roundId)
+    {
+        var response = await _httpClient.PostAsync(WithAction("initialize_contest_shots") + "&id=" + roundId, null).ConfigureAwait(false);
+        await EnsureSuccessAsync(response).ConfigureAwait(false);
+        return await response.Content.ReadFromJsonAsync<List<ThreePointContestShot>>(JsonOptions).ConfigureAwait(false) ?? [];
+    }
+
+    public async Task<ContestSyncBundle> SyncThreePointContestAsync(
+        CompetitionEvent competitionEvent,
+        ThreePointContestEntry entry,
+        ThreePointContestRound round,
+        IReadOnlyCollection<ThreePointContestShot> shots)
+    {
+        var response = await _httpClient.PutAsJsonAsync(
+            WithAction("sync_contest"),
+            new { CompetitionEvent = competitionEvent, Entry = entry, Round = round, Shots = shots },
+            JsonOptions).ConfigureAwait(false);
+        await EnsureSuccessAsync(response).ConfigureAwait(false);
+        return await ReadEntityAsync<ContestSyncBundle>(response).ConfigureAwait(false);
+    }
 
     public Task<List<ForfeitResult>> GetForfeitResultsAsync() => GetListAsync<ForfeitResult>("forfeit_results");
     public Task<ForfeitResult> CreateForfeitResultAsync(ForfeitResult forfeit) => CreateAsync("forfeit_results", forfeit);
@@ -291,6 +319,14 @@ public sealed class OnlineEntityClient
         public Match Match { get; set; } = new();
         public MatchTeam Home { get; set; } = new();
         public MatchTeam Away { get; set; } = new();
+    }
+
+    public sealed class ContestSyncBundle
+    {
+        public CompetitionEvent CompetitionEvent { get; set; } = new();
+        public ThreePointContestEntry Entry { get; set; } = new();
+        public ThreePointContestRound Round { get; set; } = new();
+        public List<ThreePointContestShot> Shots { get; set; } = [];
     }
 
     public sealed class ForfeitBundle

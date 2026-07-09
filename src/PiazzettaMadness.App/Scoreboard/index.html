@@ -11,10 +11,16 @@
     <div class="board-grid">
       <section class="panel team home" id="homePanel">
         <div class="team-bar" id="homeName">Casa</div>
+        <div class="team-timeout-top timeouts">
+          <span class="label muted">T</span>
+          <span class="pips timeout-pips" id="homeTimeoutPips"></span>
+        </div>
         <div class="score-wrap"><span class="score" id="homeScore">0</span></div>
-        <div class="fouls">
-          <span class="label muted">Falli</span>
-          <span class="pips" id="homeFoulPips"></span>
+        <div class="team-counters">
+          <div class="fouls">
+            <span class="label muted">F</span>
+            <span class="pips" id="homeFoulPips"></span>
+          </div>
         </div>
       </section>
 
@@ -24,7 +30,6 @@
           <span class="game-clock" id="gameClock">12:00</span>
         </div>
         <div class="block shot-block">
-          <span class="label">24 sec</span>
           <span class="shot-clock" id="shotClock">24</span>
         </div>
         <div class="block">
@@ -40,10 +45,16 @@
 
       <section class="panel team away" id="awayPanel">
         <div class="team-bar" id="awayName">Ospiti</div>
+        <div class="team-timeout-top timeouts">
+          <span class="label muted">T</span>
+          <span class="pips timeout-pips" id="awayTimeoutPips"></span>
+        </div>
         <div class="score-wrap"><span class="score" id="awayScore">0</span></div>
-        <div class="fouls">
-          <span class="label muted">Falli</span>
-          <span class="pips" id="awayFoulPips"></span>
+        <div class="team-counters">
+          <div class="fouls">
+            <span class="label muted">F</span>
+            <span class="pips" id="awayFoulPips"></span>
+          </div>
         </div>
       </section>
     </div>
@@ -85,7 +96,7 @@
       </div>
       <div class="sponsor-match-mid">
         <span class="sponsor-clock" id="sponsorGameClock">12:00</span>
-        <span class="sponsor-period" id="sponsorPeriod">1° Tempo</span>
+        <span class="sponsor-period" id="sponsorPeriod">1&deg; Tempo</span>
       </div>
       <div class="sponsor-side away">
         <span class="sponsor-points" id="sponsorAwayScore">0</span>
@@ -95,20 +106,55 @@
     </div>
   </main>
 
+  <main class="merchandise-view hidden" id="merchandiseView">
+    <div class="sponsor-head">
+      <span class="sponsor-rule"></span>
+      <span class="label">Merchandising ufficiale</span>
+      <span class="sponsor-rule"></span>
+    </div>
+    <div class="sponsor-stage">
+      <div class="sponsor-featured merchandise-featured">
+        <div class="sponsor-slide merchandise-slide">
+          <img class="sponsor-image merchandise-image hidden" id="merchandiseImage" alt="">
+          <div class="sponsor-fallback merchandise-fallback" id="merchandiseFallback">
+            <div class="sponsor-initial" id="merchandiseInitial">M</div>
+          </div>
+          <div class="merchandise-copy">
+            <div class="sponsor-name" id="merchandiseName">Piazzetta Madness</div>
+            <div class="sponsor-description" id="merchandiseDescription">Merchandising ufficiale</div>
+            <div class="merchandise-price hidden" id="merchandisePrice"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sponsor-dots" id="merchandiseDots"></div>
+    </div>
+    <div class="sponsor-matchbar" id="merchandiseMatchbar">
+      <div class="sponsor-side home">
+        <span class="sponsor-chip" id="merchandiseHomeChip"></span>
+        <span class="sponsor-team-name" id="merchandiseHomeName">Casa</span>
+        <span class="sponsor-points" id="merchandiseHomeScore">0</span>
+      </div>
+      <div class="sponsor-match-mid">
+        <span class="sponsor-clock" id="merchandiseGameClock">12:00</span>
+        <span class="sponsor-period" id="merchandisePeriod">1&deg; Tempo</span>
+      </div>
+      <div class="sponsor-side away">
+        <span class="sponsor-points" id="merchandiseAwayScore">0</span>
+        <span class="sponsor-team-name" id="merchandiseAwayName">Ospiti</span>
+        <span class="sponsor-chip" id="merchandiseAwayChip"></span>
+      </div>
+    </div>
+  </main>
   <main class="player-stats-view hidden" id="playerStatsView">
     <div class="stats-columns">
       <section class="stats-team" id="statsHomeTeam">
-        <div class="stats-team-bar"><span id="statsHomeName">Casa</span><small>Giocatori</small></div>
-        <div class="stats-row stats-header">
-          <span>#</span><span>Giocatore</span><span class="right">Pts</span><span class="right">Falli</span>
-        </div>
+        <div class="stats-team-bar"><span id="statsHomeName">Casa</span></div>
+        <div class="stats-row stats-header stats-metric-header"><span>#</span><span>NOME</span><span>PT</span><span>F</span></div>
         <div class="stats-viewport"><div class="stats-list" id="statsHomePlayers"></div></div>
       </section>
       <section class="stats-team" id="statsAwayTeam">
-        <div class="stats-team-bar"><span id="statsAwayName">Ospiti</span><small>Giocatori</small></div>
-        <div class="stats-row stats-header">
-          <span>#</span><span>Giocatore</span><span class="right">Pts</span><span class="right">Falli</span>
-        </div>
+        <div class="stats-team-bar"><span id="statsAwayName">Ospiti</span></div>
+        <div class="stats-row stats-header stats-metric-header"><span>#</span><span>NOME</span><span>PT</span><span>F</span></div>
         <div class="stats-viewport"><div class="stats-list" id="statsAwayPlayers"></div></div>
       </section>
     </div>
@@ -120,7 +166,7 @@
       </div>
       <div class="stats-match-mid">
         <span class="stats-match-clock" id="statsGameClock">12:00</span>
-        <span class="stats-match-period" id="statsPeriod">1° Tempo</span>
+        <span class="stats-match-period" id="statsPeriod">1&deg; Tempo</span>
       </div>
       <div class="stats-side away">
         <span class="stats-match-score" id="statsMatchAwayScore">0</span>
@@ -130,6 +176,32 @@
     </div>
   </main>
 
+  <main class="qr-view hidden" id="qrView">
+    <div class="qr-stage">
+      <div class="qr-url">www.piazzettamadness.it</div>
+      <section class="qr-card">
+        <div class="qr-frame">
+          <img class="qr-image" id="qrImage" src="../qr_code/qr-code.png" alt="QR code sito Piazzetta Madness">
+        </div>
+      </section>
+    </div>
+    <div class="sponsor-matchbar qr-matchbar" id="qrMatchbar">
+      <div class="sponsor-side home">
+        <span class="sponsor-chip" id="qrHomeChip"></span>
+        <span class="sponsor-team-name" id="qrHomeName">Casa</span>
+        <span class="sponsor-points" id="qrHomeScore">0</span>
+      </div>
+      <div class="sponsor-match-mid">
+        <span class="sponsor-clock" id="qrGameClock">12:00</span>
+        <span class="sponsor-period" id="qrPeriod">1&deg; Tempo</span>
+      </div>
+      <div class="sponsor-side away">
+        <span class="sponsor-points" id="qrAwayScore">0</span>
+        <span class="sponsor-team-name" id="qrAwayName">Ospiti</span>
+        <span class="sponsor-chip" id="qrAwayChip"></span>
+      </div>
+    </div>
+  </main>
   <main class="contest-view hidden" id="contestView">
     <div class="contest-top">
       <div class="contest-title"><span></span><strong id="contestEventName">Gara da 3 Punti</strong></div>
@@ -144,7 +216,7 @@
           <path class="contest-floor-in" d="M596 250 A80 80 0 0 0 596 410 Z"/>
           <path class="contest-court-line" d="M64 56 H596 M64 604 H596 M64 56 V604 M596 56 V604 M596 250 A80 80 0 0 0 596 410"/>
           <rect class="contest-court-line" x="64" y="243" width="215" height="174"/>
-          <path class="contest-court-line" d="M279 264 A66 66 0 0 0 279 396 M127 286 A44 44 0 0 1 127 374 M64 89 L235 89 A264 264 0 0 1 235 571 L64 571"/>
+          <path class="contest-court-line" d="M279 264 A66 66 0 0 1 279 396 M127 286 A44 44 0 0 1 127 374 M64 89 L235 89 A264 264 0 0 1 235 571 L64 571"/>
           <line class="contest-backboard" x1="109" y1="297" x2="109" y2="363"/>
           <circle class="contest-rim" cx="127" cy="330" r="15"/>
           <g class="contest-spot" data-station="1" transform="translate(150 89)"><circle r="23"/><text y="7">1</text></g>
@@ -156,11 +228,11 @@
       </section>
       <section class="contest-panel contest-timer-panel">
         <span class="contest-label">Tempo</span>
-        <strong class="contest-clock" id="contestClock">60</strong>
+        <strong class="contest-clock" id="contestClock">90.0</strong>
         <span class="contest-label muted">Secondi</span>
       </section>
       <section class="contest-panel contest-info">
-        <div class="contest-team"><span id="contestTeamName">Squadra</span><small>Gara 3 Punti</small></div>
+        <div class="contest-team"><span id="contestTeamName">Squadra</span></div>
         <div class="contest-player" id="contestPlayerName">Giocatore</div>
         <div class="contest-stations" id="contestStations"></div>
         <div class="contest-total"><span class="contest-label">Totale</span><strong id="contestScore">0</strong></div>
@@ -168,8 +240,8 @@
     </div>
     <div class="marquee contest-marquee">
       <div class="marquee-track">
-        <span>Piazzetta Madness // Gara da 3 Punti // Piazzetta Madness // Gara da 3 Punti // </span>
-        <span aria-hidden="true">Piazzetta Madness // Gara da 3 Punti // Piazzetta Madness // Gara da 3 Punti // </span>
+        <span>Piazzetta Madness // Gara da 3 Punti // Piazzetta Madness // Gara da 3 Punti // Piazzetta Madness // Gara da 3 Punti // Piazzetta Madness // Gara da 3 Punti // Piazzetta Madness // Gara da 3 Punti // </span>
+        <span aria-hidden="true">Piazzetta Madness // Gara da 3 Punti // Piazzetta Madness // Gara da 3 Punti // Piazzetta Madness // Gara da 3 Punti // Piazzetta Madness // Gara da 3 Punti // Piazzetta Madness // Gara da 3 Punti // </span>
       </div>
     </div>
   </main>

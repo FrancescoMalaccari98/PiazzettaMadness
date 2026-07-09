@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Campetto 3 Point Contest</title>
+  <style>
+    :root {
+      --court-blue: #2875bb;
+      --orange: #ea6324;
+      --paint: #ffcc67;
+      --line: #fff;
+      --ink: #0d0c0b;
+      --offset: 11px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      background: var(--ink);
+    }
+
+    body {
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      font-family: Arial, sans-serif;
+    }
+
+    .court-panel {
+      width: min(92vw, 720px);
+      aspect-ratio: 568 / 584;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      padding: clamp(6px, 1vh, 14px);
+      border: 3px solid var(--court-blue);
+      background: var(--court-blue);
+      box-shadow: var(--offset) var(--offset) 0 var(--court-blue);
+    }
+
+    .contest-court {
+      display: block;
+      width: auto;
+      max-width: 100%;
+      height: 100%;
+    }
+
+    .contest-floor-ext { fill: var(--court-blue); }
+    .contest-floor-out { fill: var(--orange); }
+    .contest-floor-in { fill: var(--paint); }
+
+    .contest-court-line {
+      fill: none;
+      stroke: var(--line);
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .contest-backboard {
+      stroke: var(--line);
+      stroke-width: 4.5;
+      stroke-linecap: round;
+    }
+
+    .contest-rim {
+      fill: none;
+      stroke: var(--orange);
+      stroke-width: 4;
+    }
+
+    .contest-spot circle {
+      fill: rgba(255, 255, 255, .2);
+      stroke: var(--line);
+      stroke-width: 2.5;
+    }
+
+    .contest-spot text {
+      fill: #1a1205;
+      font-size: 18px;
+      font-weight: 900;
+      text-anchor: middle;
+    }
+
+    .contest-spot.active circle {
+      r: 30px;
+      fill: var(--orange);
+      stroke: var(--line);
+      stroke-width: 5;
+      filter: drop-shadow(0 0 12px #fff) drop-shadow(0 0 26px var(--orange));
+      animation: contestSpotPulse 1.2s ease-in-out infinite;
+    }
+
+    .contest-spot.active text {
+      fill: #fff;
+      stroke: #1a1205;
+      stroke-width: 1.5px;
+      paint-order: stroke fill;
+      font-size: 18px;
+      font-weight: 1000;
+      filter: drop-shadow(0 2px 3px rgba(0, 0, 0, .8));
+    }
+
+    @keyframes contestSpotPulse {
+      50% {
+        stroke-width: 7;
+        filter: drop-shadow(0 0 18px #fff) drop-shadow(0 0 34px var(--orange));
+      }
+    }
+  </style>
+</head>
+<body>
+  <section class="court-panel" aria-label="Campetto 3 Point Contest">
+    <svg class="contest-court" viewBox="46 38 568 584" role="img" aria-label="Campo con cinque postazioni di tiro da tre">
+      <rect class="contest-floor-ext" x="48" y="40" width="564" height="580" rx="8"/>
+      <rect class="contest-floor-out" x="64" y="56" width="532" height="548"/>
+      <path class="contest-floor-in" d="M64 89 L235 89 A264 264 0 0 1 235 571 L64 571 Z"/>
+      <path class="contest-floor-in" d="M596 250 A80 80 0 0 0 596 410 Z"/>
+      <path class="contest-court-line" d="M64 56 H596 M64 604 H596 M64 56 V604 M596 56 V604 M596 250 A80 80 0 0 0 596 410"/>
+      <rect class="contest-court-line" x="64" y="243" width="215" height="174"/>
+      <path class="contest-court-line" d="M279 264 A66 66 0 0 1 279 396 M127 286 A44 44 0 0 1 127 374 M64 89 L235 89 A264 264 0 0 1 235 571 L64 571"/>
+      <line class="contest-backboard" x1="109" y1="297" x2="109" y2="363"/>
+      <circle class="contest-rim" cx="127" cy="330" r="15"/>
+      <g class="contest-spot" data-station="1" transform="translate(150 89)"><circle r="23"/><text y="7">1</text></g>
+      <g class="contest-spot" data-station="2" transform="translate(348 186)"><circle r="23"/><text y="7">2</text></g>
+      <g class="contest-spot" data-station="3" transform="translate(391 330)"><circle r="23"/><text y="7">3</text></g>
+      <g class="contest-spot" data-station="4" transform="translate(348 474)"><circle r="23"/><text y="7">4</text></g>
+      <g class="contest-spot active" data-station="5" transform="translate(150 571)"><circle r="23"/><text y="7">5</text></g>
+    </svg>
+  </section>
+</body>
+</html>

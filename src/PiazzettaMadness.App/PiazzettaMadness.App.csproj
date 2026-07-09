@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -7,12 +7,29 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
+    <ApplicationIcon>Assets\PM_logo.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <Using Remove="System.Drawing" />
     <Using Remove="System.Windows.Forms" />
+
+    <None Remove="Assets\PM_logo.ico" />
+    <None Remove="Assets\PM_logo.png" />
+    <Resource Include="Assets\PM_logo.ico" />
+    <Content Include="Assets\PM_logo.png"
+             Link="PM_logo\PM_logo.png"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
     <Content Include="Scoreboard\**\*" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\sound\*.mp3"
+             Link="sound\%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\qr-code.png"
+             Link="qr_code\qr-code.png"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
