@@ -26,7 +26,7 @@ public partial class MainWindow : System.Windows.Window
             alreadyProcessedPdfSelection,
             composition.ImportService,
             new WpfTeamMismatchConfirmationService(),
-            new WpfIdentityReviewService());
+            manualReviewService: new WpfManualReviewService());
         DataContext = viewModel;
 
         Loaded += (_, _) =>

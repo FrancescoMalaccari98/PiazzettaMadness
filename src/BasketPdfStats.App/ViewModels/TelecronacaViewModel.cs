@@ -217,15 +217,16 @@ public sealed class TelecronacaViewModel : INotifyPropertyChanged
         var stealsText = FormatInt(stl);
         var foulsText = FormatInt(fouls);
 
-        // Dettaglio a tabella: 3 coppie (etichetta, valore) per riga. I Minuti sono nell'intestazione.
-        var detailPairs = BuildDetailPairs(
-        [
-            ("Punti", pointsText), ("2PT", twoDetail), ("3PT", threeDetail),
-            ("TL", ftDetail), ("Valutazione", evaluation), ("Rimb. off", rebOff),
-            ("Rimb. dif", rebDef), ("Rimb. tot", rebTot), ("+/-", plusMinus),
-            ("Assist", assistsText), ("Recuperi", stealsText), ("Stoppate", blocks),
-            ("Palle perse", turnovers), ("Falli fatti", foulsText), ("Falli subiti", foulsDrawn),
-        ]);
+        // Dettaglio a tabella: gruppi cromatici (3 coppie per riga). I Minuti sono nell'intestazione.
+        var detailPairs = new List<TelecronacaDetailRow>
+        {
+            new("Punti",       pointsText,   string.Empty,  string.Empty,  string.Empty,   string.Empty,  "#FFE082"),
+            new("2PT",         twoDetail,    "3PT",         threeDetail,   "TL",           ftDetail,      "#90CAF9"),
+            new("Rimb. off",   rebOff,       "Rimb. dif",   rebDef,        "Rimb. tot",    rebTot,        "#A5D6A7"),
+            new("Assist",      assistsText,  "Recuperi",    stealsText,    "Stoppate",     blocks,        "#80DEEA"),
+            new("Palle perse", turnovers,    "Falli fatti", foulsText,     "Falli subiti", foulsDrawn,    "#EF9A9A"),
+            new("+/-",         plusMinus,    "Valutazione", evaluation,    string.Empty,   string.Empty,  "#CE93D8"),
+        };
 
         return new TelecronacaPlayer
         {
@@ -272,23 +273,6 @@ public sealed class TelecronacaViewModel : INotifyPropertyChanged
             Evaluation = evaluation,
             DetailPairs = detailPairs,
         };
-    }
-
-    private static IReadOnlyList<TelecronacaDetailRow> BuildDetailPairs(IReadOnlyList<(string Label, string Value)> stats)
-    {
-        (string Label, string Value) At(int idx) =>
-            idx < stats.Count ? stats[idx] : (Label: string.Empty, Value: string.Empty);
-
-        var rows = new List<TelecronacaDetailRow>();
-        for (var i = 0; i < stats.Count; i += 3) // 3 coppie per riga
-        {
-            var p1 = At(i);
-            var p2 = At(i + 1);
-            var p3 = At(i + 2);
-            rows.Add(new TelecronacaDetailRow(p1.Label, p1.Value, p2.Label, p2.Value, p3.Label, p3.Value));
-        }
-
-        return rows;
     }
 
     private static ObservableCollection<TelecronacaPlayer> BuildRows(IReadOnlyList<TelecronacaPlayer> players, TelecronacaTeamTotals totals)
@@ -801,4 +785,5 @@ public sealed record TeamComparisonRow(string Statistica, string Home, string Aw
 public sealed record TelecronacaDetailRow(
     string Label1, string Value1,
     string Label2, string Value2,
-    string Label3, string Value3);
+    string Label3, string Value3,
+    string GroupColor = "#FFFFFF");

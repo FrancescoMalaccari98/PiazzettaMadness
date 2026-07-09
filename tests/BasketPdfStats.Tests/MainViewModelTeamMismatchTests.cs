@@ -99,7 +99,7 @@ public sealed class MainViewModelTeamMismatchTests
             new StubPipeline(result),
             new StubFilePicker(),
             importService: import,
-            identityReviewService: withReviewService ? new StubReviewService() : null);
+            manualReviewService: withReviewService ? new StubManualReviewService() : null);
 
         vm.SelectedMatchOption = new OcrMatchOption
         {
@@ -161,10 +161,10 @@ public sealed class MainViewModelTeamMismatchTests
         }
     }
 
-    private sealed class StubReviewService : IIdentityReviewService
+    private sealed class StubManualReviewService : IManualReviewService
     {
-        public IReadOnlyDictionary<string, int>? ReviewAndConfirm(IReadOnlyList<IdentityReviewItem> items, OcrMatchContext context) =>
-            new Dictionary<string, int>();
+        public ManualEditSet? ReviewAndEdit(ProcessingResult result, OcrMatchContext? context) =>
+            new ManualEditSet([], new Dictionary<string, int>());
     }
 
     private sealed class StubFilePicker : IFilePicker

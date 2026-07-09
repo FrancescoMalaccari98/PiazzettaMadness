@@ -22,7 +22,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private readonly AlreadyProcessedPdfSelectionService? _alreadyProcessedPdfSelection;
     private readonly IOcrImportService? _importService;
     private readonly ITeamMismatchConfirmationService? _teamMismatchConfirmation;
-    private readonly IIdentityReviewService? _identityReviewService;
+    private readonly IManualReviewService? _manualReviewService;
     private readonly ImportPayloadBuilder _importPayloadBuilder = new();
     private readonly TeamIdentityMatcher _teamIdentityMatcher = new();
     private bool _reviewResolved = true;
@@ -57,15 +57,17 @@ public sealed class MainViewModel : INotifyPropertyChanged
         AlreadyProcessedPdfSelectionService? alreadyProcessedPdfSelection = null,
         IOcrImportService? importService = null,
         ITeamMismatchConfirmationService? teamMismatchConfirmation = null,
-        IIdentityReviewService? identityReviewService = null)
+        IIdentityReviewService? identityReviewService = null,
+        IManualReviewService? manualReviewService = null)
     {
         _pipeline = pipeline;
         _filePicker = filePicker;
         _ = resultPresenter; // popup post-elaborazione disattivata: i risultati restano nell'interfaccia.
+        _ = identityReviewService; // sostituito da IManualReviewService.
         _alreadyProcessedPdfSelection = alreadyProcessedPdfSelection;
         _importService = importService;
         _teamMismatchConfirmation = teamMismatchConfirmation;
-        _identityReviewService = identityReviewService;
+        _manualReviewService = manualReviewService;
         SelectPdfCommand = new AsyncRelayCommand(SelectPdfAsync);
         ProcessPdfCommand = new AsyncRelayCommand(
             ProcessSelectedPdfAsync,
@@ -169,6 +171,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
             if (SetField(ref _isBusy, value))
             {
                 RaiseWorkflowChanged();
+                ReviewIdentityCommand.RaiseCanExecuteChanged();
+                ProcessPdfCommand.RaiseCanExecuteChanged();
             }
         }
     }
@@ -685,34 +689,63 @@ public sealed class MainViewModel : INotifyPropertyChanged
         return h == "?" && a == "?" ? "(squadre non leggibili dal PDF)" : $"{h} vs {a}";
     }
 
+    // Abilitato sempre dopo un'elaborazione riuscita (senza mismatch), non solo sui conflitti.
     private bool CanReviewIdentity() =>
-        _identityReviewService is not null &&
+        _manualReviewService is not null &&
         _lastResult is not null &&
-        _lastResult.IdentityReview.Count > 0 &&
-        SelectedMatchContext is not null &&
-        _teamMismatchMessage is null; // PDF non corrispondente: niente revisione (match sbagliato).
+        _teamMismatchMessage is null &&
+        !_isBusy;
 
     private Task ReviewIdentityAsync()
     {
-        if (!CanReviewIdentity() || _lastResult is null || SelectedMatchContext is null || _identityReviewService is null)
-        {
-            return Task.CompletedTask;
-        }
+        if (!CanReviewIdentity() || _lastResult is null) return Task.CompletedTask;
 
-        var resolutions = _identityReviewService.ReviewAndConfirm(_lastResult.IdentityReview, SelectedMatchContext);
-        if (resolutions is not null)
+        var edits = _manualReviewService!.ReviewAndEdit(_lastResult, SelectedMatchContext);
+        if (edits is not null)
         {
-            _reviewOverrides = resolutions;
-            _reviewResolved = true;
-            ImportStatusText = "Revisione completata: export sbloccato.";
+            ApplyEdits(edits);
+            ImportStatusText = edits.StatEdits.Count > 0 || edits.FinalScoreOverride is not null
+                ? $"Modifiche applicate ({edits.StatEdits.Count} statistiche corrette)."
+                : "Revisione confermata.";
         }
         else
         {
-            ImportStatusText = "Revisione annullata: export ancora bloccato.";
+            ImportStatusText = "Revisione annullata.";
         }
 
         ImportToDbCommand.RaiseCanExecuteChanged();
+        ReviewIdentityCommand.RaiseCanExecuteChanged();
         return Task.CompletedTask;
+    }
+
+    private void ApplyEdits(ManualEditSet edits)
+    {
+        if (_lastResult is null) return;
+
+        // Applica correzioni statistiche (per fieldId).
+        foreach (var edit in edits.StatEdits)
+        {
+            var stat = _lastResult.Stats.FirstOrDefault(s =>
+                string.Equals(s.FieldId, edit.FieldId, StringComparison.Ordinal));
+            if (stat is not null) stat.Value = edit.NewValue;
+        }
+
+        // Applica override punteggio finale.
+        if (edits.FinalScoreOverride is not null)
+            _lastResult.Game.FinalScore = edits.FinalScoreOverride;
+
+        // Override identità (per import payload).
+        if (edits.IdentityOverrides.Count > 0)
+            _reviewOverrides = edits.IdentityOverrides;
+
+        // La conferma della revisione sblocca l'import (anche se non c'erano conflitti).
+        _reviewResolved = true;
+
+        // Rigenera le viste con i dati aggiornati.
+        var importable = _teamMismatchMessage is null && !HasBlockingError();
+        Telecronaca = new TelecronacaViewModel(_lastResult, SelectedMatchOption, _teamMismatchMessage, importable);
+        FullResult = new ProcessingResultViewModel(_lastResult);
+        ImportToDbCommand.RaiseCanExecuteChanged();
     }
 
     public async Task LoadMatchesForDateAsync()

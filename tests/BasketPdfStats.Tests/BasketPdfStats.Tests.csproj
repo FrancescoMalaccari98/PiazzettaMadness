@@ -28,7 +28,9 @@
     <Compile Include="..\..\src\BasketPdfStats.App\Services\IFilePicker.cs" Link="Services\IFilePicker.cs" />
     <Compile Include="..\..\src\BasketPdfStats.App\Services\ITeamMismatchConfirmationService.cs" Link="Services\ITeamMismatchConfirmationService.cs" />
     <Compile Include="..\..\src\BasketPdfStats.App\Services\IIdentityReviewService.cs" Link="Services\IIdentityReviewService.cs" />
+    <Compile Include="..\..\src\BasketPdfStats.App\Services\IManualReviewService.cs" Link="Services\IManualReviewService.cs" />
     <Compile Include="..\..\src\BasketPdfStats.App\ViewModels\IdentityReviewViewModel.cs" Link="ViewModels\IdentityReviewViewModel.cs" />
+    <Compile Include="..\..\src\BasketPdfStats.App\ViewModels\ManualReviewViewModel.cs" Link="ViewModels\ManualReviewViewModel.cs" />
     <!-- Composition root non-UI (WPF-free) linkata per i test. -->
     <Compile Include="..\..\src\BasketPdfStats.App\AppComposition.cs" Link="AppComposition.cs" />
   </ItemGroup>

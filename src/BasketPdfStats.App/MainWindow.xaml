@@ -355,10 +355,15 @@
                             </StackPanel>
                             <DataGrid ItemsSource="{Binding Telecronaca.SelectedPlayer.DetailPairs}" HorizontalAlignment="Stretch"
                                       AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" CanUserSortColumns="False"
-                                      HeadersVisibility="None" GridLinesVisibility="All" HorizontalGridLinesBrush="#ECEFF2"
-                                      VerticalGridLinesBrush="#ECEFF2" BorderBrush="{StaticResource BorderBrushSoft}" BorderThickness="1"
-                                      Background="White" RowBackground="White" AlternatingRowBackground="#FAFBFC" FontSize="14"
+                                      HeadersVisibility="None" GridLinesVisibility="All" HorizontalGridLinesBrush="#FFFFFF"
+                                      VerticalGridLinesBrush="#FFFFFF" BorderBrush="{StaticResource BorderBrushSoft}" BorderThickness="1"
+                                      Background="White" FontSize="14"
                                       RowHeight="34" IsHitTestVisible="False" ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                                <DataGrid.RowStyle>
+                                    <Style TargetType="DataGridRow">
+                                        <Setter Property="Background" Value="{Binding GroupColor}" />
+                                    </Style>
+                                </DataGrid.RowStyle>
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Binding="{Binding Label1}" Width="150">
                                         <DataGridTextColumn.ElementStyle>
