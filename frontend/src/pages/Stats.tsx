@@ -39,7 +39,7 @@ type StatKey = typeof statCategories[number]["key"];
 export function Stats() {
   const [data, setData] = useState<StatsData>(defaultStatsData);
   const [activeTab, setActiveTab] = useState<StatKey>("pts");
-  const [openTeam, setOpenTeam] = useState<string | null>(null);
+  const [openTeam, setOpenTeam] = useState<Set<string>>(new Set());
   const [expandedTeamShooting, setExpandedTeamShooting] = useState<string | null>(null);
 
   useEffect(() => {
@@ -416,11 +416,11 @@ export function Stats() {
           <div className="space-y-3">
             {teams.map(team => {
               const roster = allPlayers.filter((p: Player) => p.team === team).sort((a, b) => b.pts - a.pts);
-              const isOpen = openTeam === team;
+              const isOpen = openTeam.has(team);
               return (
                 <div key={team} className={`border-[3px] transition-colors ${isOpen ? "border-zinc-600" : "border-zinc-800"} bg-zinc-900 overflow-hidden`}>
                   <button
-                    onClick={() => setOpenTeam(isOpen ? null : team)}
+                    onClick={() => setOpenTeam(prev => { const next = new Set(prev); next.has(team) ? next.delete(team) : next.add(team); return next; })}
                     className="w-full flex items-center justify-between px-5 py-4 hover:bg-zinc-800/40 transition-colors group"
                   >
                     <div className="flex items-center gap-4">
