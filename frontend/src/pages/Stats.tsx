@@ -40,6 +40,7 @@ export function Stats() {
   const [data, setData] = useState<StatsData>(defaultStatsData);
   const [activeTab, setActiveTab] = useState<StatKey>("pts");
   const [openTeam, setOpenTeam] = useState<string | null>(null);
+  const [expandedTeamShooting, setExpandedTeamShooting] = useState<string | null>(null);
 
   useEffect(() => {
     fetch(`${API}/api-web/statistiche`)
@@ -318,6 +319,7 @@ export function Stats() {
                   <th className="text-center px-3 py-3 font-display text-xs uppercase tracking-widest text-green-400">REC</th>
                   <th className="text-center px-3 py-3 font-display text-xs uppercase tracking-widest text-purple-400">STO</th>
                   <th className="text-center px-3 py-3 font-display text-xs uppercase tracking-widest text-zinc-500">PP</th>
+                  <th className="w-8" />
                 </tr>
               </thead>
               <tbody>
@@ -325,27 +327,83 @@ export function Stats() {
                   .sort((a, b) => (b.partiteGiocate > 0 ? b.punti / b.partiteGiocate : 0) - (a.partiteGiocate > 0 ? a.punti / a.partiteGiocate : 0))
                   .map((ts, i) => {
                     const g = Math.max(1, ts.partiteGiocate);
+                    const isExpanded = expandedTeamShooting === ts.squadra;
+                    const hasShooting = (ts.p2a ?? 0) > 0 || (ts.p3a ?? 0) > 0 || (ts.tla ?? 0) > 0;
+                    const shootingCards = [
+                      { label: "2PT", pct: ts.p2pct ?? 0, made: ts.p2m ?? 0, att: ts.p2a ?? 0, color: "bg-brand-orange" },
+                      { label: "3PT", pct: ts.p3pct ?? 0, made: ts.p3m ?? 0, att: ts.p3a ?? 0, color: "bg-brand-blue" },
+                      { label: "TL",  pct: ts.tlpct ?? 0, made: ts.tlm ?? 0, att: ts.tla ?? 0, color: "bg-brand-yellow" },
+                    ];
                     return (
-                      <tr key={ts.squadra} className={`border-b border-zinc-800/50 ${i === 0 ? "bg-brand-orange/5" : "hover:bg-zinc-800/30"} transition-colors`}>
-                        <td className="px-5 py-3">
-                          <Link to={teamLink(ts.squadra)} className="font-sans font-bold text-sm uppercase text-zinc-300 hover:text-brand-orange transition-colors">{ts.squadra}</Link>
-                        </td>
-                        <td className="text-center px-3 py-3 font-mono text-zinc-500">{ts.partiteGiocate}</td>
-                        <td className="text-center px-3 py-3 font-mono font-bold text-brand-orange">{avg(ts.punti, g)}</td>
-                        <td className="text-center px-3 py-3 font-mono text-red-400">{avg(ts.puntiSubiti, g)}</td>
-                        <td className="text-center px-3 py-3 font-mono text-brand-blue">{avg(ts.assist, g)}</td>
-                        <td className="text-center px-3 py-3 font-mono text-brand-yellow">{avg(ts.rimbalzi, g)}</td>
-                        <td className="text-center px-3 py-3 font-mono text-green-400">{avg(ts.recuperi, g)}</td>
-                        <td className="text-center px-3 py-3 font-mono text-purple-400">{avg(ts.stoppate, g)}</td>
-                        <td className="text-center px-3 py-3 font-mono text-zinc-500">{avg(ts.pallePerse, g)}</td>
-                      </tr>
+                      <>
+                        <tr
+                          key={ts.squadra}
+                          className={`border-b border-zinc-800/50 ${isExpanded ? "border-zinc-700" : ""} ${i === 0 ? "bg-brand-orange/5" : ""} transition-colors ${hasShooting ? "cursor-pointer hover:bg-zinc-800/30" : ""}`}
+                          onClick={() => hasShooting && setExpandedTeamShooting(isExpanded ? null : ts.squadra)}
+                        >
+                          <td className="px-5 py-3" onClick={e => e.stopPropagation()}>
+                            <Link to={teamLink(ts.squadra)} className="font-sans font-bold text-sm uppercase text-zinc-300 hover:text-brand-orange transition-colors">{ts.squadra}</Link>
+                          </td>
+                          <td className="text-center px-3 py-3 font-mono text-zinc-500">{ts.partiteGiocate}</td>
+                          <td className="text-center px-3 py-3 font-mono font-bold text-brand-orange">{avg(ts.punti, g)}</td>
+                          <td className="text-center px-3 py-3 font-mono text-red-400">{avg(ts.puntiSubiti, g)}</td>
+                          <td className="text-center px-3 py-3 font-mono text-brand-blue">{avg(ts.assist, g)}</td>
+                          <td className="text-center px-3 py-3 font-mono text-brand-yellow">{avg(ts.rimbalzi, g)}</td>
+                          <td className="text-center px-3 py-3 font-mono text-green-400">{avg(ts.recuperi, g)}</td>
+                          <td className="text-center px-3 py-3 font-mono text-purple-400">{avg(ts.stoppate, g)}</td>
+                          <td className="text-center px-3 py-3 font-mono text-zinc-500">{avg(ts.pallePerse, g)}</td>
+                          <td className="px-2 py-3 text-center">
+                            {hasShooting && (
+                              <motion.div animate={{ rotate: isExpanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                                <ChevronDown className="w-4 h-4 text-zinc-600" />
+                              </motion.div>
+                            )}
+                          </td>
+                        </tr>
+                        {isExpanded && hasShooting && (
+                          <tr key={`${ts.squadra}-shooting`} className="bg-zinc-950 border-b border-zinc-800/50">
+                            <td colSpan={10} className="px-4 py-4 sm:px-6">
+                              <div className="grid grid-cols-3 gap-3 max-w-lg">
+                                {shootingCards.map(s => {
+                                  const fraction = s.att > 0 ? `${s.made}/${s.att}` : null;
+                                  return (
+                                    <div key={s.label} className="border-2 border-zinc-800 bg-zinc-900">
+                                      {/* Mobile */}
+                                      <div className="sm:hidden p-3 text-center">
+                                        <div className="font-mono text-xl font-bold text-white leading-tight">
+                                          {s.pct > 0 ? `${s.pct}%` : "—"}
+                                        </div>
+                                        {fraction && <div className="font-mono text-xs text-zinc-500 mt-0.5">{fraction}</div>}
+                                        <div className="font-display text-[10px] uppercase tracking-widest text-zinc-600 mt-1">{s.label}</div>
+                                      </div>
+                                      {/* Desktop */}
+                                      <div className="hidden sm:block p-4">
+                                        <div className="flex items-start justify-between mb-2">
+                                          <span className="font-display text-xs uppercase tracking-widest text-zinc-500">{s.label}%</span>
+                                          <div className="text-right">
+                                            <span className="font-mono text-lg font-bold text-white block">{s.pct > 0 ? `${s.pct}%` : "—"}</span>
+                                            {fraction && <span className="font-mono text-xs text-zinc-500">{fraction}</span>}
+                                          </div>
+                                        </div>
+                                        <div className="h-1.5 bg-zinc-800 w-full">
+                                          <div className={`h-full ${s.color} transition-all`} style={{ width: `${s.pct}%` }} />
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </>
                     );
                   })}
               </tbody>
             </table>
           </div>
           <p className="font-display text-[10px] uppercase tracking-widest text-zinc-600 mt-2">
-            PPG = Punti/G · PSG = Punti Subiti/G · APG = Assist/G · RPG = Rimbalzi/G · ordinate per PPG
+            PPG = Punti/G · PSG = Punti Subiti/G · APG = Assist/G · RPG = Rimbalzi/G · REC = Recuperi/G · STO = Stoppate/G · PP = Palle Perse/G · ordinate per PPG
           </p>
         </section>
         )}
@@ -413,9 +471,18 @@ export function Stats() {
                                   <td className="text-center px-3 py-3 font-mono text-zinc-400">{player.reb}</td>
                                   <td className="text-center px-3 py-3 font-mono text-zinc-400">{player.stl}</td>
                                   <td className="text-center px-3 py-3 font-mono text-zinc-400">{player.sd}</td>
-                                  <td className="text-center px-3 py-3 font-mono text-zinc-500">{player.p2pct}%</td>
-                                  <td className="text-center px-3 py-3 font-mono text-zinc-500">{player.p3pct > 0 ? `${player.p3pct}%` : "—"}</td>
-                                  <td className="text-center px-3 py-3 font-mono text-zinc-500">{player.tlpct}%</td>
+                                  <td className="text-center px-3 py-2 font-mono text-zinc-500">
+                                    <div>{player.p2pct}%</div>
+                                    {(player.p2a ?? 0) > 0 && <div className="text-[10px] text-zinc-600">{player.p2m}/{player.p2a}</div>}
+                                  </td>
+                                  <td className="text-center px-3 py-2 font-mono text-zinc-500">
+                                    <div>{player.p3pct > 0 ? `${player.p3pct}%` : "—"}</div>
+                                    {(player.p3a ?? 0) > 0 && <div className="text-[10px] text-zinc-600">{player.p3m}/{player.p3a}</div>}
+                                  </td>
+                                  <td className="text-center px-3 py-2 font-mono text-zinc-500">
+                                    <div>{player.tlpct}%</div>
+                                    {(player.tla ?? 0) > 0 && <div className="text-[10px] text-zinc-600">{player.tlm}/{player.tla}</div>}
+                                  </td>
                                   <td className="text-center px-3 py-3 font-mono font-bold text-cyan-400">{player.val}</td>
                                   <td className={`text-center px-3 py-3 font-mono font-bold ${player.plusMinus >= 0 ? "text-green-400" : "text-red-400"}`}>
                                     {player.plusMinus >= 0 ? `+${player.plusMinus}` : player.plusMinus}

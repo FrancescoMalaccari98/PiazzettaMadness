@@ -96,7 +96,7 @@ export function PlayerDetail() {
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
           className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12"
         >
-          {player.number && (
+          {player.number != null && (
             <span className="font-display text-[50px] sm:text-[100px] md:text-[160px] leading-none text-white/[0.06] font-black absolute top-0 right-4 md:right-8 pointer-events-none select-none">
               #{player.number}
             </span>
@@ -184,20 +184,39 @@ export function PlayerDetail() {
           {/* Percentuali di tiro */}
           <div className="grid grid-cols-3 gap-3 mt-3">
             {[
-              { label: "2PT%", val: player.p2pct, color: "bg-brand-orange" },
-              { label: "3PT%", val: player.p3pct, color: "bg-brand-blue" },
-              { label: "TL%",  val: player.tlpct, color: "bg-brand-yellow" },
-            ].map(s => (
-              <div key={s.label} className="border-2 border-zinc-800 bg-zinc-900 p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-display text-xs uppercase tracking-widest text-zinc-500">{s.label}</span>
-                  <span className="font-mono text-lg font-bold text-white">{s.val > 0 ? `${s.val}%` : "—"}</span>
+              { label: "2PT", pct: player.p2pct, made: player.p2m, att: player.p2a, color: "bg-brand-orange" },
+              { label: "3PT", pct: player.p3pct, made: player.p3m, att: player.p3a, color: "bg-brand-blue" },
+              { label: "TL",  pct: player.tlpct, made: player.tlm, att: player.tla, color: "bg-brand-yellow" },
+            ].map(s => {
+              const fraction = (s.att ?? 0) > 0 ? `${s.made}/${s.att}` : null;
+              return (
+                <div key={s.label} className="border-2 border-zinc-800 bg-zinc-900">
+                  {/* Mobile: box compatto senza barra */}
+                  <div className="sm:hidden p-3 text-center">
+                    <div className="font-mono text-xl font-bold text-white leading-tight">
+                      {s.pct > 0 ? `${s.pct}%` : "—"}
+                    </div>
+                    {fraction && (
+                      <div className="font-mono text-xs text-zinc-500 mt-0.5">{fraction}</div>
+                    )}
+                    <div className="font-display text-[10px] uppercase tracking-widest text-zinc-600 mt-1">{s.label}</div>
+                  </div>
+                  {/* Desktop: barra con etichetta e frazione */}
+                  <div className="hidden sm:block p-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <span className="font-display text-xs uppercase tracking-widest text-zinc-500">{s.label}%</span>
+                      <div className="text-right">
+                        <span className="font-mono text-lg font-bold text-white block">{s.pct > 0 ? `${s.pct}%` : "—"}</span>
+                        {fraction && <span className="font-mono text-xs text-zinc-500">{fraction}</span>}
+                      </div>
+                    </div>
+                    <div className="h-1.5 bg-zinc-800 w-full">
+                      <div className={`h-full ${s.color} transition-all`} style={{ width: `${s.pct}%` }} />
+                    </div>
+                  </div>
                 </div>
-                <div className="h-1.5 bg-zinc-800 w-full">
-                  <div className={`h-full ${s.color} transition-all`} style={{ width: `${s.val}%` }} />
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
 

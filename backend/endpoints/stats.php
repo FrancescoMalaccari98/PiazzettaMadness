@@ -94,7 +94,13 @@ function handle_statistiche_compat(PDO $pdo): void {
             COALESCE(SUM(COALESCE(mps.reb_off,0) + COALESCE(mps.reb_def,0)), 0) AS rimbalzi,
             COALESCE(SUM(mps.steals), 0)                    AS recuperi,
             COALESCE(SUM(mps.blocks), 0)                    AS stoppate,
-            COALESCE(SUM(mps.turnovers), 0)                 AS pallePerse
+            COALESCE(SUM(mps.turnovers), 0)                 AS pallePerse,
+            COALESCE(SUM(mps.two_made), 0)                  AS two_made,
+            COALESCE(SUM(mps.two_att), 0)                   AS two_att,
+            COALESCE(SUM(mps.three_made), 0)                AS three_made,
+            COALESCE(SUM(mps.three_att), 0)                 AS three_att,
+            COALESCE(SUM(mps.ft_made), 0)                   AS ft_made,
+            COALESCE(SUM(mps.ft_att), 0)                    AS ft_att
         FROM match_player_stats mps
         JOIN matches m ON m.id = mps.match_id AND m.edition_id = ?
         JOIN teams   t ON t.id = mps.team_id
@@ -144,6 +150,15 @@ function handle_statistiche_compat(PDO $pdo): void {
             'recuperi'       => (int)$r['recuperi'],
             'stoppate'       => (int)$r['stoppate'],
             'pallePerse'     => (int)$r['pallePerse'],
+            'p2m'            => (int)$r['two_made'],
+            'p2a'            => (int)$r['two_att'],
+            'p2pct'          => shooting_pct((int)$r['two_made'],   (int)$r['two_att']),
+            'p3m'            => (int)$r['three_made'],
+            'p3a'            => (int)$r['three_att'],
+            'p3pct'          => shooting_pct((int)$r['three_made'], (int)$r['three_att']),
+            'tlm'            => (int)$r['ft_made'],
+            'tla'            => (int)$r['ft_att'],
+            'tlpct'          => shooting_pct((int)$r['ft_made'],    (int)$r['ft_att']),
         ];
     }
 

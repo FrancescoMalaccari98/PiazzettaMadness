@@ -117,6 +117,12 @@ function row_to_player(array $r): array {
         'p2pct'      => shooting_pct((int)$r['two_made'],   (int)$r['two_att']),
         'p3pct'      => shooting_pct((int)$r['three_made'], (int)$r['three_att']),
         'tlpct'      => shooting_pct((int)$r['ft_made'],    (int)$r['ft_att']),
+        'p2m'        => (int)$r['two_made'],
+        'p2a'        => (int)$r['two_att'],
+        'p3m'        => (int)$r['three_made'],
+        'p3a'        => (int)$r['three_att'],
+        'tlm'        => (int)$r['ft_made'],
+        'tla'        => (int)$r['ft_att'],
         'matchLog'   => [],
     ];
 }

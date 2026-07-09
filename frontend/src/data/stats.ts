@@ -30,6 +30,12 @@ export type Player = {
   p2pct: number;     // % 2 punti
   p3pct: number;     // % 3 punti
   tlpct: number;     // % tiri liberi
+  p2m?: number;      // 2pt realizzati
+  p2a?: number;      // 2pt tentati
+  p3m?: number;      // 3pt realizzati
+  p3a?: number;      // 3pt tentati
+  tlm?: number;      // tiri liberi realizzati
+  tla?: number;      // tiri liberi tentati
   matchLog: MatchLog[];
 };
 
@@ -43,6 +49,15 @@ export type TeamStats = {
   recuperi: number;
   stoppate: number;
   pallePerse: number;
+  p2m?: number;
+  p2a?: number;
+  p2pct?: number;
+  p3m?: number;
+  p3a?: number;
+  p3pct?: number;
+  tlm?: number;
+  tla?: number;
+  tlpct?: number;
 };
 
 export type MatchMvp = {
