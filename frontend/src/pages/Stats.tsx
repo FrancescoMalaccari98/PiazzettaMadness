@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence, useInView, animate as motionAnimate } from "motion/react";
 import { Trophy, Flame, Medal, ChevronDown, Star, Target, Shield, Zap, BarChart2, TrendingUp } from "lucide-react";
@@ -97,8 +97,8 @@ export function Stats() {
           </div>
         </motion.div>
 
-        {/* — MVP TORNEO — */}
-        {tournamentMvp && (
+        {/* — MVP TORNEO — (disabilitato: rimuovere "false &&" per riabilitare) */}
+        {false && tournamentMvp && (
         <section className="mb-16">
           <h2 className="font-display text-lg sm:text-2xl uppercase tracking-widest text-zinc-500 mb-6 flex items-center gap-3">
             <Trophy className="w-5 h-5 text-brand-yellow" /> MVP del Torneo
@@ -191,8 +191,8 @@ export function Stats() {
           </motion.div>
         )}
 
-        {/* — MVP PER PARTITA — */}
-        {hasData && <section className="mb-16">
+        {/* — MVP PER PARTITA — (disabilitato: rimuovere "false &&" per riabilitare) */}
+        {false && hasData && <section className="mb-16">
           <h2 className="font-display text-lg sm:text-2xl uppercase tracking-widest text-zinc-500 mb-6 flex items-center gap-3">
             <Flame className="w-5 h-5 text-brand-orange" /> MVP per Partita
           </h2>
@@ -328,7 +328,7 @@ export function Stats() {
                     return (
                       <tr key={ts.squadra} className={`border-b border-zinc-800/50 ${i === 0 ? "bg-brand-orange/5" : "hover:bg-zinc-800/30"} transition-colors`}>
                         <td className="px-5 py-3">
-                                                    <Link to={teamLink(ts.squadra)} className="font-sans font-bold text-sm uppercase text-zinc-300 hover:text-brand-orange transition-colors">{ts.squadra}</Link>
+                          <Link to={teamLink(ts.squadra)} className="font-sans font-bold text-sm uppercase text-zinc-300 hover:text-brand-orange transition-colors">{ts.squadra}</Link>
                         </td>
                         <td className="text-center px-3 py-3 font-mono text-zinc-500">{ts.partiteGiocate}</td>
                         <td className="text-center px-3 py-3 font-mono font-bold text-brand-orange">{avg(ts.punti, g)}</td>
@@ -404,7 +404,7 @@ export function Stats() {
                               {roster.map((player: Player, i: number) => (
                                 <tr key={player.name} className={`border-t border-zinc-800/50 ${i === 0 ? "bg-brand-orange/5" : "hover:bg-zinc-800/30"} transition-colors`}>
                                   <td className="px-5 py-3">
-                                                                        <Link to={`/statistiche/${player.slug}`} className="font-sans font-bold text-sm uppercase text-zinc-300 hover:text-brand-orange transition-colors">
+                                    <Link to={`/statistiche/${player.slug}`} className="font-sans font-bold text-sm uppercase text-zinc-300 hover:text-brand-orange transition-colors">
                                       {player.name}
                                     </Link>
                                   </td>
