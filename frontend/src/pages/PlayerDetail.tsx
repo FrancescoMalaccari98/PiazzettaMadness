@@ -109,7 +109,7 @@ export function PlayerDetail() {
                 <img
                   src={player.photo}
                   alt={player.name}
-                  className="w-32 h-32 md:w-44 md:h-44 object-cover border-[4px] border-brand-orange shadow-[8px_8px_0_var(--color-brand-blue)] grayscale hover:grayscale-0 transition-all duration-500"
+                  className="w-32 h-32 md:w-44 md:h-44 object-cover border-[4px] border-brand-orange shadow-[8px_8px_0_var(--color-brand-blue)] transition-all duration-500"
                 />
               ) : (
                 <div className="w-32 h-32 md:w-44 md:h-44 border-[4px] border-zinc-700 bg-zinc-900 flex items-center justify-center shadow-[8px_8px_0_rgba(0,0,0,0.4)]">

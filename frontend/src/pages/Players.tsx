@@ -124,7 +124,7 @@ export function Players() {
                         <img
                           src={player.photo}
                           alt={player.name}
-                          className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-500"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-all duration-500"
                         />
                       ) : (
                         <div className="w-full h-full flex flex-col items-center justify-center bg-zinc-900 group-hover:bg-zinc-800 transition-colors">
