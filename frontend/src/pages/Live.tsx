@@ -269,6 +269,7 @@ function PlayerList({ team, accent, mirrored = false }: { team: LiveTeam; accent
     <div className="bg-zinc-900 border-[3px] border-zinc-800">
       {/* Intestazione */}
       <div className={`flex items-center gap-2 ${padX} py-3 border-b-[3px] ${a.border} ${rowDir}`}>
+        <span className="font-mono text-zinc-600 text-[10px] uppercase w-5 text-center shrink-0">#</span>
         <h3 className={`font-display uppercase text-white text-base sm:text-xl tracking-wide flex-1 min-w-0 ${nameAlign}`}>
           Players
         </h3>
@@ -286,6 +287,9 @@ function PlayerList({ team, accent, mirrored = false }: { team: LiveTeam; accent
             const fouledOut = p.fouls >= FOUL_LIMIT;
             return (
               <li key={p.player_id} className={`flex items-center gap-2 ${padX} py-2 ${rowDir}`}>
+                <span className="font-mono tabular-nums text-[10px] sm:text-xs text-zinc-500 w-5 text-center shrink-0">
+                  {p.jersey_number != null ? p.jersey_number : ""}
+                </span>
                 <Link to={`/statistiche/${playerSlug(p.name, p.jersey_number)}`} className={`font-sans text-zinc-200 text-xs sm:text-sm flex-1 min-w-0 break-words leading-tight hover:text-brand-orange transition-colors ${nameAlign}`}>
                   {(() => {
                     const parts = p.name.trim().split(" ");
