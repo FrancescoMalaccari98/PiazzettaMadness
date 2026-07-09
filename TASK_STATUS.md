@@ -432,6 +432,19 @@ provider is part of the solution. Adobe and GLM-OCR are fully removed.
   - **Non eseguito da Claude**: `dotnet publish` è in deny list di sicurezza del progetto e PowerShell ha
     deny rule → lo script va lanciato dall'utente (`.\tools\build-app-portable.ps1`). Build verde,
     253 test non-integration verdi (246 + 7 nuovi `MainViewModelUiStateTests`).
+- **Ottimizzazione — parallelizzazione CH2–CH4 (2026-07-09):** in `PdfProcessingPipeline.RunEnginesAsync`
+  i motori secondari (CH2 Tesseract crop, CH3 Paddle crop, CH4 Paddle row) vengono ora eseguiti **in
+  parallelo** via `Task.WhenAll` invece del `foreach` sequenziale. CH1 (obbligatorio, esporta la geometria
+  word-box per la calibrazione) e la calibrazione layout restano **prima** e bloccanti; il blocco anticipato
+  su team mismatch resta invariato (salta CH2–CH4). Sicurezza verificata: ogni canale scrive su un path
+  unico basato sul nome del motore (`NormalizedOcrResultWriter` stateless), `OcrProcessingRequest` è
+  read-only durante CH2–CH4, `RunEngineAsync` cattura tutte le eccezioni internamente (nessuna propaga con
+  `Task.WhenAll`). `Task.WhenAll` preserva l'ordine dei motori → lista `results` deterministica (CH1, CH2,
+  CH3, CH4) → nessun impatto su riconciliazione/snapshot. Attesa la corsa critica CH4 (~16–23s) invece della
+  somma sequenziale CH2+CH3+CH4. Nessuna modifica ai test (verificano `WasCalled`, non l'ordine); nessuna
+  modifica a schema JSON, `engineWeights`, worker Python, backend. Build verde, 68 test non-integration
+  mirati (Tesseract/Pipeline/Preparation/Reconciler) verdi; la regressione `Integration` rossa
+  (`raw warnings were not preserved`) è **preesistente** (fallisce identica sul baseline, pipeline solo-CH1).
 
 ## Risky or Unfinished Areas
 

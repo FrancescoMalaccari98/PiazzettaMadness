@@ -200,10 +200,17 @@ public class PdfProcessingPipeline : IPdfProcessingPipeline
             request.DocumentPreparation = await _documentPreparationStage.PrepareAsync(request, request.RunPlan, cancellationToken);
         }
 
-        foreach (var engine in engines.Where(engine => !string.Equals(engine.EngineName, OcrStrategyNames.TesseractFullPage, StringComparison.OrdinalIgnoreCase)))
-        {
-            results.Add(await RunEngineAsync(engine, request, cancellationToken));
-        }
+        // CH2–CH4 sono indipendenti tra loro (ognuno scrive su un path unico basato sul nome del
+        // motore; RunEngineAsync cattura ogni eccezione internamente). Si eseguono in parallelo.
+        // Task.WhenAll preserva l'ordine dei motori nell'array di risultati: la lista resta deterministica.
+        var secondaryEngines = engines
+            .Where(engine => !string.Equals(engine.EngineName, OcrStrategyNames.TesseractFullPage, StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+
+        var secondaryResults = await Task.WhenAll(
+            secondaryEngines.Select(engine => RunEngineAsync(engine, request, cancellationToken)));
+
+        results.AddRange(secondaryResults);
 
         if (results.Count == 0)
         {
