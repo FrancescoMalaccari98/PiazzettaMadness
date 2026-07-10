@@ -40,11 +40,7 @@ function handle_standings(PDO $pdo): void {
         FROM standings s
         JOIN tournament_groups tg ON tg.id = s.group_id AND tg.edition_id = ?
         JOIN teams t ON t.id = s.team_id
-        ORDER BY tg.sort_order, tg.id,
-                 s.ranking_points DESC,
-                 s.point_difference DESC,
-                 s.points_for DESC,
-                 t.name
+        ORDER BY tg.sort_order, tg.id, s.position
     ";
 
     $stmt = $pdo->prepare($sql);

@@ -275,35 +275,18 @@ type Bracket = { semis: Match[]; third: Match | null; final: Match | null };
 
 // — Classifica —
 
-function computeStandings(teams: string[], matches: Match[]) {
-  const s: Record<string, { g: number; v: number; p: number; pt: number; pf: number; ps: number }> = {};
-  teams.forEach(t => { s[t] = { g: 0, v: 0, p: 0, pt: 0, pf: 0, ps: 0 }; });
+type StandingRow = {
+  team_name: string;
+  group_code: string;
+  games_played: number;
+  wins: number;
+  losses: number;
+  point_diff: number;
+  standing_points: number;
+  qualifies: boolean;
+};
 
-  for (const m of matches) {
-    if (m.status !== "COMPLETA") continue;
-    // Inizializza entry se il team non era nella lista iniziale (es. team di altro girone)
-    if (!s[m.team1.name]) s[m.team1.name] = { g: 0, v: 0, p: 0, pt: 0, pf: 0, ps: 0 };
-    if (!s[m.team2.name]) s[m.team2.name] = { g: 0, v: 0, p: 0, pt: 0, pf: 0, ps: 0 };
-    s[m.team1.name].g++;  s[m.team2.name].g++;
-    s[m.team1.name].pf += m.team1.score; s[m.team1.name].ps += m.team2.score;
-    s[m.team2.name].pf += m.team2.score; s[m.team2.name].ps += m.team1.score;
-    if (m.team1.score > m.team2.score) {
-      s[m.team1.name].v++;  s[m.team1.name].pt += 2;
-      s[m.team2.name].p++;
-    } else if (m.team2.score > m.team1.score) {
-      s[m.team2.name].v++;  s[m.team2.name].pt += 2;
-      s[m.team1.name].p++;
-    }
-  }
-
-  return teams
-    .map(t => ({ name: t, ...s[t] }))
-    .sort((a, b) => b.pt - a.pt || (b.pf - b.ps) - (a.pf - a.ps));
-}
-
-function StandingsTable({ group }: { group: Group }) {
-  const rows = computeStandings(group.teams, group.matches);
-
+function StandingsTable({ group, rows }: { group: Group; rows: StandingRow[] }) {
   return (
     <table className="w-full text-sm table-fixed">
       <thead>
@@ -319,12 +302,11 @@ function StandingsTable({ group }: { group: Group }) {
       </thead>
       <tbody>
         {rows.map((row, i) => {
-          const qualifies = i < 2;
-          const diff = row.pf - row.ps;
+          const diff = row.point_diff;
           return (
             <tr
-              key={row.name}
-              className={`border-b border-zinc-800/50 last:border-0 ${qualifies ? "" : "opacity-60"}`}
+              key={row.team_name}
+              className={`border-b border-zinc-800/50 last:border-0 ${row.qualifies ? "" : "opacity-60"}`}
             >
               <td className="py-3 pr-3">
                 <div className={`w-6 h-6 flex items-center justify-center font-display text-xs font-bold
@@ -334,23 +316,23 @@ function StandingsTable({ group }: { group: Group }) {
               </td>
               <td className="py-3 pr-1 min-w-0">
                 <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-                  {qualifies && (
+                  {row.qualifies && (
                     <span className={`w-1 h-4 ${group.borderClass} bg-current ${group.accentClass} opacity-60 shrink-0`} />
                   )}
-                  <TeamLink name={row.name} className={`font-sans font-bold text-sm uppercase truncate min-w-0 flex-1 block ${i === 0 ? "text-white" : "text-zinc-300"}`} />
-                  {qualifies && (
+                  <TeamLink name={row.team_name} className={`font-sans font-bold text-sm uppercase truncate min-w-0 flex-1 block ${i === 0 ? "text-white" : "text-zinc-300"}`} />
+                  {row.qualifies && (
                     <span className={`font-display text-[9px] uppercase tracking-widest ${group.accentClass} border ${group.borderClass} px-1 shrink-0 opacity-70`}>
                       Q
                     </span>
                   )}
                 </div>
               </td>
-              <td className={`py-3 text-center font-mono font-bold text-sm px-1.5 sm:px-3 ${i === 0 ? group.accentClass : "text-brand-orange/70"}`}>{row.pt}</td>
-              <td className="py-3 text-center font-mono text-xs text-zinc-400 px-1.5 sm:px-3">{row.g}</td>
-              <td className="py-3 text-center font-mono text-xs text-zinc-400 px-1.5 sm:px-3">{row.v}</td>
-              <td className="py-3 text-center font-mono text-xs text-zinc-400 px-1.5 sm:px-3">{row.p}</td>
-              <td className={`py-3 text-center font-mono text-xs pl-1.5 sm:pl-3 font-bold ${row.g === 0 ? "text-zinc-600" : diff > 0 ? "text-green-500" : diff < 0 ? "text-red-500" : "text-zinc-400"}`}>
-                {row.g === 0 ? "—" : `${diff > 0 ? "+" : ""}${diff}`}
+              <td className={`py-3 text-center font-mono font-bold text-sm px-1.5 sm:px-3 ${i === 0 ? group.accentClass : "text-brand-orange/70"}`}>{row.standing_points}</td>
+              <td className="py-3 text-center font-mono text-xs text-zinc-400 px-1.5 sm:px-3">{row.games_played}</td>
+              <td className="py-3 text-center font-mono text-xs text-zinc-400 px-1.5 sm:px-3">{row.wins}</td>
+              <td className="py-3 text-center font-mono text-xs text-zinc-400 px-1.5 sm:px-3">{row.losses}</td>
+              <td className={`py-3 text-center font-mono text-xs pl-1.5 sm:pl-3 font-bold ${row.games_played === 0 ? "text-zinc-600" : diff > 0 ? "text-green-500" : diff < 0 ? "text-red-500" : "text-zinc-400"}`}>
+                {row.games_played === 0 ? "—" : `${diff > 0 ? "+" : ""}${diff}`}
               </td>
             </tr>
           );
@@ -462,6 +444,7 @@ const API = import.meta.env.VITE_API_URL ?? "";
 export function Matches() {
   const [groups,        setGroups]        = useState<Group[]>(defaultGroups);
   const [bracketMatches, setBracket]      = useState<Bracket>({ semis: [], third: null, final: null });
+  const [standings,     setStandings]     = useState<StandingRow[]>([]);
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [matchDetail,   setMatchDetail]   = useState<MatchDetail | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
@@ -509,13 +492,14 @@ export function Matches() {
       .catch(() => {});
   }, []);
 
-  // Fetch squadre + partite in parallelo dal backend
+  // Fetch squadre + partite + standings in parallelo dal backend
   useEffect(() => {
     Promise.all([
       fetch(`${API}/api-web/squadre`).then(r => r.ok ? r.json() as Promise<TeamApi[]> : null),
       fetch(`${API}/api-web/partite`).then(r => r.ok ? r.json() as Promise<Match[]>   : null),
+      fetch(`${API}/api-web/standings`).then(r => r.ok ? r.json() as Promise<StandingRow[]> : null),
     ])
-    .then(([squadre, partite]) => {
+    .then(([squadre, partite, stnd]) => {
       if (!squadre && !partite) return; // backend non disponibile
 
       setGroups(defaultGroups.map(g => ({
@@ -529,6 +513,8 @@ export function Matches() {
           ? partite.filter(m => m.round.includes(`Girone ${g.key}`))
           : g.matches,
       })));
+
+      if (stnd) setStandings(stnd);
 
       // Aggiorna bracket con partite playoff reali dal campo phase
       if (partite) {
@@ -695,7 +681,7 @@ export function Matches() {
                   <span className="font-display text-[10px] uppercase tracking-[0.2em] text-zinc-500">Classifica</span>
                 </div>
                 <div className="px-5 py-4">
-                  <StandingsTable group={group} />
+                  <StandingsTable group={group} rows={standings.filter(r => r.group_code === group.key)} />
                 </div>
                 <div className={`px-5 py-2 border-t border-zinc-800 flex items-center gap-1.5`}>
                   <span className={`w-1 h-3 ${group.accentClass} bg-current`} />
