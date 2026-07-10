@@ -154,7 +154,7 @@ export function PlayerDetail() {
                   <card.Icon className={`w-4 h-4 ${card.accent}`} />
                 </div>
                 <div className="p-4">
-                  <div className={`font-mono text-4xl font-bold ${card.accent} mb-1`}>{player[card.key]}</div>
+                  <div className={`font-mono text-3xl sm:text-4xl font-bold ${card.accent} mb-1`}>{player[card.key]}</div>
                   <div className="font-display text-xs uppercase tracking-widest text-zinc-600">{card.unit}{rank(card.key) ? ` · #${rank(card.key)} nel torneo` : ""}</div>
                 </div>
               </div>

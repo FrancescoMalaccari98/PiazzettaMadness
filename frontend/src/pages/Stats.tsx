@@ -421,13 +421,11 @@ export function Stats() {
                 <div key={team} className={`border-[3px] transition-colors ${isOpen ? "border-zinc-600" : "border-zinc-800"} bg-zinc-900 overflow-hidden`}>
                   <button
                     onClick={() => setOpenTeam(prev => { const next = new Set(prev); next.has(team) ? next.delete(team) : next.add(team); return next; })}
-                    className="w-full flex items-center justify-between px-5 py-4 hover:bg-zinc-800/40 transition-colors group"
+                    className="w-full flex items-center gap-3 px-5 py-4 hover:bg-zinc-800/40 transition-colors group"
                   >
-                    <div className="flex items-center gap-4">
-                      <span className="font-display text-lg uppercase tracking-wide text-white group-hover:text-brand-orange transition-colors">{team}</span>
-                      <span className="font-display text-xs uppercase tracking-widest text-zinc-600">{roster.length} giocatori</span>
-                    </div>
-                    <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                    <span className="font-display text-lg uppercase tracking-wide text-white group-hover:text-brand-orange transition-colors flex-1 min-w-0 text-left">{team}</span>
+                    <span className="font-display text-xs uppercase tracking-widest text-zinc-600 shrink-0 whitespace-nowrap">{roster.length} giocatori</span>
+                    <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.2 }} className="shrink-0">
                       <ChevronDown className={`w-5 h-5 ${isOpen ? "text-brand-orange" : "text-zinc-600"}`} />
                     </motion.div>
                   </button>

@@ -289,10 +289,10 @@ function computeStandings(teams: string[], matches: Match[]) {
     s[m.team2.name].pf += m.team2.score; s[m.team2.name].ps += m.team1.score;
     if (m.team1.score > m.team2.score) {
       s[m.team1.name].v++;  s[m.team1.name].pt += 2;
-      s[m.team2.name].p++;  s[m.team2.name].pt += 1;
+      s[m.team2.name].p++;
     } else if (m.team2.score > m.team1.score) {
       s[m.team2.name].v++;  s[m.team2.name].pt += 2;
-      s[m.team1.name].p++;  s[m.team1.name].pt += 1;
+      s[m.team1.name].p++;
     }
   }
 
