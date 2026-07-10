@@ -288,9 +288,26 @@ export function Stats() {
                       />
                     </div>
                   </div>
-                  <span className={`font-mono text-xl font-bold shrink-0 ${i === 0 ? activeCategory.accent : "text-zinc-400"}`}>
-                    {val > 0 && activeTab === "plusMinus" ? `+${val}` : val}
-                  </span>
+                  <div className="flex flex-col items-end shrink-0">
+                    <span className={`font-mono text-xl font-bold ${i === 0 ? activeCategory.accent : "text-zinc-400"}`}>
+                      {val > 0 && activeTab === "plusMinus" ? `+${val}` : val}
+                    </span>
+                    {(() => {
+                      const totalMap: Partial<Record<StatKey, number | undefined>> = {
+                        pts: player.ptsTotal,
+                        ast: player.astTotal,
+                        reb: player.rebTotal,
+                        stl: player.stlTotal,
+                        sd:  player.sdTotal,
+                      };
+                      const total = totalMap[activeTab];
+                      return total != null ? (
+                        <span className="font-mono text-[10px] text-zinc-500 leading-none">
+                          {total} {activeCategory.unit.replace("PG", "T")}
+                        </span>
+                      ) : null;
+                    })()}
+                  </div>
                 </div>
               );
             })}

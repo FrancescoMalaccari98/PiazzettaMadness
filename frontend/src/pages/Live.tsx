@@ -263,18 +263,18 @@ function PlayerList({ team, accent, mirrored = false }: { team: LiveTeam; accent
   const nameAlign = mirrored ? "text-right" : "text-left";
   // Padding ridotto sul lato esterno (sinistra a sx, destra a dx) e normale
   // sul lato centrale, così "Players" e i nomi si attaccano al bordo esterno.
-  const padX = mirrored ? "pr-2 pl-3" : "pl-2 pr-3";
+  const padX = mirrored ? "pr-1 pl-2" : "pl-1 pr-2";
 
   return (
     <div className="bg-zinc-900 border-[3px] border-zinc-800">
       {/* Intestazione */}
-      <div className={`flex items-center gap-2 ${padX} py-3 border-b-[3px] ${a.border} ${rowDir}`}>
-        <span className="font-mono text-zinc-600 text-[10px] uppercase w-5 text-center shrink-0">#</span>
+      <div className={`flex items-center gap-1 ${padX} py-3 border-b-[3px] ${a.border} ${rowDir}`}>
+        <span className="font-mono text-zinc-600 text-[10px] uppercase w-4 text-center shrink-0">#</span>
         <h3 className={`font-display uppercase text-white text-base sm:text-xl tracking-wide flex-1 min-w-0 ${nameAlign}`}>
           Players
         </h3>
-        <span className="font-mono text-zinc-500 text-[10px] uppercase w-5 text-center shrink-0">F</span>
-        <span className="font-mono text-zinc-500 text-[10px] uppercase w-6 text-center shrink-0">PT</span>
+        <span className="font-mono text-zinc-500 text-[10px] uppercase w-4 text-center shrink-0">F</span>
+        <span className="font-mono text-zinc-500 text-[10px] uppercase w-5 text-center shrink-0">PT</span>
       </div>
 
       {players.length === 0 ? (
@@ -286,29 +286,24 @@ function PlayerList({ team, accent, mirrored = false }: { team: LiveTeam; accent
           {players.map(p => {
             const fouledOut = p.fouls >= FOUL_LIMIT;
             return (
-              <li key={p.player_id} className={`flex items-center gap-2 ${padX} py-2 ${rowDir}`}>
-                <span className="font-mono tabular-nums text-[10px] sm:text-xs text-zinc-500 w-5 text-center shrink-0">
+              <li key={p.player_id} className={`flex items-center gap-1 ${padX} py-2 ${rowDir}`}>
+                <span className="font-mono tabular-nums text-[10px] sm:text-xs text-zinc-500 w-4 text-center shrink-0">
                   {p.jersey_number != null ? p.jersey_number : ""}
                 </span>
-                <Link to={`/statistiche/${playerSlug(p.name, p.jersey_number)}`} className={`font-sans text-zinc-200 text-xs sm:text-sm flex-1 min-w-0 break-words leading-tight hover:text-brand-orange transition-colors ${nameAlign}`}>
+                <Link to={`/statistiche/${playerSlug(p.name, p.jersey_number)}`} className={`font-sans text-zinc-200 text-xs sm:text-sm flex-1 min-w-0 truncate leading-tight hover:text-brand-orange transition-colors ${nameAlign}`}>
                   {(() => {
                     const parts = p.name.trim().split(" ");
-                    const first = parts.shift() ?? "";
-                    const rest = parts.join(" ");
-                    return (
-                      <>
-                        <span className="block">{first}</span>
-                        {rest && <span className="block">{rest}</span>}
-                      </>
-                    );
+                    const initial = parts[0]?.[0] ?? "";
+                    const last = parts.slice(1).join(" ");
+                    return last ? `${initial}.${last}` : p.name;
                   })()}
                 </Link>
-                <span className={`font-mono tabular-nums text-sm w-5 text-center shrink-0 ${
+                <span className={`font-mono tabular-nums text-sm w-4 text-center shrink-0 ${
                   fouledOut ? "text-red-500 font-bold" : "text-zinc-500"
                 }`}>
                   {p.fouls}
                 </span>
-                <span className="font-mono tabular-nums text-white text-sm sm:text-base font-bold w-6 text-center shrink-0">
+                <span className="font-mono tabular-nums text-white text-sm sm:text-base font-bold w-5 text-center shrink-0">
                   {p.points}
                 </span>
               </li>

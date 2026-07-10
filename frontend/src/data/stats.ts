@@ -18,6 +18,10 @@ export type Player = {
   pts: number;
   ptsTotal?: number; // punti totali stagione (somma di tutte le partite)
   ptsTop?: number;   // miglior punteggio in una singola partita
+  astTotal?: number;
+  rebTotal?: number;
+  stlTotal?: number;
+  sdTotal?: number;
   ast: number;
   reb: number;       // rimbalzi totali
   rebOff: number;    // rimbalzi offensivi
