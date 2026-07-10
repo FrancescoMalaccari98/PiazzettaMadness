@@ -167,6 +167,8 @@ export function PlayerDetail() {
           <h2 className="font-display text-xl uppercase tracking-widest text-zinc-500 mb-5">Statistiche avanzate</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             {[
+              { label: "Punti Tot.", val: player.ptsTotal ?? "—", accent: "text-brand-orange", perGame: false },
+              { label: "Top Match",  val: player.ptsTop ?? "—",   accent: "text-brand-yellow",  perGame: false },
               { label: "Rim. Off.",  val: player.rebOff,    accent: "text-zinc-300" },
               { label: "Rim. Dif.",  val: player.rebDef,    accent: "text-zinc-300" },
               { label: "Stoppate",   val: player.sd,        accent: "text-purple-400" },
@@ -176,7 +178,7 @@ export function PlayerDetail() {
             ].map(s => (
               <div key={s.label} className="border-2 border-zinc-800 bg-zinc-900 p-4 text-center">
                 <div className={`font-mono text-2xl font-bold ${s.accent} mb-1`}>{s.val}</div>
-                <div className="font-display text-[10px] uppercase tracking-widest text-zinc-600">{s.label}/G</div>
+                <div className="font-display text-[10px] uppercase tracking-widest text-zinc-600">{s.label}{s.perGame === false ? "" : "/G"}</div>
               </div>
             ))}
           </div>

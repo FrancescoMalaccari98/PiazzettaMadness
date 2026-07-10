@@ -440,11 +440,13 @@ export function Stats() {
                         className="overflow-hidden"
                       >
                         <div className="border-t-2 border-zinc-800 overflow-x-auto">
-                          <table className="w-full min-w-[640px] text-sm">
+                          <table className="w-full min-w-[760px] text-sm">
                             <thead>
                               <tr className="bg-zinc-950">
                                 <th className="text-left px-5 py-3 font-display text-xs uppercase tracking-widest text-zinc-500">Giocatore</th>
                                 <th className="text-center px-3 py-3 font-display text-xs uppercase tracking-widest text-brand-orange">PTI</th>
+                                <th className="text-center px-3 py-3 font-display text-xs uppercase tracking-widest text-brand-orange">PTS</th>
+                                <th className="text-center px-3 py-3 font-display text-xs uppercase tracking-widest text-brand-yellow">TOP</th>
                                 <th className="text-center px-3 py-3 font-display text-xs uppercase tracking-widest text-brand-blue">ASS</th>
                                 <th className="text-center px-3 py-3 font-display text-xs uppercase tracking-widest text-brand-yellow">RIM</th>
                                 <th className="text-center px-3 py-3 font-display text-xs uppercase tracking-widest text-green-400">REC</th>
@@ -465,6 +467,8 @@ export function Stats() {
                                     </Link>
                                   </td>
                                   <td className="text-center px-3 py-3 font-mono font-bold text-brand-orange">{player.pts}</td>
+                                  <td className="text-center px-3 py-3 font-mono text-zinc-300">{player.ptsTotal ?? "—"}</td>
+                                  <td className="text-center px-3 py-3 font-mono font-bold text-brand-yellow">{player.ptsTop ?? "—"}</td>
                                   <td className="text-center px-3 py-3 font-mono text-zinc-400">{player.ast}</td>
                                   <td className="text-center px-3 py-3 font-mono text-zinc-400">{player.reb}</td>
                                   <td className="text-center px-3 py-3 font-mono text-zinc-400">{player.stl}</td>
@@ -497,6 +501,9 @@ export function Stats() {
               );
             })}
           </div>
+          <p className="font-display text-[10px] uppercase tracking-widest text-zinc-600 mt-2">
+            PTI = Punti/Partita · PTS = Punti Totali · TOP = Miglior Partita · ASS = Assist · RIM = Rimbalzi · REC = Recuperi · STO = Stoppate · VAL = Valutazione · ordinati per PTI
+          </p>
         </section>}
 
       </div>
