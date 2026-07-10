@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
+import { X } from "lucide-react";
+import type { Player } from "../data/stats";
 
 function playerSlug(fullName: string, jerseyNumber: number | string | null = null): string {
   const base = fullName
@@ -83,6 +85,19 @@ export function Live() {
   const [clockPeriod, setClockPeriod] = useState(1);
   const lastServerClock = useRef(-1);
 
+  // Statistiche stagionali dei giocatori (foto, medie) per la scheda a comparsa.
+  // Vengono dall'OCR dei referti (stesso dato della pagina Statistiche), NON dal
+  // tabellone live: caricate una volta sola, non ad ogni polling del punteggio.
+  const [playersData, setPlayersData] = useState<Player[]>([]);
+  const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch(`${API}/api-web/giocatori`)
+      .then(r => r.ok ? r.json() as Promise<Player[]> : null)
+      .then(d => { if (d) setPlayersData(d); })
+      .catch(() => {});
+  }, []);
+
   // Polling ogni 5s — aggiorna tutto (punteggio, giocatori, falli).
   // Per il clock: aggiorna solo se il server manda un valore diverso dal precedente.
   // Se uguale, il tabellone non ha scritto → il countdown locale continua.
@@ -155,17 +170,27 @@ export function Live() {
             clock={formatClock(clockSeconds)}
             running={clockRunning}
             period={clockPeriod}
+            onSelectPlayer={setSelectedSlug}
           />
         ) : (
           <EmptyState message={data?.message} />
         )}
       </div>
+
+      {/* Scheda giocatore: statistiche stagionali (OCR), non quelle della partita in corso */}
+      <PlayerModal
+        player={selectedSlug ? playersData.find(p => p.slug === selectedSlug) ?? null : null}
+        open={selectedSlug !== null}
+        onClose={() => setSelectedSlug(null)}
+      />
     </div>
   );
 }
 
 // ── Tabellone live ───────────────────────────────────────────
-function LiveBoard({ data, clock, running, period }: { data: LiveData; clock: string; running: boolean; period?: number }) {
+function LiveBoard({ data, clock, running, period, onSelectPlayer }: {
+  data: LiveData; clock: string; running: boolean; period?: number; onSelectPlayer: (slug: string) => void;
+}) {
   const home = data.home_team!;
   const away = data.away_team!;
   const homeScore = data.home_score ?? home.score ?? 0;
@@ -219,8 +244,8 @@ function LiveBoard({ data, clock, running, period }: { data: LiveData; clock: st
           max-w + mx-auto: la coppia di tabelle resta centrata sotto il tabellone
           invece di spalmarsi su tutta la larghezza. */}
       <div className="grid grid-cols-2 gap-3 sm:gap-5 max-w-4xl mx-auto">
-        <PlayerList team={home} accent="blue" />
-        <PlayerList team={away} accent="orange" mirrored />
+        <PlayerList team={home} accent="blue" onSelectPlayer={onSelectPlayer} />
+        <PlayerList team={away} accent="orange" mirrored onSelectPlayer={onSelectPlayer} />
       </div>
     </div>
   );
@@ -254,7 +279,9 @@ function TeamScore({ team, score, leading, accent, align }: {
   );
 }
 
-function PlayerList({ team, accent, mirrored = false }: { team: LiveTeam; accent: Accent; mirrored?: boolean }) {
+function PlayerList({ team, accent, mirrored = false, onSelectPlayer }: {
+  team: LiveTeam; accent: Accent; mirrored?: boolean; onSelectPlayer: (slug: string) => void;
+}) {
   const a = ACCENTS[accent];
   const players = [...team.players].sort((x, y) => y.points - x.points);
   // L'ordine base è [nome, falli, punti]. Con flex-row-reverse diventa
@@ -290,14 +317,17 @@ function PlayerList({ team, accent, mirrored = false }: { team: LiveTeam; accent
                 <span className="font-mono tabular-nums text-[10px] sm:text-xs text-zinc-500 w-4 text-center shrink-0">
                   {p.jersey_number != null ? p.jersey_number : ""}
                 </span>
-                <Link to={`/statistiche/${playerSlug(p.name, p.jersey_number)}`} className={`font-sans text-zinc-200 text-xs sm:text-sm flex-1 min-w-0 truncate leading-tight hover:text-brand-orange transition-colors ${nameAlign}`}>
+                <button
+                  onClick={() => onSelectPlayer(playerSlug(p.name, p.jersey_number))}
+                  className={`font-sans text-zinc-200 text-xs sm:text-sm flex-1 min-w-0 truncate leading-tight hover:text-brand-orange transition-colors bg-transparent ${nameAlign}`}
+                >
                   {(() => {
                     const parts = p.name.trim().split(" ");
                     const initial = parts[0]?.[0] ?? "";
                     const last = parts.slice(1).join(" ");
                     return last ? `${initial}.${last}` : p.name;
                   })()}
-                </Link>
+                </button>
                 <span className={`font-mono tabular-nums text-sm w-4 text-center shrink-0 ${
                   fouledOut ? "text-red-500 font-bold" : "text-zinc-500"
                 }`}>
@@ -312,6 +342,98 @@ function PlayerList({ team, accent, mirrored = false }: { team: LiveTeam; accent
         </ul>
       )}
     </div>
+  );
+}
+
+// ── Scheda giocatore (dialog) ───────────────────────────────
+// Statistiche stagionali (medie da referto OCR), non quelle della partita live.
+function PlayerModal({ player, open, onClose }: { player: Player | null | undefined; open: boolean; onClose: () => void }) {
+  return (
+    <AnimatePresence>
+      {open && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="absolute inset-0 bg-black/90 backdrop-blur-sm cursor-pointer"
+          />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            className="relative w-full max-w-md bg-zinc-950 border-[4px] border-brand-orange shadow-[16px_16px_0_var(--color-brand-blue)] z-10 flex flex-col max-h-[90vh]"
+          >
+            <div className="flex justify-between items-center gap-3 p-4 sm:p-5 border-b-[3px] border-zinc-800 bg-zinc-900 shrink-0">
+              <h3 className="font-display text-lg sm:text-xl uppercase text-white tracking-wide truncate">Scheda Giocatore</h3>
+              <button onClick={onClose} className="text-zinc-400 hover:text-white border-2 border-transparent hover:border-brand-orange p-1 transition-colors shrink-0 bg-transparent">
+                <X size={26} />
+              </button>
+            </div>
+
+            <div className="p-5 sm:p-6 overflow-y-auto">
+              {!player ? (
+                <div className="text-center py-10">
+                  <p className="font-display text-zinc-500 uppercase tracking-widest text-sm">
+                    Statistiche non disponibili
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {/* Foto + identità */}
+                  <div className="flex flex-col items-center text-center mb-6">
+                    {player.photo ? (
+                      <img
+                        src={player.photo}
+                        alt={player.name}
+                        className="w-24 h-24 sm:w-28 sm:h-28 object-cover border-[3px] border-brand-orange shadow-[6px_6px_0_var(--color-brand-blue)] mb-4"
+                      />
+                    ) : (
+                      <div className="w-24 h-24 sm:w-28 sm:h-28 border-[3px] border-zinc-700 bg-zinc-900 flex items-center justify-center shadow-[6px_6px_0_rgba(0,0,0,0.4)] mb-4">
+                        <span className="font-display text-3xl sm:text-4xl text-zinc-600 uppercase select-none">
+                          {player.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
+                        </span>
+                      </div>
+                    )}
+                    <h4 className="font-display text-2xl sm:text-3xl uppercase text-white leading-tight">
+                      {player.name}
+                    </h4>
+                    <p className="font-sans text-zinc-500 text-sm mt-1">
+                      {player.team}{player.number != null ? ` · #${player.number}` : ""}
+                    </p>
+                  </div>
+
+                  {/* Medie stagionali + totali */}
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { label: "Punti",    val: player.pts, total: player.ptsTotal, accent: "text-brand-orange", border: "border-brand-orange" },
+                      { label: "Assist",   val: player.ast, total: player.astTotal, accent: "text-brand-blue",   border: "border-brand-blue" },
+                      { label: "Rimbalzi", val: player.reb, total: player.rebTotal, accent: "text-brand-yellow", border: "border-brand-yellow" },
+                      { label: "Recuperi", val: player.stl, total: player.stlTotal, accent: "text-green-400",    border: "border-green-500" },
+                    ].map(s => (
+                      <div key={s.label} className={`border-2 ${s.border} bg-zinc-900 p-3 text-center`}>
+                        <div className={`font-mono text-2xl sm:text-3xl font-bold ${s.accent}`}>{s.val}</div>
+                        <div className="font-display text-[10px] uppercase tracking-widest text-zinc-500 mt-1">{s.label}/G</div>
+                        {s.total !== undefined && (
+                          <div className="font-mono text-[11px] text-zinc-600 mt-1">{s.total} tot.</div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  <Link
+                    to={`/statistiche/${player.slug}`}
+                    onClick={onClose}
+                    className="block text-center mt-5 font-display text-xs uppercase tracking-widest text-brand-orange hover:underline"
+                  >
+                    Vedi scheda completa →
+                  </Link>
+                </>
+              )}
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
   );
 }
 
