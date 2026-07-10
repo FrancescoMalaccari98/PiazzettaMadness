@@ -437,18 +437,18 @@ function PlayoffCard({ match, isFinal = false, small = false, onClick }: { match
       </div>
       <div className={`flex flex-col ${small ? "p-3 gap-2" : "p-4 gap-3"}`}>
         <div className={`flex justify-between items-center ${!isPending && match.team1.score > match.team2.score ? "text-white" : "text-zinc-500"}`}>
-          <div className={`flex items-center gap-1.5 min-w-0 ${small ? "max-w-[120px]" : "max-w-[150px]"}`}>
+          <div className="flex items-center gap-1.5 min-w-0 flex-1">
             {match.team1.color && <span className="w-[3px] h-4 shrink-0" style={{ backgroundColor: match.team1.color }} />}
             <TeamLink name={match.team1.name} className={`font-sans font-[900] tracking-tight uppercase truncate block ${small ? "text-xs" : "text-sm"}`} />
           </div>
-          <span className={`font-mono font-bold ${small ? "text-lg" : "text-2xl"}`}>{isPending ? "—" : match.team1.score}</span>
+          <span className={`font-mono font-bold shrink-0 ${small ? "text-lg" : "text-2xl"}`}>{isPending ? "—" : match.team1.score}</span>
         </div>
         <div className={`flex justify-between items-center ${!isPending && match.team2.score > match.team1.score ? "text-white" : "text-zinc-500"}`}>
-          <div className={`flex items-center gap-1.5 min-w-0 ${small ? "max-w-[120px]" : "max-w-[150px]"}`}>
+          <div className="flex items-center gap-1.5 min-w-0 flex-1">
             {match.team2.color && <span className="w-[3px] h-4 shrink-0" style={{ backgroundColor: match.team2.color }} />}
             <TeamLink name={match.team2.name} className={`font-sans font-[900] tracking-tight uppercase truncate block ${small ? "text-xs" : "text-sm"}`} />
           </div>
-          <span className={`font-mono font-bold ${small ? "text-lg" : "text-2xl"}`}>{isPending ? "—" : match.team2.score}</span>
+          <span className={`font-mono font-bold shrink-0 ${small ? "text-lg" : "text-2xl"}`}>{isPending ? "—" : match.team2.score}</span>
         </div>
       </div>
     </div>
