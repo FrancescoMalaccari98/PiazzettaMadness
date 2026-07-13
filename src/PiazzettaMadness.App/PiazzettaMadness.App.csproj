@@ -26,6 +26,10 @@
              Link="sound\%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest"
              CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\sound\*.wav"
+             Link="sound\%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
     <Content Include="..\..\qr-code.png"
              Link="qr_code\qr-code.png"
              CopyToOutputDirectory="PreserveNewest"

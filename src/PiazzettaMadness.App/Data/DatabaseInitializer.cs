@@ -611,6 +611,7 @@ public static class DatabaseInitializer
         AddColumnIfMissing(connection, "players", "address", "TEXT NULL");
         AddColumnIfMissing(connection, "players", "phone_number", "TEXT NULL");
         AddColumnIfMissing(connection, "players", "email", "TEXT NULL");
+        AddColumnIfMissing(connection, "players", "console_photo_path", "TEXT NULL");
         AddColumnIfMissing(connection, "editions", "is_console_active", "INTEGER NOT NULL DEFAULT 0 CHECK (is_console_active IN (0, 1))");
         CreateUniqueIndexIfMissing(connection, "ux_editions_console_active", "CREATE UNIQUE INDEX ux_editions_console_active ON editions(is_console_active) WHERE is_console_active = 1;");
         CreateSponsorsTableIfMissing(connection);

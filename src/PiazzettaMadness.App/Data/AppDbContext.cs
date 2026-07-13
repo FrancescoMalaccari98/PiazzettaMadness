@@ -299,6 +299,7 @@ public sealed class AppDbContext : DbContext
             entity.Property(x => x.Email).HasColumnName("email");
             entity.Property(x => x.BirthDate).HasColumnName("birth_date");
             entity.Property(x => x.PhotoPath).HasColumnName("photo_path");
+            entity.Property(x => x.ConsolePhotoPath).HasColumnName("console_photo_path");
             entity.Property(x => x.CreatedAt).HasColumnName("created_at");
             entity.Property(x => x.UpdatedAt).HasColumnName("updated_at");
         });

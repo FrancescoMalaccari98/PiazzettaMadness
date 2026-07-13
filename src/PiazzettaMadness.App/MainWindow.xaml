@@ -16,7 +16,7 @@
             <Style x:Key="LivePlayersTextCellStyle" TargetType="TextBlock">
                 <Setter Property="VerticalAlignment" Value="Center" />
                 <Setter Property="Padding" Value="2,0" />
-                <Setter Property="FontSize" Value="13" />
+                <Setter Property="FontSize" Value="14" />
             </Style>
 
             <Style x:Key="LivePlayersGridStyle" TargetType="DataGrid">
@@ -33,10 +33,10 @@
                             <Setter Property="Background" Value="#f1f5f9" />
                             <Setter Property="Foreground" Value="#475569" />
                             <Setter Property="FontWeight" Value="SemiBold" />
-                            <Setter Property="FontSize" Value="13" />
+                            <Setter Property="FontSize" Value="14" />
                             <Setter Property="BorderBrush" Value="#e2e8f0" />
                             <Setter Property="BorderThickness" Value="0,0,0,1" />
-                            <Setter Property="Padding" Value="4,6" />
+                            <Setter Property="Padding" Value="5,7" />
                         </Style>
                     </Setter.Value>
                 </Setter>
@@ -44,7 +44,7 @@
                     <Setter.Value>
                         <Style TargetType="DataGridCell">
                             <Setter Property="BorderThickness" Value="0" />
-                            <Setter Property="Padding" Value="2,1" />
+                            <Setter Property="Padding" Value="3,2" />
                             <Setter Property="Background" Value="Transparent" />
                             <Setter Property="Foreground" Value="#111827" />
                             <Setter Property="VerticalContentAlignment" Value="Center" />
@@ -138,6 +138,12 @@
                                       VerticalAlignment="Center"
                                       Margin="18,0,0,0"
                                       FontWeight="SemiBold" />
+                            <CheckBox x:Name="AnimationImagesEnabledCheckBox"
+                                      Content="Immagini"
+                                      IsChecked="True"
+                                      VerticalAlignment="Center"
+                                      Margin="10,0,0,0"
+                                      FontWeight="SemiBold" />
                         </StackPanel>
                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right">
                             <Border x:Name="LiveSyncStatusBorder" Padding="8,6" Margin="0,0,6,0" Background="#e5e7eb" BorderBrush="#cbd5e1" BorderThickness="1">
@@ -201,37 +207,37 @@
                                       IsReadOnly="True"
                                       SelectionMode="Single"
                                       HeadersVisibility="Column"
-                                      RowHeight="42"
+                                      RowHeight="46"
                                       AlternatingRowBackground="#f9fafb">
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Header="#" Binding="{Binding JerseyNumber}" Width="34" ElementStyle="{StaticResource LivePlayersTextCellStyle}" />
-                                    <DataGridTemplateColumn Header="Giocatore" Width="124">
+                                    <DataGridTextColumn Header="#" Binding="{Binding JerseyNumber}" Width="38" ElementStyle="{StaticResource LivePlayersTextCellStyle}" />
+                                    <DataGridTemplateColumn Header="Giocatore" Width="134">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <TextBlock Text="{Binding PlayerName}" TextWrapping="Wrap" FontSize="13" LineHeight="15" VerticalAlignment="Center" Padding="2,0" />
+                                                <TextBlock Text="{Binding PlayerName}" TextWrapping="Wrap" FontSize="14" LineHeight="16" FontWeight="SemiBold" VerticalAlignment="Center" Padding="3,0" />
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTextColumn Header="Pt" Binding="{Binding Points}" Width="40" ElementStyle="{StaticResource LivePlayersTextCellStyle}" />
-                                    <DataGridTextColumn Header="F" Binding="{Binding Fouls}" Width="36" ElementStyle="{StaticResource LivePlayersTextCellStyle}" />
-                                    <DataGridTemplateColumn Header="Punti" Width="206">
+                                    <DataGridTextColumn Header="Pt" Binding="{Binding Points}" Width="44" ElementStyle="{StaticResource LivePlayersTextCellStyle}" />
+                                    <DataGridTextColumn Header="F" Binding="{Binding Fouls}" Width="40" ElementStyle="{StaticResource LivePlayersTextCellStyle}" />
+                                    <DataGridTemplateColumn Header="Punti" Width="258">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <StackPanel Orientation="Horizontal" Margin="12,0,0,0">
-                                                    <Button Content="+1" Width="42" Height="34" FontSize="15" Margin="0,0,5,0" Click="PlayerPlusOne_Click" />
-                                                    <Button Content="+2" Width="42" Height="34" FontSize="15" Margin="0,0,5,0" Click="PlayerPlusTwo_Click" />
-                                                    <Button Content="+3" Width="42" Height="34" FontSize="15" Margin="0,0,13,0" Click="PlayerPlusThree_Click" />
-                                                    <Button Content="-1" Width="42" Height="34" FontSize="15" Click="PlayerMinusOne_Click" />
+                                                <StackPanel Orientation="Horizontal" Margin="14,0,0,0">
+                                                    <Button Content="+1" Width="46" Height="37" FontSize="16" Margin="0,0,8,0" Click="PlayerPlusOne_Click" />
+                                                    <Button Content="+2" Width="46" Height="37" FontSize="16" Margin="0,0,8,0" Click="PlayerPlusTwo_Click" />
+                                                    <Button Content="+3" Width="46" Height="37" FontSize="16" Margin="0,0,16,0" Click="PlayerPlusThree_Click" />
+                                                    <Button Content="-1" Width="46" Height="37" FontSize="16" FontWeight="SemiBold" Background="#f59e0b" BorderBrush="#b45309" Foreground="#111827" Click="PlayerMinusOne_Click" />
                                                 </StackPanel>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTemplateColumn Header="Falli" Width="106">
+                                    <DataGridTemplateColumn Header="Falli" Width="136">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <StackPanel Orientation="Horizontal" Margin="12,0,0,0">
-                                                    <Button Content="+" Width="42" Height="34" FontSize="17" Margin="0,0,5,0" Click="PlayerFoulPlus_Click" />
-                                                    <Button Content="-" Width="42" Height="34" FontSize="17" Click="PlayerFoulMinus_Click" />
+                                                <StackPanel Orientation="Horizontal" Margin="14,0,0,0">
+                                                    <Button Content="+" Width="46" Height="37" FontSize="18" Margin="0,0,10,0" Click="PlayerFoulPlus_Click" />
+                                                    <Button Content="-" Width="46" Height="37" FontSize="18" FontWeight="SemiBold" Background="#f59e0b" BorderBrush="#b45309" Foreground="#111827" Click="PlayerFoulMinus_Click" />
                                                 </StackPanel>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
@@ -376,37 +382,37 @@
                                       IsReadOnly="True"
                                       SelectionMode="Single"
                                       HeadersVisibility="Column"
-                                      RowHeight="42"
+                                      RowHeight="46"
                                       AlternatingRowBackground="#f9fafb">
                                 <DataGrid.Columns>
-                                    <DataGridTextColumn Header="#" Binding="{Binding JerseyNumber}" Width="34" ElementStyle="{StaticResource LivePlayersTextCellStyle}" />
-                                    <DataGridTemplateColumn Header="Giocatore" Width="124">
+                                    <DataGridTextColumn Header="#" Binding="{Binding JerseyNumber}" Width="38" ElementStyle="{StaticResource LivePlayersTextCellStyle}" />
+                                    <DataGridTemplateColumn Header="Giocatore" Width="134">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <TextBlock Text="{Binding PlayerName}" TextWrapping="Wrap" FontSize="13" LineHeight="15" VerticalAlignment="Center" Padding="2,0" />
+                                                <TextBlock Text="{Binding PlayerName}" TextWrapping="Wrap" FontSize="14" LineHeight="16" FontWeight="SemiBold" VerticalAlignment="Center" Padding="3,0" />
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTextColumn Header="Pt" Binding="{Binding Points}" Width="40" ElementStyle="{StaticResource LivePlayersTextCellStyle}" />
-                                    <DataGridTextColumn Header="F" Binding="{Binding Fouls}" Width="36" ElementStyle="{StaticResource LivePlayersTextCellStyle}" />
-                                    <DataGridTemplateColumn Header="Punti" Width="206">
+                                    <DataGridTextColumn Header="Pt" Binding="{Binding Points}" Width="44" ElementStyle="{StaticResource LivePlayersTextCellStyle}" />
+                                    <DataGridTextColumn Header="F" Binding="{Binding Fouls}" Width="40" ElementStyle="{StaticResource LivePlayersTextCellStyle}" />
+                                    <DataGridTemplateColumn Header="Punti" Width="258">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <StackPanel Orientation="Horizontal" Margin="12,0,0,0">
-                                                    <Button Content="+1" Width="42" Height="34" FontSize="15" Margin="0,0,5,0" Click="PlayerPlusOne_Click" />
-                                                    <Button Content="+2" Width="42" Height="34" FontSize="15" Margin="0,0,5,0" Click="PlayerPlusTwo_Click" />
-                                                    <Button Content="+3" Width="42" Height="34" FontSize="15" Margin="0,0,13,0" Click="PlayerPlusThree_Click" />
-                                                    <Button Content="-1" Width="42" Height="34" FontSize="15" Click="PlayerMinusOne_Click" />
+                                                <StackPanel Orientation="Horizontal" Margin="14,0,0,0">
+                                                    <Button Content="+1" Width="46" Height="37" FontSize="16" Margin="0,0,8,0" Click="PlayerPlusOne_Click" />
+                                                    <Button Content="+2" Width="46" Height="37" FontSize="16" Margin="0,0,8,0" Click="PlayerPlusTwo_Click" />
+                                                    <Button Content="+3" Width="46" Height="37" FontSize="16" Margin="0,0,16,0" Click="PlayerPlusThree_Click" />
+                                                    <Button Content="-1" Width="46" Height="37" FontSize="16" FontWeight="SemiBold" Background="#f59e0b" BorderBrush="#b45309" Foreground="#111827" Click="PlayerMinusOne_Click" />
                                                 </StackPanel>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
-                                    <DataGridTemplateColumn Header="Falli" Width="106">
+                                    <DataGridTemplateColumn Header="Falli" Width="136">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <StackPanel Orientation="Horizontal" Margin="12,0,0,0">
-                                                    <Button Content="+" Width="42" Height="34" FontSize="17" Margin="0,0,5,0" Click="PlayerFoulPlus_Click" />
-                                                    <Button Content="-" Width="42" Height="34" FontSize="17" Click="PlayerFoulMinus_Click" />
+                                                <StackPanel Orientation="Horizontal" Margin="14,0,0,0">
+                                                    <Button Content="+" Width="46" Height="37" FontSize="18" Margin="0,0,10,0" Click="PlayerFoulPlus_Click" />
+                                                    <Button Content="-" Width="46" Height="37" FontSize="18" FontWeight="SemiBold" Background="#f59e0b" BorderBrush="#b45309" Foreground="#111827" Click="PlayerFoulMinus_Click" />
                                                 </StackPanel>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
@@ -802,6 +808,39 @@
                 </Grid>
             </TabItem>
 
+            <TabItem x:Name="SoundEffectsTabItem" Header="Sound and effects">
+                <Grid Margin="0,16,0,0">
+                    <Border Padding="20" Background="White" BorderBrush="#d1d5db" BorderThickness="1" CornerRadius="4">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <StackPanel>
+                                <TextBlock Text="Sound and effects" FontSize="24" FontWeight="Bold" Foreground="#111827" />
+                                <TextBlock Text="Suoni locali e animazioni da mandare al tabellone. Un suono interrompe quello precedente." Margin="0,6,0,18" Foreground="#4b5563" TextWrapping="Wrap" />
+
+                                <TextBlock Text="Suoni" FontSize="18" FontWeight="Bold" Foreground="#111827" Margin="0,0,0,8" />
+                                <UniformGrid Columns="5" Rows="2" Margin="0,0,0,22">
+                                    <Button x:Name="SoundEffectButton1" Tag="Buzzer 24 sec.mp3" Click="SoundEffect_Click" Margin="5" MinHeight="74" FontSize="15" FontWeight="Bold" Background="#111827" Foreground="White" />
+                                    <Button x:Name="SoundEffectButton2" Tag="Siren.mp3" Click="SoundEffect_Click" Margin="5" MinHeight="74" FontSize="15" FontWeight="Bold" Background="#111827" Foreground="White" />
+                                    <Button x:Name="SoundEffectButton3" Tag="Trombetta.mp3" Click="SoundEffect_Click" Margin="5" MinHeight="74" FontSize="15" FontWeight="Bold" Background="#111827" Foreground="White" />
+                                    <Button x:Name="SoundEffectButton4" Tag="Commedy drum roll.mp3" Click="SoundEffect_Click" Margin="5" MinHeight="74" FontSize="15" FontWeight="Bold" Background="#111827" Foreground="White" />
+                                    <Button x:Name="SoundEffectButton5" Tag="good result.mp3" Click="SoundEffect_Click" Margin="5" MinHeight="74" FontSize="15" FontWeight="Bold" Background="#16a34a" Foreground="White" />
+                                    <Button x:Name="SoundEffectButton6" Tag="sad fail.mp3" Click="SoundEffect_Click" Margin="5" MinHeight="74" FontSize="15" FontWeight="Bold" Background="#dc2626" Foreground="White" />
+                                    <Button x:Name="SoundEffectButton7" Tag="MarioSoundCoin.mp3" Click="SoundEffect_Click" Margin="5" MinHeight="74" FontSize="15" FontWeight="Bold" Background="#2563eb" Foreground="White" />
+                                    <Button x:Name="SoundEffectButton8" Tag="Victory voice.mp3" Click="SoundEffect_Click" Margin="5" MinHeight="74" FontSize="15" FontWeight="Bold" Background="#7c3aed" Foreground="White" />
+                                    <Button x:Name="SoundEffectButton9" Tag="Fulmine.wav" Click="SoundEffect_Click" Margin="5" MinHeight="74" FontSize="15" FontWeight="Bold" Background="#f59e0b" Foreground="#111827" />
+                                    <Button x:Name="SoundEffectButton10" Tag="suii - cristiano - ronaldo.mp3" Click="SoundEffect_Click" Margin="5" MinHeight="74" FontSize="15" FontWeight="Bold" Background="#0ea5e9" Foreground="White" />
+                                </UniformGrid>
+
+                                <TextBlock Text="Animazioni" FontSize="18" FontWeight="Bold" Foreground="#111827" Margin="0,0,0,8" />
+                                <UniformGrid Columns="3">
+                                    <Button x:Name="LightningAnimationButton" Content="Animazione Fulmine" Click="LightningAnimation_Click" Margin="5" MinHeight="74" FontSize="16" FontWeight="Bold" Background="#f97316" Foreground="White" />
+                                </UniformGrid>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+
             <TabItem x:Name="DatabaseTabItem" Header="Database">
                 <Grid Margin="0,16,0,0">
                     <Grid.RowDefinitions>
@@ -1031,7 +1070,8 @@
                                         <DataGridTextColumn Header="Telefono" Binding="{Binding PhoneNumber}" Width="*" />
                                         <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="1.4*" />
                                         <DataGridTextColumn Header="Data nascita" Binding="{Binding BirthDate}" Width="*" />
-                                        <DataGridTextColumn Header="Foto" Binding="{Binding PhotoPath}" Width="2*" />
+                                        <DataGridTextColumn Header="Foto sito" Binding="{Binding PhotoPath}" Width="2*" />
+                                        <DataGridTextColumn Header="Foto console" Binding="{Binding ConsolePhotoPath}" Width="2*" />
                                     </DataGrid.Columns>
                                 </DataGrid>
                             </Grid>

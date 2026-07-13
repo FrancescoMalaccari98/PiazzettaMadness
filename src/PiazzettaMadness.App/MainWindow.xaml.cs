@@ -19,6 +19,9 @@ namespace PiazzettaMadness.App;
 public partial class MainWindow : Window
 {
     private const int ContestDurationMs = 90000;
+    private const double ShotClockBuzzerVolume = 1.0;
+    private const double LightningSoundVolume = 0.45;
+    private const double DefaultManualEffectVolume = 1.0;
 
     private readonly GameClock _gameClock = new(720000);
     private readonly GameClock _shotClock = new(24000);
@@ -27,6 +30,7 @@ public partial class MainWindow : Window
     private readonly MediaPlayer _sirenSound = new();
     private readonly MediaPlayer _freeThrowSound = new();
     private readonly MediaPlayer _threePointSound = new();
+    private readonly MediaPlayer _manualEffectSound = new();
     private readonly ScoreboardBroadcaster _broadcaster = new();
     private readonly OnlineEntityClient? _onlineEntities = OnlineEntityClient.TryCreate();
     private readonly DispatcherTimer _timer;
@@ -88,6 +92,7 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         InitializeSoundEffects();
+        InitializeSoundEffectButtons();
         DatabasePathText.Text = $"Sessione live locale: {AppPaths.LiveDatabasePath}";
 
         if (_onlineEntities is null)
@@ -152,18 +157,25 @@ public partial class MainWindow : Window
 
     private void InitializeSoundEffects()
     {
-        OpenSound(_buzzerSound, "Buzzer.mp3");
+        OpenSound(_buzzerSound, "Buzzer.mp3", "Buzzer 24 sec.mp3");
+        _buzzerSound.Volume = ShotClockBuzzerVolume;
         OpenSound(_sirenSound, "Siren.mp3");
-        OpenSound(_freeThrowSound, "MarioSound.mp3");
-        OpenSound(_threePointSound, "nycRadio.mp3");
+        OpenSound(_freeThrowSound, "MarioSoundCoin.mp3", "MarioSound.mp3");
+        OpenSound(_threePointSound, "Trombetta.mp3", "nycRadio.mp3");
     }
 
-    private static void OpenSound(MediaPlayer player, string fileName)
+    private static void OpenSound(MediaPlayer player, params string[] fileNames)
     {
-        var path = Path.Combine(AppContext.BaseDirectory, "sound", fileName);
-        if (File.Exists(path))
+        foreach (var fileName in fileNames)
         {
+            var path = Path.Combine(AppContext.BaseDirectory, "sound", fileName);
+            if (!File.Exists(path))
+            {
+                continue;
+            }
+
             player.Open(new System.Uri(path, System.UriKind.Absolute));
+            return;
         }
     }
 
@@ -177,6 +189,70 @@ public partial class MainWindow : Window
         player.Stop();
         player.Position = TimeSpan.Zero;
         player.Play();
+    }
+
+    private void InitializeSoundEffectButtons()
+    {
+        foreach (var button in new[]
+                 {
+                     SoundEffectButton1,
+                     SoundEffectButton2,
+                     SoundEffectButton3,
+                     SoundEffectButton4,
+                     SoundEffectButton5,
+                     SoundEffectButton6,
+                     SoundEffectButton7,
+                     SoundEffectButton8,
+                     SoundEffectButton9,
+                     SoundEffectButton10
+                 })
+        {
+            if (button.Tag is not string fileName)
+            {
+                continue;
+            }
+
+            var displayName = Path.GetFileNameWithoutExtension(fileName);
+            button.Content = displayName;
+            button.ToolTip = fileName;
+            if (!File.Exists(Path.Combine(AppContext.BaseDirectory, "sound", fileName)))
+            {
+                button.IsEnabled = false;
+                button.Content = $"{displayName}\nnon trovato";
+                button.Opacity = 0.45;
+            }
+        }
+    }
+
+    private void SoundEffect_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button { Tag: string fileName })
+        {
+            PlayManualEffectSound(fileName);
+        }
+    }
+
+    private void LightningAnimation_Click(object sender, RoutedEventArgs e)
+    {
+        PlayManualEffectSound("Fulmine.wav");
+        _ = _broadcaster.ShowLightningAnimationAsync();
+    }
+
+    private void PlayManualEffectSound(string fileName)
+    {
+        var path = Path.Combine(AppContext.BaseDirectory, "sound", fileName);
+        if (!File.Exists(path))
+        {
+            return;
+        }
+
+        _manualEffectSound.Stop();
+        _manualEffectSound.Open(new Uri(path, UriKind.Absolute));
+        _manualEffectSound.Volume = string.Equals(fileName, "Fulmine.wav", StringComparison.OrdinalIgnoreCase)
+            ? LightningSoundVolume
+            : DefaultManualEffectVolume;
+        _manualEffectSound.Position = TimeSpan.Zero;
+        _manualEffectSound.Play();
     }
 
     private void MainWindow_PreviewKeyDown(object sender, KeyEventArgs e)
@@ -637,7 +713,9 @@ public partial class MainWindow : Window
                 scorer.PlayerName,
                 scorer.JerseyNumber,
                 home ? _state.HomeName : _state.AwayName,
-                home ? _state.HomeColor : _state.AwayColor);
+                home ? _state.HomeColor : _state.AwayColor,
+                home ? _state.HomeSecondaryColor : _state.AwaySecondaryColor,
+                ResolveAnimationPhotoUrl(scorer));
         }
 
         if (AnimationsEnabledCheckBox.IsChecked == true && showFreeThrowCelebration)
@@ -647,7 +725,9 @@ public partial class MainWindow : Window
                 scorer.PlayerName,
                 scorer.JerseyNumber,
                 home ? _state.HomeName : _state.AwayName,
-                home ? _state.HomeColor : _state.AwayColor);
+                home ? _state.HomeColor : _state.AwayColor,
+                home ? _state.HomeSecondaryColor : _state.AwaySecondaryColor,
+                ResolveAnimationPhotoUrl(scorer));
         }
     }
 
@@ -666,7 +746,37 @@ public partial class MainWindow : Window
             scorer.PlayerName,
             scorer.JerseyNumber,
             home ? _state.HomeName : _state.AwayName,
-            home ? _state.HomeColor : _state.AwayColor);
+            home ? _state.HomeColor : _state.AwayColor,
+            home ? _state.HomeSecondaryColor : _state.AwaySecondaryColor,
+            ResolveAnimationPhotoUrl(scorer));
+    }
+
+    private string? ResolveAnimationPhotoUrl(LiveScorerOption scorer)
+    {
+        if (AnimationImagesEnabledCheckBox.IsChecked != true)
+        {
+            return null;
+        }
+
+        if (!ImageAssetStore.IsValidOptionalImagePath(scorer.ConsolePhotoPath))
+        {
+            return null;
+        }
+
+        var resolvedPath = ImageAssetStore.ResolvePath(scorer.ConsolePhotoPath);
+        if (string.IsNullOrWhiteSpace(resolvedPath) || !File.Exists(resolvedPath))
+        {
+            return null;
+        }
+
+        try
+        {
+            return new Uri(resolvedPath).AbsoluteUri;
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     private void AddFoulFromButton(object sender, int delta)
@@ -848,6 +958,7 @@ public partial class MainWindow : Window
         ResumeMatchButton.Visibility = matchVisibility;
         FinishMatchButton.Visibility = matchVisibility;
         AnimationsEnabledCheckBox.Visibility = matchVisibility;
+        AnimationImagesEnabledCheckBox.Visibility = matchVisibility;
     }
 
     private async void EnterThreePointContestMode()
@@ -1132,7 +1243,13 @@ public partial class MainWindow : Window
 
     private void SetContestShotResult(ContestShotOption option, string result, bool advance)
     {
+        var previousResult = option.Result;
         option.Result = result;
+        if (result == "Made" && previousResult != "Made")
+        {
+            PlaySound(_freeThrowSound);
+        }
+
         RecalculateContestScores();
 
         if (advance)
@@ -2963,6 +3080,7 @@ public partial class MainWindow : Window
         target.Email = source.Email;
         target.BirthDate = source.BirthDate;
         target.PhotoPath = source.PhotoPath;
+        target.ConsolePhotoPath = source.ConsolePhotoPath;
         target.CreatedAt = source.CreatedAt;
         target.UpdatedAt = source.UpdatedAt;
     }
@@ -4736,9 +4854,9 @@ public partial class MainWindow : Window
     private async void AddMatch_Click(object sender, RoutedEventArgs e)
     {
         var editions = GetConsoleEditionList();
-        if (editions.Count == 0 || _teams.Count < 2)
+        if (editions.Count == 0)
         {
-            MessageBox.Show("Servono almeno una edizione e due squadre.", "Partite", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("Serve almeno una edizione.", "Partite", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
@@ -4777,7 +4895,7 @@ public partial class MainWindow : Window
         {
             try
             {
-                var bundle = await _onlineEntities.SaveMatchBundleAsync(match, form.HomeMatchTeam, form.AwayMatchTeam);
+                var bundle = await _onlineEntities.SaveMatchBundleAsync(match, ToOptionalMatchTeam(form.HomeMatchTeam), ToOptionalMatchTeam(form.AwayMatchTeam));
                 match = bundle.Match;
                 _db.ChangeTracker.Clear();
                 LoadCrudData();
@@ -4797,14 +4915,44 @@ public partial class MainWindow : Window
             return;
         }
 
-        form.HomeMatchTeam.MatchId = match.Id;
-        form.AwayMatchTeam.MatchId = match.Id;
-        _db.MatchTeams.Add(form.HomeMatchTeam);
-        _db.MatchTeams.Add(form.AwayMatchTeam);
+        AddOptionalMatchTeam(match.Id, form.HomeMatchTeam);
+        AddOptionalMatchTeam(match.Id, form.AwayMatchTeam);
         if (SaveChanges())
         {
             LoadCrudData();
             MatchesGrid.SelectedItem = _matchRows.FirstOrDefault(x => x.Match.Id == match.Id);
+        }
+    }
+
+    private static MatchTeam? ToOptionalMatchTeam(MatchTeam matchTeam) => matchTeam.TeamId > 0 ? matchTeam : null;
+
+    private void AddOptionalMatchTeam(int matchId, MatchTeam matchTeam)
+    {
+        if (matchTeam.TeamId <= 0)
+        {
+            return;
+        }
+
+        matchTeam.MatchId = matchId;
+        _db.MatchTeams.Add(matchTeam);
+    }
+
+    private void ApplyOptionalMatchTeam(int matchId, MatchTeam formSide, MatchTeam? existingSide)
+    {
+        if (formSide.TeamId <= 0)
+        {
+            if (existingSide is not null)
+            {
+                _db.MatchTeams.Remove(existingSide);
+            }
+
+            return;
+        }
+
+        formSide.MatchId = matchId;
+        if (existingSide is null)
+        {
+            _db.MatchTeams.Add(formSide);
         }
     }
 
@@ -4841,7 +4989,7 @@ public partial class MainWindow : Window
         {
             try
             {
-                await _onlineEntities.SaveMatchBundleAsync(row.Match, form.HomeMatchTeam, form.AwayMatchTeam);
+                await _onlineEntities.SaveMatchBundleAsync(row.Match, ToOptionalMatchTeam(form.HomeMatchTeam), ToOptionalMatchTeam(form.AwayMatchTeam));
                 _db.ChangeTracker.Clear();
                 LoadCrudData();
             }
@@ -4854,17 +5002,8 @@ public partial class MainWindow : Window
             return;
         }
 
-        if (home is null)
-        {
-            form.HomeMatchTeam.MatchId = row.Match.Id;
-            _db.MatchTeams.Add(form.HomeMatchTeam);
-        }
-
-        if (away is null)
-        {
-            form.AwayMatchTeam.MatchId = row.Match.Id;
-            _db.MatchTeams.Add(form.AwayMatchTeam);
-        }
+        ApplyOptionalMatchTeam(row.Match.Id, form.HomeMatchTeam, home);
+        ApplyOptionalMatchTeam(row.Match.Id, form.AwayMatchTeam, away);
 
         if (SaveChanges())
         {
@@ -5882,6 +6021,7 @@ public partial class MainWindow : Window
                 matchPlayer.JerseyNumber,
                 playerName,
                 $"{number}{playerName}",
+                player?.ConsolePhotoPath,
                 matchPlayer.Points,
                 matchPlayer.PersonalFouls);
         }
@@ -7032,7 +7172,7 @@ public partial class MainWindow : Window
 
     private sealed class LiveScorerOption
     {
-        public LiveScorerOption(int matchPlayerId, int teamId, int playerId, int? jerseyNumber, string playerName, string displayName, int points, int fouls)
+        public LiveScorerOption(int matchPlayerId, int teamId, int playerId, int? jerseyNumber, string playerName, string displayName, string? consolePhotoPath, int points, int fouls)
         {
             MatchPlayerId = matchPlayerId;
             TeamId = teamId;
@@ -7040,6 +7180,7 @@ public partial class MainWindow : Window
             JerseyNumber = jerseyNumber;
             PlayerName = playerName;
             DisplayName = displayName;
+            ConsolePhotoPath = consolePhotoPath;
             Points = points;
             Fouls = fouls;
         }
@@ -7050,6 +7191,7 @@ public partial class MainWindow : Window
         public int? JerseyNumber { get; }
         public string PlayerName { get; }
         public string DisplayName { get; }
+        public string? ConsolePhotoPath { get; }
         public int Points { get; set; }
         public int Fouls { get; set; }
     }

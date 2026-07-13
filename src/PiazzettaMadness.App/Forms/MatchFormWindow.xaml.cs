@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using PiazzettaMadness.App.Controls;
@@ -58,6 +58,15 @@ public partial class MatchFormWindow : Window
         LoadEditionScopedCombos();
     }
 
+    private void ClearHomeTeam_Click(object sender, RoutedEventArgs e)
+    {
+        HomeTeamCombo.SelectedItem = null;
+    }
+
+    private void ClearAwayTeam_Click(object sender, RoutedEventArgs e)
+    {
+        AwayTeamCombo.SelectedItem = null;
+    }
     private void Save_Click(object sender, RoutedEventArgs e)
     {
         if (EditionCombo.SelectedItem is not Edition edition)
@@ -66,13 +75,9 @@ public partial class MatchFormWindow : Window
             return;
         }
 
-        if (HomeTeamCombo.SelectedItem is not Team homeTeam || AwayTeamCombo.SelectedItem is not Team awayTeam)
-        {
-            ShowValidation("Seleziona entrambe le squadre.");
-            return;
-        }
-
-        if (homeTeam.Id == awayTeam.Id)
+        var homeTeam = HomeTeamCombo.SelectedItem as Team;
+        var awayTeam = AwayTeamCombo.SelectedItem as Team;
+        if (homeTeam is not null && awayTeam is not null && homeTeam.Id == awayTeam.Id)
         {
             ShowValidation("Squadra casa e squadra ospite devono essere diverse.");
             return;
@@ -128,9 +133,9 @@ public partial class MatchFormWindow : Window
         Match.MaxScoreEnabled = MaxScoreEnabledBox.IsChecked == true;
         Match.MaxScore = maxScore;
 
-        HomeMatchTeam.TeamId = homeTeam.Id;
+        HomeMatchTeam.TeamId = homeTeam?.Id ?? 0;
         HomeMatchTeam.Side = "Home";
-        AwayMatchTeam.TeamId = awayTeam.Id;
+        AwayMatchTeam.TeamId = awayTeam?.Id ?? 0;
         AwayMatchTeam.Side = "Away";
         DialogResult = true;
     }
@@ -205,3 +210,5 @@ public partial class MatchFormWindow : Window
         MessageBox.Show(message, "Dati non validi", MessageBoxButton.OK, MessageBoxImage.Warning);
     }
 }
+
+

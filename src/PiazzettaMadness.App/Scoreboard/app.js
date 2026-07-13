@@ -46,6 +46,7 @@ let displayMode = "scoreboard";
 let playerListsSignature = "";
 let threePointCleanupTimer = null;
 let actionCleanupTimer = null;
+let lightningCleanupTimer = null;
 let clockAnchorGameMs = state.gameClockMs;
 let clockAnchorShotMs = state.shotClockMs;
 let clockAnchorAt = performance.now();
@@ -458,41 +459,98 @@ function renderSponsorDots() {
 function createThreePointParticles() {
   const particles = document.getElementById("threeParticles");
   particles.replaceChildren();
-  const total = 26;
+  const total = 40;
 
   for (let index = 0; index < total; index += 1) {
     const particle = document.createElement("span");
     const angle = (Math.PI * 2 * index) / total + Math.random() * .25;
-    const distance = 180 + Math.random() * 360;
+    const distance = 220 + Math.random() * 560;
     particle.className = "three-particle";
     particle.style.setProperty("--particle-x", `${Math.cos(angle) * distance}px`);
     particle.style.setProperty("--particle-y", `${Math.sin(angle) * distance}px`);
-    particle.style.setProperty("--particle-size", `${8 + Math.random() * 18}px`);
+    particle.style.setProperty("--particle-size", `${10 + Math.random() * 20}px`);
     particle.style.setProperty("--particle-rotation", `${300 + Math.random() * 720}deg`);
     particle.style.setProperty("--particle-delay", `${Math.random() * .12}s`);
     particles.appendChild(particle);
   }
 }
 
+function getCelebrationName(message) {
+  const number = message.jerseyNumber == null ? "" : `#${message.jerseyNumber} `;
+  return `${number}${getCelebrationShortName(message)}`.trim();
+}
+
+function getCelebrationShortName(message) {
+  const rawName = (message.playerName || "").trim().replace(/\s+/g, " ");
+  if (!rawName) {
+    return "Giocatore";
+  }
+
+  const parts = rawName.split(" ");
+  if (parts.length === 1) {
+    return parts[0];
+  }
+
+  const firstName = parts[parts.length - 1];
+  const lastName = parts.slice(0, -1).join(" ");
+  const firstInitial = firstName.charAt(0).toUpperCase();
+  return firstInitial ? `${lastName} ${firstInitial}.` : lastName;
+}
+
+function setCelebrationPhoto(overlay, imageId, src) {
+  const image = document.getElementById(imageId);
+  image.removeAttribute("src");
+  image.alt = "";
+  image.onerror = null;
+  image.onload = null;
+
+  if (!src) {
+    overlay.classList.add("no-photo");
+    return;
+  }
+
+  image.onerror = () => {
+    image.removeAttribute("src");
+    overlay.classList.add("no-photo");
+  };
+  image.onload = () => overlay.classList.remove("no-photo");
+  image.alt = "Giocatore";
+  image.src = src;
+}
+
+function restartCelebrationAnimations(overlay) {
+  overlay.querySelectorAll(".celebration-flash,.celebration-ring,.celebration-card,.celebration-foil,.celebration-lenti,.celebration-holo,.celebration-sheen,.celebration-gloss,.celebration-plus,.three-headline,.free-throw-headline,.celebration-name,.free-throw-rim,.free-throw-net,.free-throw-ripple,.free-throw-ball").forEach(element => {
+    element.style.animation = "none";
+    void element.offsetWidth;
+    element.style.animation = "";
+  });
+}
+
 function showThreePointCelebration(message) {
   stopActionCelebrations();
   const overlay = document.getElementById("threePointOverlay");
-  const number = message.jerseyNumber == null ? "" : `#${message.jerseyNumber} - `;
   clearTimeout(threePointCleanupTimer);
   overlay.classList.remove("active");
+  overlay.classList.add("no-photo");
   overlay.style.setProperty("--celebration-color", message.teamColor || "#ea6324");
-  setText("threeTeamName", message.teamName || "Piazzetta Madness");
-  setText("threePlayerName", `${number}${message.playerName || "Giocatore"}`);
+  overlay.style.setProperty("--celebration-secondary", message.teamSecondaryColor || "#fffefd");
+
+  const playerName = getCelebrationName(message);
+  setText("threeCardNumber", message.jerseyNumber == null ? "" : message.jerseyNumber);
+  setText("threeCardName", getCelebrationShortName(message));
+  document.getElementById("threePlayerName").innerHTML = `<span>${playerName}</span>`;
+  setCelebrationPhoto(overlay, "threePlayerPhoto", message.playerPhotoUrl);
   createThreePointParticles();
 
   void overlay.offsetWidth;
+  restartCelebrationAnimations(overlay);
   overlay.classList.add("active");
   overlay.setAttribute("aria-hidden", "false");
 
   threePointCleanupTimer = setTimeout(() => {
     overlay.classList.remove("active");
     overlay.setAttribute("aria-hidden", "true");
-  }, 1900);
+  }, 3400);
 }
 
 function stopActionCelebrations() {
@@ -522,9 +580,38 @@ function createActionParticles(id) {
   }
 }
 
+function showFreeThrowCelebration(message) {
+  clearTimeout(threePointCleanupTimer);
+  document.getElementById("threePointOverlay").classList.remove("active");
+  stopActionCelebrations();
+
+  const overlay = document.getElementById("freeThrowOverlay");
+  overlay.classList.add("no-photo");
+  overlay.style.setProperty("--action-color", message.teamColor || "#ea6324");
+  overlay.style.setProperty("--action-secondary", message.teamSecondaryColor || "#fffefd");
+  overlay.style.setProperty("--celebration-color", message.teamColor || "#ea6324");
+  overlay.style.setProperty("--celebration-secondary", message.teamSecondaryColor || "#fffefd");
+
+  const playerName = getCelebrationName(message);
+  setText("freeThrowCardNumber", message.jerseyNumber == null ? "" : message.jerseyNumber);
+  setText("freeThrowCardName", getCelebrationShortName(message));
+  document.getElementById("freeThrowPlayer").innerHTML = `<span>${playerName}</span>`;
+  setCelebrationPhoto(overlay, "freeThrowPlayerPhoto", message.playerPhotoUrl);
+
+  void overlay.offsetWidth;
+  restartCelebrationAnimations(overlay);
+  overlay.classList.add("active");
+  overlay.setAttribute("aria-hidden", "false");
+  actionCleanupTimer = setTimeout(stopActionCelebrations, 3400);
+}
+
 function showPlayerCelebration(message) {
+  if (message.celebration === "freeThrow") {
+    showFreeThrowCelebration(message);
+    return;
+  }
+
   const configurations = {
-    freeThrow: { overlay: "freeThrowOverlay", team: "freeThrowTeam", player: "freeThrowPlayer", duration: 1800 },
     dunk: { overlay: "dunkOverlay", team: "dunkTeam", player: "dunkPlayer", particles: "dunkParticles", duration: 1900 },
     block: { overlay: "blockOverlay", team: "blockTeam", player: "blockPlayer", particles: "blockParticles", duration: 1900 }
   };
@@ -552,6 +639,66 @@ function showPlayerCelebration(message) {
   actionCleanupTimer = setTimeout(stopActionCelebrations, configuration.duration);
 }
 
+
+
+function stopLightningAnimation() {
+  clearTimeout(lightningCleanupTimer);
+  const overlay = document.getElementById("lightningOverlay");
+  if (!overlay) {
+    return;
+  }
+
+  overlay.classList.remove("active");
+  overlay.setAttribute("aria-hidden", "true");
+}
+
+function createLightningSparks() {
+  const container = document.getElementById("lightningSparks");
+  container.replaceChildren();
+
+  for (let index = 0; index < 30; index += 1) {
+    const spark = document.createElement("span");
+    const angle = (Math.PI * 2 * index) / 30 + Math.random() * .3;
+    const distance = 150 + Math.random() * 390;
+    spark.className = "lightning-spark";
+    spark.style.setProperty("--spark-x", `${Math.cos(angle) * distance}px`);
+    spark.style.setProperty("--spark-y", `${Math.sin(angle) * distance * .72 + 80}px`);
+    spark.style.setProperty("--spark-size", `${6 + Math.random() * 14}px`);
+    spark.style.setProperty("--spark-rotation", `${280 + Math.random() * 760}deg`);
+    spark.style.setProperty("--spark-delay", `${.08 + Math.random() * .16}s`);
+    container.appendChild(spark);
+  }
+}
+
+function restartLightningAnimations(overlay) {
+  overlay.querySelectorAll(".lightning-flash,.lightning-gif,.lightning-message strong,.lightning-message span,.lightning-spark").forEach(element => {
+    element.style.animation = "none";
+    void element.offsetWidth;
+    element.style.animation = "";
+  });
+}
+
+function showLightningAnimation() {
+  clearTimeout(threePointCleanupTimer);
+  document.getElementById("threePointOverlay").classList.remove("active");
+  stopActionCelebrations();
+
+  const overlay = document.getElementById("lightningOverlay");
+  clearTimeout(lightningCleanupTimer);
+  overlay.classList.remove("active");
+  createLightningSparks();
+  const gif = document.getElementById("lightningGif");
+  const gifSrc = gif.getAttribute("src");
+  gif.removeAttribute("src");
+  void gif.offsetWidth;
+  gif.setAttribute("src", gifSrc || "assets/lightning.gif");
+
+  void overlay.offsetWidth;
+  restartLightningAnimations(overlay);
+  overlay.classList.add("active");
+  overlay.setAttribute("aria-hidden", "false");
+  lightningCleanupTimer = setTimeout(stopLightningAnimation, 3200);
+}
 
 function renderMerchandiseDots() {
   const dots = document.getElementById("merchandiseDots");
@@ -672,6 +819,11 @@ window.chrome?.webview?.addEventListener("message", event => {
 
   if (message?.type === "playerCelebration") {
     showPlayerCelebration(message);
+    return;
+  }
+
+  if (message?.type === "lightningAnimation") {
+    showLightningAnimation();
     return;
   }
 

@@ -298,25 +298,34 @@ function saveMatchBundle(PDO $pdo)
 {
     $body = readJsonBody();
     $matchData = requireObject($body, 'match');
-    $homeData = requireObject($body, 'home');
-    $awayData = requireObject($body, 'away');
+    $homeData = isset($body['home']) && is_array($body['home']) ? $body['home'] : null;
+    $awayData = isset($body['away']) && is_array($body['away']) ? $body['away'] : null;
 
     $pdo->beginTransaction();
     try {
         $matchId = (int)($matchData['id'] ?? 0);
         $match = writeRecord($pdo, 'matches', $matchData, $matchId > 0 ? $matchId : null);
-        $homeData['match_id'] = $match['id'];
-        $homeData['side'] = 'Home';
-        $awayData['match_id'] = $match['id'];
-        $awayData['side'] = 'Away';
-        $home = upsertMatchTeam($pdo, $homeData);
-        $away = upsertMatchTeam($pdo, $awayData);
+        $home = saveOptionalMatchTeamSide($pdo, (int)$match['id'], 'Home', $homeData);
+        $away = saveOptionalMatchTeamSide($pdo, (int)$match['id'], 'Away', $awayData);
         $pdo->commit();
         respond($matchId > 0 ? 200 : 201, ['match' => $match, 'home' => $home, 'away' => $away]);
     } catch (Throwable $exception) {
         $pdo->rollBack();
         throw $exception;
     }
+}
+
+function saveOptionalMatchTeamSide(PDO $pdo, int $matchId, string $side, ?array $data): ?array
+{
+    if ($data === null || (int)($data['team_id'] ?? 0) < 1) {
+        $statement = $pdo->prepare('DELETE FROM match_teams WHERE match_id = :match_id AND side = :side');
+        $statement->execute([':match_id' => $matchId, ':side' => $side]);
+        return null;
+    }
+
+    $data['match_id'] = $matchId;
+    $data['side'] = $side;
+    return upsertMatchTeam($pdo, $data);
 }
 
 function deleteMatchBundle(PDO $pdo)
@@ -657,8 +666,8 @@ function tableDefinitions(): array
             'order' => '`group_id`, `position`, `id`',
         ],
         'players' => [
-            'columns' => ['id', 'first_name', 'last_name', 'nickname', 'fiscal_code', 'address', 'phone_number', 'email', 'birth_date', 'photo_path', 'created_at', 'updated_at'],
-            'writable' => ['first_name', 'last_name', 'nickname', 'fiscal_code', 'address', 'phone_number', 'email', 'birth_date', 'photo_path'],
+            'columns' => ['id', 'first_name', 'last_name', 'nickname', 'fiscal_code', 'address', 'phone_number', 'email', 'birth_date', 'photo_path', 'console_photo_path', 'created_at', 'updated_at'],
+            'writable' => ['first_name', 'last_name', 'nickname', 'fiscal_code', 'address', 'phone_number', 'email', 'birth_date', 'photo_path', 'console_photo_path'],
             'order' => '`last_name`, `first_name`, `id`',
         ],
     ];

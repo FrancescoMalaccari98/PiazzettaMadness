@@ -1,4 +1,4 @@
-using System.Net.Http;
+﻿using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -183,7 +183,7 @@ public sealed class OnlineEntityClient
     public Task<Player> UpdatePlayerAsync(Player player) => UpdateAsync("players", player.Id, player);
     public Task DeletePlayerAsync(int id) => DeleteAsync("players", id);
 
-    public async Task<MatchBundle> SaveMatchBundleAsync(Match match, MatchTeam home, MatchTeam away)
+    public async Task<MatchBundle> SaveMatchBundleAsync(Match match, MatchTeam? home, MatchTeam? away)
     {
         var response = await _httpClient.PostAsJsonAsync(
             WithAction("save_match"),
@@ -317,8 +317,8 @@ public sealed class OnlineEntityClient
     public sealed class MatchBundle
     {
         public Match Match { get; set; } = new();
-        public MatchTeam Home { get; set; } = new();
-        public MatchTeam Away { get; set; } = new();
+        public MatchTeam? Home { get; set; }
+        public MatchTeam? Away { get; set; }
     }
 
     public sealed class ContestSyncBundle
@@ -337,3 +337,4 @@ public sealed class OnlineEntityClient
         public MatchTeam Away { get; set; } = new();
     }
 }
+

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Animazione Tripla</title>
+  <style>
+    :root { --ink:#0d0c0b; --bone:#fffefd; --orange:#ea6324; --team:#2875bb; --mono:Consolas, monospace; --display:"Arial Narrow","Segoe UI",Arial,sans-serif; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    html, body { width:100%; height:100%; overflow:hidden; background:var(--ink); color:var(--bone); font-family:var(--display); }
+    body::before { content:""; position:fixed; inset:-20%; background:radial-gradient(circle at center, color-mix(in srgb,var(--team) 42%, transparent), transparent 58%); opacity:.45; }
+    .overlay { --celebration-color:var(--team); position:fixed; inset:0; display:grid; place-items:center; isolation:isolate; background:rgba(13,12,11,.82); overflow:hidden; }
+    .flash { position:absolute; inset:0; z-index:1; background:radial-gradient(circle at center, color-mix(in srgb,var(--celebration-color) 82%, white) 0%, color-mix(in srgb,var(--celebration-color) 72%, transparent) 20%, transparent 66%); opacity:0; animation:three-flash 1.65s ease-out forwards; }
+    .ring { position:absolute; left:50%; top:50%; z-index:1; width:18vmin; height:18vmin; border:8px solid var(--celebration-color); border-radius:50%; transform:translate(-50%,-50%); opacity:0; animation:three-ring 1.3s ease-out forwards; }
+    .particles { position:absolute; left:50%; top:50%; z-index:2; }
+    .particle { position:absolute; width:var(--particle-size); height:var(--particle-size); background:var(--celebration-color); box-shadow:0 0 18px var(--celebration-color); opacity:0; animation:three-particle-fly 1.2s var(--particle-delay) cubic-bezier(.1,.7,.2,1) forwards; }
+    .card { position:relative; z-index:3; display:flex; flex-direction:column; align-items:center; text-align:center; text-transform:uppercase; }
+    .kicker { color:var(--celebration-color); font-family:var(--mono); font-size:clamp(18px,2.8vh,34px); font-weight:900; letter-spacing:.32em; margin-bottom:16px; opacity:0; animation:caption 1.5s 220ms ease-out forwards; }
+    .number { color:var(--bone); font-size:clamp(170px,31vh,380px); font-weight:1000; letter-spacing:-.12em; line-height:.75; -webkit-text-stroke:7px var(--celebration-color); text-shadow:12px 12px 0 rgba(0,0,0,.32),0 0 44px var(--celebration-color); opacity:0; animation:number-in 1.7s cubic-bezier(.16,1,.3,1) forwards; }
+    .word { display:inline-block; margin-top:18px; padding:12px 34px; background:var(--celebration-color); color:var(--ink); font-size:clamp(48px,9vh,122px); font-weight:1000; line-height:.85; transform:skewX(-8deg); opacity:0; animation:word-in 1.7s 80ms cubic-bezier(.16,1,.3,1) forwards; }
+    .player { display:inline-block; margin-top:28px; padding:10px 26px; border:2px solid var(--celebration-color); background:var(--ink); color:var(--bone); font-family:var(--mono); font-size:clamp(20px,3vh,38px); font-weight:900; letter-spacing:.1em; opacity:0; animation:caption 1.5s 220ms ease-out forwards; }
+    .hint { position:fixed; right:22px; bottom:18px; color:#9ca3af; font-family:var(--mono); font-size:14px; letter-spacing:.08em; text-transform:uppercase; }
+    @keyframes three-flash { 0%{opacity:0;transform:scale(.25)} 12%{opacity:1} 100%{opacity:0;transform:scale(1.45)} }
+    @keyframes three-ring { 0%{opacity:.9;transform:translate(-50%,-50%) scale(.1)} 100%{opacity:0;transform:translate(-50%,-50%) scale(7)} }
+    @keyframes number-in { 0%{opacity:0;transform:scale(4) rotate(-10deg)} 28%{opacity:1;transform:scale(.86) rotate(3deg)} 43%{transform:scale(1.08) rotate(-1deg)} 72%{opacity:1;transform:scale(1)} 100%{opacity:0;transform:scale(1.38) translateY(-16px)} }
+    @keyframes word-in { 0%{opacity:0;transform:translateX(-110vw) skewX(-12deg)} 30%{opacity:1;transform:translateX(24px) skewX(-8deg)} 44%,76%{opacity:1;transform:translateX(0) skewX(-8deg)} 100%{opacity:0;transform:translateX(105vw) skewX(-8deg)} }
+    @keyframes caption { 0%{opacity:0;transform:translateY(30px)} 28%,74%{opacity:1;transform:translateY(0)} 100%{opacity:0;transform:translateY(20px)} }
+    @keyframes three-particle-fly { 0%{opacity:1;transform:translate(-50%,-50%) scale(0)} 72%{opacity:1} 100%{opacity:0;transform:translate(calc(-50% + var(--particle-x)),calc(-50% + var(--particle-y))) scale(1.5) rotate(var(--particle-rotation))} }
+  </style>
+</head>
+<body>
+  <main class="overlay" id="overlay">
+    <div class="flash"></div><div class="ring"></div><div class="particles" id="particles"></div>
+    <section class="card"><div class="kicker">Aurora Lynx</div><div class="number">+3</div><div class="word">Tripla!</div><div class="player">#18 Foschi Dario</div></section>
+  </main>
+  <div class="hint">Click / spazio per riavviare</div>
+  <script>
+    function particles(){const c=document.getElementById('particles');c.replaceChildren();for(let i=0;i<34;i++){const p=document.createElement('span');const a=(Math.PI*2*i)/34;const d=180+Math.random()*430;p.className='particle';p.style.setProperty('--particle-x',Math.cos(a)*d+'px');p.style.setProperty('--particle-y',Math.sin(a)*d+'px');p.style.setProperty('--particle-size',8+Math.random()*18+'px');p.style.setProperty('--particle-rotation',300+Math.random()*720+'deg');p.style.setProperty('--particle-delay',Math.random()*0.12+'s');c.appendChild(p)}}
+    function replay(){particles();const o=document.getElementById('overlay');o.style.animation='none';o.querySelectorAll('*').forEach(e=>{e.style.animation='none';void e.offsetWidth;e.style.animation=''});}
+    addEventListener('click',replay);addEventListener('keydown',e=>{if(e.code==='Space'){e.preventDefault();replay()}});particles();
+  </script>
+</body>
+</html>

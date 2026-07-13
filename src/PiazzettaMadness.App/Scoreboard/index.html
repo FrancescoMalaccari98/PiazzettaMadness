@@ -246,33 +246,54 @@
     </div>
   </main>
 
-  <section class="three-point-overlay" id="threePointOverlay" aria-hidden="true">
-    <div class="three-flash"></div>
-    <div class="three-ring"></div>
+  <section class="three-point-overlay celebration-stage no-photo" id="threePointOverlay" aria-hidden="true">
+    <div class="celebration-flash"></div>
+    <div class="celebration-ring"></div>
     <div class="three-particles" id="threeParticles"></div>
-    <div class="three-card">
-      <div class="three-kicker" id="threeTeamName">Piazzetta Madness</div>
-      <div class="three-number">+3</div>
-      <div class="three-word">Tripla!</div>
-      <div class="three-player" id="threePlayerName">Giocatore</div>
+    <div class="celebration-layout">
+      <div class="celebration-card" id="threePhotoCard">
+        <div class="celebration-frame"><div class="celebration-inner">
+          <div class="celebration-media"><img id="threePlayerPhoto" alt=""></div>
+          <div class="celebration-scrim"></div>
+          <div class="celebration-foil"></div><div class="celebration-lenti"></div><div class="celebration-holo"></div><div class="celebration-sheen"></div><div class="celebration-gloss"></div>
+          <div class="celebration-card-num"><span id="threeCardNumber">3</span></div>
+          <div class="celebration-card-name" id="threeCardName">Giocatore</div>
+        </div></div>
+      </div>
+      <div class="celebration-info">
+        <div class="celebration-plus"><span>+3</span></div>
+        <div class="three-headline">Tripla!</div>
+        <div class="celebration-name" id="threePlayerName"><span>Giocatore</span></div>
+      </div>
     </div>
   </section>
 
-  <section class="action-overlay free-throw-overlay" id="freeThrowOverlay" aria-hidden="true">
-    <div class="action-glow"></div>
-    <div class="free-throw-scene">
-      <svg class="free-throw-arc" viewBox="0 0 420 300" aria-hidden="true">
-        <path d="M 38 205 C 118 48 258 34 330 145" />
-      </svg>
-      <div class="action-ball free-throw-ball"></div>
-      <div class="free-throw-rim"></div>
-      <div class="free-throw-net"><i></i><i></i><i></i><i></i><i></i><i></i></div>
-      <div class="free-throw-ripple"></div>
-    </div>
-    <div class="action-caption">
-      <span class="action-team" id="freeThrowTeam">Piazzetta Madness</span>
-      <strong>Tiro libero</strong>
-      <span class="action-player" id="freeThrowPlayer">Giocatore</span>
+  <section class="action-overlay free-throw-overlay celebration-stage no-photo" id="freeThrowOverlay" aria-hidden="true">
+    <div class="celebration-flash"></div>
+    <div class="celebration-ring"></div>
+    <div class="celebration-layout">
+      <div class="celebration-card" id="freeThrowPhotoCard">
+        <div class="celebration-frame"><div class="celebration-inner">
+          <div class="celebration-media"><img id="freeThrowPlayerPhoto" alt=""></div>
+          <div class="celebration-scrim"></div>
+          <div class="celebration-foil"></div><div class="celebration-lenti"></div><div class="celebration-holo"></div><div class="celebration-sheen"></div><div class="celebration-gloss"></div>
+          <div class="celebration-card-num"><span id="freeThrowCardNumber">1</span></div>
+          <div class="celebration-card-name" id="freeThrowCardName">Giocatore</div>
+        </div></div>
+      </div>
+      <div class="celebration-info free-throw-info">
+        <div class="free-throw-top">
+          <div class="free-throw-swish">
+            <div class="free-throw-rim"></div>
+            <div class="free-throw-net"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            <div class="free-throw-ripple"></div>
+            <div class="action-ball free-throw-ball"></div>
+          </div>
+          <div class="celebration-plus"><span>+1</span></div>
+        </div>
+        <div class="free-throw-headline"><span>Tiro</span><span>Libero</span></div>
+        <div class="celebration-name" id="freeThrowPlayer"><span>Giocatore</span></div>
+      </div>
     </div>
   </section>
 
@@ -302,6 +323,19 @@
       <strong class="action-big">No!</strong>
       <span class="action-label">Stoppata</span>
       <span class="action-player" id="blockPlayer">Giocatore</span>
+    </div>
+  </section>
+
+
+  <section class="lightning-overlay" id="lightningOverlay" aria-hidden="true">
+    <div class="lightning-flash"></div>
+    <div class="lightning-scene">
+      <img class="lightning-gif" id="lightningGif" alt="" src="assets/lightning.gif">
+      <div class="lightning-sparks" id="lightningSparks"></div>
+      <div class="lightning-message">
+        <strong>Fulminato!</strong>
+        <span>Eliminato</span>
+      </div>
     </div>
   </section>
 

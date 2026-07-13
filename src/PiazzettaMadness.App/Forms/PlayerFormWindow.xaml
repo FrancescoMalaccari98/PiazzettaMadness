@@ -59,7 +59,7 @@
             <TextBlock Text="Data nascita" Grid.Row="7" VerticalAlignment="Center" Margin="0,0,12,12" />
             <DatePicker x:Name="BirthDatePicker" Grid.Row="7" Grid.Column="1" Height="34" Margin="0,0,0,12" DateValidationError="BirthDatePicker_DateValidationError" />
 
-            <TextBlock Text="Foto" Grid.Row="8" VerticalAlignment="Center" Margin="0,0,12,0" />
+            <TextBlock Text="Foto console" Grid.Row="8" VerticalAlignment="Center" Margin="0,0,12,0" />
             <Grid Grid.Row="8" Grid.Column="1">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />

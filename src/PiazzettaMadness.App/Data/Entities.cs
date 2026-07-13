@@ -174,6 +174,7 @@ public sealed class Player
     public string? Email { get; set; }
     public string? BirthDate { get; set; }
     public string? PhotoPath { get; set; }
+    public string? ConsolePhotoPath { get; set; }
     public string CreatedAt { get; set; } = "";
     public string UpdatedAt { get; set; } = "";
 }

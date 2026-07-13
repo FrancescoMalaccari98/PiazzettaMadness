@@ -123,7 +123,21 @@ public sealed class ScoreboardBroadcaster
         });
     }
 
-    public Task ShowThreePointCelebrationAsync(string playerName, int? jerseyNumber, string teamName, string teamColor)
+    public Task ShowLightningAnimationAsync()
+    {
+        return PostAsync(new
+        {
+            type = "lightningAnimation"
+        });
+    }
+
+    public Task ShowThreePointCelebrationAsync(
+        string playerName,
+        int? jerseyNumber,
+        string teamName,
+        string teamColor,
+        string teamSecondaryColor,
+        string? playerPhotoUrl)
     {
         return PostAsync(new
         {
@@ -131,7 +145,9 @@ public sealed class ScoreboardBroadcaster
             playerName,
             jerseyNumber,
             teamName,
-            teamColor
+            teamColor,
+            teamSecondaryColor,
+            playerPhotoUrl
         });
     }
 
@@ -140,7 +156,9 @@ public sealed class ScoreboardBroadcaster
         string playerName,
         int? jerseyNumber,
         string teamName,
-        string teamColor)
+        string teamColor,
+        string teamSecondaryColor,
+        string? playerPhotoUrl)
     {
         return PostAsync(new
         {
@@ -149,7 +167,9 @@ public sealed class ScoreboardBroadcaster
             playerName,
             jerseyNumber,
             teamName,
-            teamColor
+            teamColor,
+            teamSecondaryColor,
+            playerPhotoUrl
         });
     }
 

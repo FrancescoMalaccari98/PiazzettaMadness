@@ -65,7 +65,7 @@ function tableColumns(): array
         'teams' => ['id', 'edition_id', 'name', 'short_name', 'primary_color', 'secondary_color', 'logo_path', 'created_at', 'updated_at'],
         'sponsors' => ['id', 'name', 'description', 'image_path', 'is_active', 'sort_order', 'created_at', 'updated_at'],
         'merchandise_items' => ['id', 'name', 'description', 'price', 'image_path', 'is_active', 'sort_order', 'created_at', 'updated_at'],
-        'players' => ['id', 'first_name', 'last_name', 'nickname', 'fiscal_code', 'address', 'phone_number', 'email', 'birth_date', 'photo_path', 'created_at', 'updated_at'],
+        'players' => ['id', 'first_name', 'last_name', 'nickname', 'fiscal_code', 'address', 'phone_number', 'email', 'birth_date', 'photo_path', 'console_photo_path', 'created_at', 'updated_at'],
         'team_rosters' => ['id', 'team_id', 'player_id', 'jersey_number', 'role', 'is_captain', 'is_active', 'created_at', 'updated_at'],
         'tournament_groups' => ['id', 'edition_id', 'name', 'code', 'sort_order'],
         'group_teams' => ['id', 'group_id', 'team_id', 'seed_label'],

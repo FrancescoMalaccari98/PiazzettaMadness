@@ -704,3 +704,104 @@ body { overflow: hidden; background: var(--ink); color: var(--bone); font-family
 @keyframes free-net { 0% { opacity: 0; transform: scaleY(.8); } 28%,70% { opacity: 1; transform: scaleY(1.15); } 100% { opacity: 0; transform: scaleY(.9); } }
 @keyframes free-ripple { 0% { opacity: 1; transform: translate(-50%,-50%) scale(.2); } 100% { opacity: 0; transform: translate(-50%,-50%) scale(2.4); } }
 @media (prefers-reduced-motion: reduce) { .shot-clock.warning { animation: none; } }
+
+
+/* New player score celebration overlays */
+.celebration-stage { --celebration-color: var(--orange); --celebration-secondary: var(--bone); --action-secondary: var(--bone); position: fixed; inset: 0; z-index: 100; display: block; visibility: hidden; overflow: hidden; pointer-events: none; background: rgba(13,12,11,.82); isolation: isolate; }
+.free-throw-overlay.celebration-stage { --celebration-color: var(--action-color); --celebration-secondary: var(--action-secondary); z-index: 101; padding: 0; }
+.three-point-overlay.active, .free-throw-overlay.active { visibility: visible; }
+.celebration-stage::before { content: ""; position: absolute; inset: -20%; z-index: 0; background: radial-gradient(circle at center, color-mix(in srgb, var(--celebration-color) 42%, transparent), transparent 58%); opacity: .45; }
+.celebration-flash { position: absolute; inset: 0; z-index: 1; background: radial-gradient(circle at center, color-mix(in srgb, var(--celebration-color) 82%, white) 0%, color-mix(in srgb, var(--celebration-color) 70%, transparent) 20%, transparent 66%); opacity: 0; }
+.celebration-ring { position: absolute; left: 50%; top: 50%; z-index: 1; width: 26vmin; height: 26vmin; border: 10px solid var(--celebration-color); border-radius: 50%; transform: translate(-50%,-50%); opacity: 0; }
+.celebration-layout { position: absolute; inset: 0; z-index: 3; display: grid; grid-template-columns: auto auto; align-items: center; justify-content: center; gap: clamp(28px,4.5vw,90px); padding: 3.5vh clamp(24px,4vw,64px); }
+.celebration-stage.no-photo .celebration-layout { grid-template-columns: 1fr; justify-items: center; }
+.celebration-card { position: relative; height: min(86vh,58vw); aspect-ratio: 63/88; width: auto; transform-style: preserve-3d; opacity: 0; }
+.celebration-stage.no-photo .celebration-card { display: none; }
+.celebration-frame { position: absolute; inset: 0; overflow: hidden; border-radius: 22px; padding: 12px; background: linear-gradient(150deg, color-mix(in srgb,var(--celebration-color) 55%,#fff) 0%, var(--celebration-color) 30%, color-mix(in srgb,var(--celebration-color) 60%,#000) 100%); box-shadow: 0 30px 70px rgba(0,0,0,.55), 0 0 46px color-mix(in srgb,var(--celebration-color) 55%,transparent); }
+.celebration-inner { position: absolute; inset: 12px; border-radius: 13px; overflow: hidden; background: var(--ink); }
+.celebration-media, .celebration-media img { position: absolute; inset: 0; width: 100%; height: 100%; }
+.celebration-media img { object-fit: cover; object-position: 50% 14%; filter: contrast(1.05) saturate(1.05); }
+.celebration-scrim { position: absolute; inset: 0; background: linear-gradient(180deg,transparent 38%,color-mix(in srgb,var(--ink) 40%,transparent) 62%,color-mix(in srgb,var(--ink) 82%,transparent) 88%,color-mix(in srgb,var(--ink) 95%,transparent) 100%); }
+.celebration-foil,.celebration-holo,.celebration-sheen,.celebration-gloss,.celebration-lenti { position: absolute; inset: 0; pointer-events: none; opacity: 0; }
+.celebration-foil { background: linear-gradient(118deg,rgba(150,200,255,.55) 0%,rgba(255,255,255,.14) 34%,rgba(255,222,188,.5) 64%,rgba(214,190,236,.4) 100%); background-size: 250% 250%; mix-blend-mode: soft-light; filter: blur(.6px); }
+.celebration-lenti { background: repeating-linear-gradient(106deg,rgba(255,255,255,.10) 0 1.5px,rgba(0,0,0,.10) 1.5px 3px); background-size: 200% 100%; mix-blend-mode: overlay; }
+.celebration-holo { background: linear-gradient(112deg,transparent 40%,rgba(150,220,255,.5) 47%,rgba(255,255,255,.2) 50%,rgba(255,225,170,.5) 53%,transparent 60%); background-size: 260% 260%; mix-blend-mode: screen; }
+.celebration-sheen { background: linear-gradient(108deg,transparent 42%,rgba(255,255,255,.35) 47%,rgba(255,255,255,.9) 50%,rgba(255,255,255,.35) 53%,transparent 58%); background-size: 260% 260%; mix-blend-mode: screen; filter: blur(.3px); }
+.celebration-gloss { background: radial-gradient(130% 90% at 22% 8%,rgba(255,255,255,.28),rgba(255,255,255,.05) 34%,transparent 52%); mix-blend-mode: screen; }
+.celebration-card-num { position: absolute; top: clamp(12px,2.4vh,26px); right: clamp(12px,1.6vw,24px); z-index: 6; display: grid; place-items: center; min-width: clamp(52px,8vh,112px); height: clamp(52px,8vh,112px); background: var(--celebration-color); color: var(--celebration-secondary); font-weight: 1000; font-size: clamp(30px,5.4vh,74px); line-height: 1; transform: skewX(-8deg); box-shadow: 0 6px 0 rgba(0,0,0,.35),0 0 22px color-mix(in srgb,var(--celebration-color) 55%,transparent); }
+.celebration-card-num span { display: inline-block; transform: skewX(8deg); }
+.celebration-card-name { position: absolute; left: 0; right: 0; bottom: 0; z-index: 6; padding: clamp(12px,2.6vh,28px) clamp(16px,1.8vw,26px); color: var(--bone); font-weight: 1000; font-size: clamp(26px,4.6vh,66px); line-height: .95; letter-spacing: .02em; text-transform: uppercase; text-shadow: 0 3px 12px rgba(0,0,0,.85); }
+.celebration-info { display: flex; flex-direction: column; align-items: flex-start; gap: clamp(10px,2.2vh,26px); text-transform: uppercase; max-width: 100%; min-width: 0; }
+.celebration-stage.no-photo .celebration-info { align-items: center; text-align: center; }
+.celebration-plus { display: inline-block; color: var(--celebration-secondary); font-weight: 1000; font-size: clamp(40px,min(13vh,7vw),190px); line-height: .8; letter-spacing: -.04em; transform: skewX(-8deg); -webkit-text-stroke: clamp(4px,.8vh,9px) var(--celebration-color); paint-order: stroke fill; text-shadow: 6px 6px 0 rgba(0,0,0,.35),0 0 40px color-mix(in srgb,var(--celebration-color) 70%,transparent); opacity: 0; }
+.celebration-plus > span, .celebration-name > span { display: inline-block; transform: skewX(8deg); }
+.three-headline { color: var(--celebration-secondary); font-weight: 1000; font-style: italic; font-size: clamp(64px,min(30vh,11vw),420px); line-height: .78; letter-spacing: -.02em; -webkit-text-stroke: clamp(4px,.9vh,9px) var(--celebration-color); text-shadow: 10px 12px 0 rgba(0,0,0,.4),0 0 60px color-mix(in srgb,var(--celebration-color) 75%,transparent); opacity: 0; }
+.celebration-name { display: inline-block; max-width: 100%; white-space: nowrap; padding: clamp(8px,1.6vh,18px) clamp(18px,2.2vw,44px); background: var(--celebration-color); color: var(--celebration-secondary); font-weight: 1000; font-size: clamp(28px,min(7vh,5vw),100px); line-height: .9; letter-spacing: .01em; transform: skewX(-8deg); box-shadow: 8px 8px 0 rgba(0,0,0,.32); opacity: 0; }
+.three-particles { position: absolute; left: 50%; top: 50%; z-index: 2; }
+.three-particle { position: absolute; width: var(--particle-size); height: var(--particle-size); background: var(--celebration-color); box-shadow: 0 0 18px var(--celebration-color); opacity: 0; }
+.free-throw-info { gap: clamp(10px,2.4vh,28px); }
+.free-throw-top { display: flex; align-items: center; gap: clamp(16px,2.6vw,46px); }
+.free-throw-swish { position: relative; flex: 0 0 auto; width: clamp(120px,24vh,260px); aspect-ratio: 1/1; }
+.free-throw-rim { position: absolute; left: 18%; top: 30%; width: 64%; height: 15%; border: clamp(4px,.8vh,9px) solid var(--action-color); border-radius: 50%; box-shadow: 0 0 16px color-mix(in srgb,var(--action-color) 55%,transparent); opacity: 0; }
+.free-throw-net { position: absolute; left: 27%; top: 37%; width: 46%; height: 40%; transform-origin: top center; opacity: 0; }
+.free-throw-net i { position: absolute; top: 0; width: 2px; height: 100%; background: linear-gradient(var(--action-secondary),transparent); transform-origin: top; }
+.free-throw-net i:nth-child(1){left:2%;transform:rotate(-17deg)} .free-throw-net i:nth-child(2){left:22%;transform:rotate(-9deg)} .free-throw-net i:nth-child(3){left:44%;transform:rotate(-3deg)} .free-throw-net i:nth-child(4){right:44%;transform:rotate(3deg)} .free-throw-net i:nth-child(5){right:22%;transform:rotate(9deg)} .free-throw-net i:nth-child(6){right:2%;transform:rotate(17deg)}
+.free-throw-ball { position: absolute; left: -12%; top: 22%; offset-path: none; offset-anchor: auto; width: 22%; height: auto; aspect-ratio: 1/1; border-radius: 50%; background: radial-gradient(circle at 34% 28%,#ffc078,#ef6a1f 62%,#b0470e); box-shadow: inset -3px -4px 8px rgba(0,0,0,.35),0 0 18px rgba(239,106,31,.5); opacity: 0; }
+.free-throw-ripple { position: absolute; left: 50%; top: 37%; width: 60%; height: 15%; transform: translate(-50%,-50%); border: 3px solid color-mix(in srgb,var(--action-color) 55%,white); border-radius: 50%; opacity: 0; }
+.free-throw-headline { color: var(--action-secondary); font-weight: 1000; font-style: italic; font-size: clamp(48px,min(16vh,12vw),220px); line-height: .82; letter-spacing: -.01em; -webkit-text-stroke: clamp(3px,.8vh,8px) var(--action-color); text-shadow: 8px 10px 0 rgba(0,0,0,.4),0 0 50px color-mix(in srgb,var(--action-color) 70%,transparent); opacity: 0; }
+.free-throw-headline span { display: block; }
+.three-point-overlay.active .celebration-flash, .free-throw-overlay.active .celebration-flash { animation: celebration-flash 1.7s ease-out forwards; }
+.three-point-overlay.active .celebration-ring, .free-throw-overlay.active .celebration-ring { animation: celebration-ring 1.35s ease-out forwards; }
+.three-point-overlay.active .celebration-card, .free-throw-overlay.active .celebration-card { animation: celebration-card-in 3.4s cubic-bezier(.16,1,.3,1) forwards; }
+.three-point-overlay.active .celebration-plus, .free-throw-overlay.active .celebration-plus, .three-point-overlay.active .celebration-name, .free-throw-overlay.active .celebration-name { animation: celebration-info-rise 3.4s ease-out forwards; }
+.three-point-overlay.active .three-headline, .free-throw-overlay.active .free-throw-headline { animation: celebration-head-in 3.4s cubic-bezier(.16,1,.3,1) forwards; }
+.three-point-overlay.active .three-particle { animation: three-particle-fly 1.25s var(--particle-delay) cubic-bezier(.1,.7,.2,1) forwards; }
+.three-point-overlay.active .celebration-foil, .free-throw-overlay.active .celebration-foil { animation: celebration-foil 3.4s ease-in-out forwards; }
+.three-point-overlay.active .celebration-lenti, .free-throw-overlay.active .celebration-lenti { animation: celebration-lenti 3.4s ease-in-out forwards; }
+.three-point-overlay.active .celebration-holo, .free-throw-overlay.active .celebration-holo { animation: celebration-holo 3.4s ease-in-out forwards; }
+.three-point-overlay.active .celebration-sheen, .free-throw-overlay.active .celebration-sheen { animation: celebration-sheen 3.4s ease-out forwards; }
+.three-point-overlay.active .celebration-gloss, .free-throw-overlay.active .celebration-gloss { animation: celebration-gloss 3.4s ease-out forwards; }
+.free-throw-overlay.active .free-throw-rim { animation: free-rim-new 1.6s ease-out forwards; }
+.free-throw-overlay.active .free-throw-net { animation: free-net-new 1.6s ease-out forwards; }
+.free-throw-overlay.active .free-throw-ripple { animation: free-ripple-new 1.6s ease-out forwards; }
+.free-throw-overlay.active .free-throw-ball { animation: free-ball-new 1.55s .12s cubic-bezier(.32,.06,.5,1) forwards; }
+@keyframes celebration-flash { 0% { opacity: 0; transform: scale(.25); } 12% { opacity: 1; } 100% { opacity: 0; transform: scale(1.45); } }
+@keyframes celebration-ring { 0% { opacity: .9; transform: translate(-50%,-50%) scale(.1); } 100% { opacity: 0; transform: translate(-50%,-50%) scale(7); } }
+@keyframes celebration-card-in { 0% { opacity:0; transform:perspective(1400px) rotateY(-42deg) rotateX(9deg) scale(.5) translateY(24px); filter:blur(7px); } 16%{opacity:1} 30%{transform:perspective(1400px) rotateY(7deg) rotateX(-2deg) scale(1.05) translateY(-6px);filter:blur(0)} 42%{transform:perspective(1400px) rotateY(-3deg) rotateX(1deg) scale(1) translateY(0);filter:blur(0)} 86%{opacity:1;transform:perspective(1400px) rotateY(0) rotateX(0) scale(1) translateY(0);filter:blur(0)} 100%{opacity:0;transform:perspective(1400px) rotateY(9deg) scale(1.08) translateY(-16px);filter:blur(4px)} }
+@keyframes celebration-info-rise { 0%{opacity:0;transform:translateY(46px) skewX(-8deg)} 18%{opacity:1;transform:translateY(0) skewX(-8deg)} 84%{opacity:1;transform:translateY(0) skewX(-8deg)} 100%{opacity:0;transform:translateY(-26px) skewX(-8deg)} }
+@keyframes celebration-head-in { 0%{opacity:0;transform:translateX(-60px) scale(.72)} 18%{opacity:1} 32%{transform:translateX(0) scale(1.05)} 44%{transform:scale(1)} 84%{opacity:1;transform:scale(1)} 100%{opacity:0;transform:scale(1.06) translateY(-18px)} }
+@keyframes celebration-foil { 0%{opacity:0;background-position:0% 50%} 22%{opacity:.45} 82%{opacity:.45;background-position:150% 50%} 100%{opacity:0;background-position:170% 50%} }
+@keyframes celebration-lenti { 0%{opacity:0;background-position:0% 0%} 22%{opacity:.14} 82%{opacity:.14;background-position:150% 0%} 100%{opacity:0;background-position:170% 0%} }
+@keyframes celebration-holo { 0%{opacity:0;background-position:0% 0%} 22%{opacity:.5} 82%{opacity:.25;background-position:150% 100%} 100%{opacity:0;background-position:170% 100%} }
+@keyframes celebration-sheen { 0%{opacity:0;background-position:-20% -20%} 16%{opacity:0} 24%{opacity:1} 40%{opacity:0} 56%{opacity:0} 64%{opacity:.9} 78%{opacity:0} 100%{opacity:0;background-position:150% 150%} }
+@keyframes celebration-gloss { 0%{opacity:0;transform:translateX(0)} 28%{opacity:1} 56%{transform:translateX(9%)} 72%{transform:translateX(-9%)} 82%{opacity:.75;transform:translateX(0)} 100%{opacity:0;transform:translateX(0)} }
+@keyframes free-rim-new { 0%{opacity:0;transform:scale(.85)} 20%{opacity:1;transform:scale(1)} 86%{opacity:1} 100%{opacity:0} }
+@keyframes free-net-new { 0%{opacity:0;transform:scaleY(1)} 18%{opacity:1;transform:scaleY(1)} 58%{transform:scaleY(1)} 68%{transform:scaleY(1.16)} 80%{transform:scaleY(1.04)} 86%{opacity:1;transform:scaleY(1)} 100%{opacity:0;transform:scaleY(1)} }
+@keyframes free-ripple-new { 0%,52%{opacity:0;transform:translate(-50%,-50%) scale(.4)} 62%{opacity:1} 100%{opacity:0;transform:translate(-50%,-50%) scale(1.35)} }
+@keyframes free-ball-new { 0%{left:-12%;top:22%;transform:scale(.8);opacity:0} 12%{opacity:1} 46%{left:20%;top:-10%} 66%{left:38%;top:22%} 82%{left:39%;top:50%;transform:scale(.92)} 100%{left:39%;top:68%;transform:scale(.5);opacity:0} }
+
+
+
+
+/* Manual lightning animation */
+.lightning-overlay { position: fixed; inset: 0; z-index: 130; display: grid; place-items: center; visibility: hidden; pointer-events: none; overflow: hidden; isolation: isolate; background: rgba(13,12,11,.86); }
+.lightning-overlay.active { visibility: visible; }
+.lightning-overlay::before { content: ""; position: absolute; inset: -20%; z-index: 0; background: radial-gradient(circle at center, color-mix(in srgb, var(--orange) 34%, transparent), transparent 60%); opacity: .42; }
+.lightning-flash { position: absolute; inset: 0; z-index: 2; opacity: 0; background: radial-gradient(circle at 50% 36%, rgba(255,255,255,.96), rgba(150,195,255,.45) 26%, transparent 62%); }
+.lightning-scene { position: relative; z-index: 3; width: 100%; height: 100%; display: grid; place-items: center; }
+.lightning-gif { position: absolute; top: -3vh; left: 50%; z-index: 3; height: min(98vh, 72vw); width: auto; transform: translateX(-50%); opacity: 0; mix-blend-mode: screen; filter: drop-shadow(0 0 20px #4aa3ff) drop-shadow(0 0 44px rgba(90,150,255,.55)); pointer-events: none; }
+.lightning-sparks { position: absolute; left: 50%; top: 47%; z-index: 4; }
+.lightning-spark { position: absolute; width: var(--spark-size); height: var(--spark-size); background: #cfe6ff; box-shadow: 0 0 12px var(--orange); opacity: 0; }
+.lightning-message { position: relative; z-index: 5; display: flex; flex-direction: column; align-items: center; text-align: center; text-transform: uppercase; padding: 0 4vw; }
+.lightning-message strong { color: var(--bone); font-weight: 1000; font-style: italic; font-size: clamp(70px, min(23vh, 13vw), 360px); line-height: .82; letter-spacing: -.01em; -webkit-text-stroke: clamp(3px,.9vh,9px) var(--orange); paint-order: stroke fill; text-shadow: 0 0 8px #fff, 0 0 34px var(--orange), 8px 10px 0 rgba(0,0,0,.45); opacity: 0; }
+.lightning-message span { margin-top: clamp(8px,2vh,22px); color: var(--orange); font-family: Consolas, monospace; font-weight: 900; font-size: clamp(22px,4.8vh,58px); letter-spacing: .36em; padding-left: .36em; opacity: 0; }
+.lightning-overlay.active .lightning-flash { animation: lightning-flash 3s ease-out forwards; }
+.lightning-overlay.active .lightning-gif { animation: lightning-gif-in 3s ease-out forwards; }
+.lightning-overlay.active .lightning-spark { animation: lightning-spark .95s var(--spark-delay) cubic-bezier(.15,.7,.25,1) forwards; }
+.lightning-overlay.active .lightning-message strong { animation: lightning-zap-in 3s cubic-bezier(.16,1,.3,1) forwards; }
+.lightning-overlay.active .lightning-message span { animation: lightning-sub-in 3s ease-out forwards; }
+@keyframes lightning-flash { 0%{opacity:0} 2%{opacity:.95} 5%{opacity:.08} 8%{opacity:.85} 11%{opacity:0} 15%{opacity:.52} 18%{opacity:0} 100%{opacity:0} }
+@keyframes lightning-gif-in { 0%{opacity:0} 4%{opacity:1} 8%{opacity:.45} 12%{opacity:1} 18%{opacity:.7} 24%{opacity:1} 74%{opacity:1} 100%{opacity:0} }
+@keyframes lightning-spark { 0%{opacity:0; transform:translate(-50%,-50%) scale(0)} 12%{opacity:1} 100%{opacity:0; transform:translate(calc(-50% + var(--spark-x)), calc(-50% + var(--spark-y))) scale(1.2) rotate(var(--spark-rotation))} }
+@keyframes lightning-zap-in { 0%{opacity:0; transform:scale(2.4) skewX(-8deg); filter:blur(7px)} 6%{opacity:1; filter:blur(0)} 8%{transform:scale(.92) translate(7px,-5px) skewX(-8deg)} 11%{transform:scale(1.07) translate(-7px,5px) skewX(-8deg)} 14%{transform:scale(.98) translate(5px,2px) skewX(-8deg)} 17%{transform:scale(1) translate(0,0) skewX(-8deg)} 82%{opacity:1; transform:scale(1) skewX(-8deg)} 100%{opacity:0; transform:scale(1.05) translateY(-16px) skewX(-8deg)} }
+@keyframes lightning-sub-in { 0%{opacity:0; transform:translateY(24px)} 22%{opacity:1; transform:translateY(0)} 82%{opacity:1; transform:translateY(0)} 100%{opacity:0; transform:translateY(16px)} }

@@ -20,7 +20,7 @@ public partial class PlayerFormWindow : Window
         AddressBox.Text = player.Address;
         PhoneNumberBox.Text = player.PhoneNumber;
         EmailBox.Text = player.Email;
-        PhotoPathBox.Text = player.PhotoPath;
+        PhotoPathBox.Text = player.ConsolePhotoPath;
         UpdatePhotoPreview();
 
         if (DateTime.TryParseExact(player.BirthDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
@@ -83,7 +83,7 @@ public partial class PlayerFormWindow : Window
         Player.PhoneNumber = EmptyToNull(PhoneNumberBox.Text);
         Player.Email = EmptyToNull(email);
         Player.BirthDate = birthDate;
-        Player.PhotoPath = photoPath;
+        Player.ConsolePhotoPath = photoPath;
 
         DialogResult = true;
     }

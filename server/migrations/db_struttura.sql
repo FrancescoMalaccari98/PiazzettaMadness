@@ -301,6 +301,7 @@ CREATE TABLE `players` (
   `email` varchar(160) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `birth_date` date DEFAULT NULL,
   `photo_path` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `console_photo_path` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

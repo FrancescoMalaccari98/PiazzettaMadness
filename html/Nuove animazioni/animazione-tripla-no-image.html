@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Animazione Tripla — Figurina</title>
+<style>
+  :root{
+    --ink:#0d0c0b; --bone:#fffefd; --orange:#ea6324;
+    --team:#2875bb;                     /* colore squadra: cambia solo questo */
+    --mono:Consolas,monospace;
+    --display:"Arial Narrow","Segoe UI",Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:100%;height:100%;overflow:hidden;background:var(--ink);color:var(--bone);font-family:var(--display)}
+
+  /* ---- sfondo + esplosione ---- */
+  .stage{position:fixed;inset:0;isolation:isolate;background:rgba(13,12,11,.82);overflow:hidden}
+  .stage::before{content:"";position:absolute;inset:-20%;background:radial-gradient(circle at center,color-mix(in srgb,var(--team) 42%,transparent),transparent 58%);opacity:.45;z-index:0}
+  .flash{position:absolute;inset:0;z-index:1;background:radial-gradient(circle at center,color-mix(in srgb,var(--team) 82%,white) 0%,color-mix(in srgb,var(--team) 70%,transparent) 20%,transparent 66%);opacity:0;animation:flash 1.7s ease-out forwards}
+  .ring{position:absolute;left:50%;top:50%;z-index:1;width:26vmin;height:26vmin;border:10px solid var(--team);border-radius:50%;transform:translate(-50%,-50%);opacity:0;animation:ring 1.35s ease-out forwards}
+  .particles{position:absolute;left:50%;top:50%;z-index:2}
+  .particle{position:absolute;width:var(--s);height:var(--s);background:var(--team);box-shadow:0 0 18px var(--team);opacity:0;animation:fly 1.25s var(--d) cubic-bezier(.1,.7,.2,1) forwards}
+
+  /* ---- layout orizzontale: card + testo ---- */
+  .layout{
+    position:absolute;inset:0;z-index:3;
+    display:grid;grid-template-columns:auto auto;align-items:center;justify-content:center;
+    gap:clamp(28px,4.5vw,90px);
+    padding:3.5vh clamp(24px,4vw,64px);
+  }
+  .stage.no-photo .layout{grid-template-columns:1fr;justify-items:center}
+
+  /* ---- la figurina (solo foto + lamina) ---- */
+  .card{
+    position:relative;height:min(86vh,58vw);aspect-ratio:63/88;width:auto;
+    transform-style:preserve-3d;
+    opacity:0;animation:card-in 3.4s cubic-bezier(.16,1,.3,1) forwards;
+  }
+  .stage.no-photo .card{display:none}
+  .frame{position:absolute;inset:0;overflow:hidden;border-radius:22px;padding:12px;
+    background:linear-gradient(150deg,color-mix(in srgb,var(--team) 55%,#fff) 0%,var(--team) 30%,color-mix(in srgb,var(--team) 60%,#000) 100%);
+    box-shadow:0 30px 70px rgba(0,0,0,.55),0 0 46px color-mix(in srgb,var(--team) 55%,transparent)}
+  .inner{position:absolute;inset:12px;border-radius:13px;overflow:hidden;background:var(--ink)}
+  .media{position:absolute;inset:0;overflow:hidden}
+  .media img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 14%;filter:contrast(1.05) saturate(1.05)}
+  .scrim{position:absolute;inset:0;background:linear-gradient(180deg,transparent 38%,color-mix(in srgb,var(--ink) 40%,transparent) 62%,color-mix(in srgb,var(--ink) 82%,transparent) 88%,color-mix(in srgb,var(--ink) 95%,transparent) 100%)}
+
+  /* lamina olografica a strati (effetto lamincard) */
+  .foil,.holo,.sheen,.gloss,.lenti{position:absolute;inset:0;pointer-events:none;opacity:0}
+  .foil{background:repeating-linear-gradient(112deg,rgba(255,64,160,.34) 0%,rgba(255,214,64,.34) 3.5%,rgba(80,230,170,.34) 7%,rgba(64,180,255,.34) 10.5%,rgba(180,90,255,.34) 14%,rgba(255,64,160,.34) 17.5%);background-size:200% 200%;mix-blend-mode:color-dodge;filter:blur(.6px);animation:foil 3.4s ease-in-out forwards}
+  .lenti{background:repeating-linear-gradient(106deg,rgba(255,255,255,.14) 0 1.5px,rgba(0,0,0,.16) 1.5px 3px);background-size:200% 100%;mix-blend-mode:overlay;animation:lenti 3.4s ease-in-out forwards}
+  .holo{background:linear-gradient(112deg,transparent 22%,#ff5ea3 34%,#ffd23f 42%,#4ade80 50%,#38bdf8 58%,#a855f7 66%,transparent 76%);background-size:260% 260%;mix-blend-mode:color-dodge;animation:holo 3.4s ease-in-out forwards}
+  .sheen{background:linear-gradient(108deg,transparent 40%,rgba(255,255,255,.35) 46%,rgba(255,255,255,.95) 50%,rgba(255,255,255,.35) 54%,transparent 57%,transparent 62%,rgba(255,255,255,.5) 66%,transparent 71%);background-size:260% 260%;mix-blend-mode:screen;filter:blur(.3px);animation:sheen 3.4s ease-out forwards}
+  .gloss{background:radial-gradient(130% 90% at 22% 8%,rgba(255,255,255,.34),rgba(255,255,255,.06) 34%,transparent 52%);mix-blend-mode:screen;animation:gloss 3.4s ease-out forwards}
+
+  /* numero in alto a destra + nome in basso (stile figurina), sopra la lamina */
+  .card-num{position:absolute;top:clamp(12px,2.4vh,26px);right:clamp(12px,1.6vw,24px);z-index:6;display:grid;place-items:center;min-width:clamp(52px,8vh,112px);height:clamp(52px,8vh,112px);background:var(--team);color:var(--bone);font-weight:1000;font-size:clamp(30px,5.4vh,74px);line-height:1;transform:skewX(-8deg);box-shadow:0 6px 0 rgba(0,0,0,.35),0 0 22px color-mix(in srgb,var(--team) 55%,transparent)}
+  .card-num span{display:inline-block;transform:skewX(8deg)}
+  .card-name{position:absolute;left:0;right:0;bottom:0;z-index:6;padding:clamp(12px,2.6vh,28px) clamp(16px,1.8vw,26px);color:var(--bone);font-weight:1000;font-size:clamp(26px,4.6vh,66px);line-height:.95;letter-spacing:.02em;text-transform:uppercase;text-shadow:0 3px 12px rgba(0,0,0,.85)}
+
+  /* ---- blocco testo grande ---- */
+  .info{display:flex;flex-direction:column;align-items:flex-start;gap:clamp(10px,2.2vh,26px);text-transform:uppercase;max-width:100%;min-width:0}
+  .stage.no-photo .info{align-items:center;text-align:center}
+  .plus{display:inline-block;color:var(--bone);font-weight:1000;font-size:clamp(40px,min(13vh,7vw),190px);line-height:.8;letter-spacing:-.04em;transform:skewX(-8deg);text-shadow:6px 6px 0 rgba(0,0,0,.35),0 0 40px color-mix(in srgb,var(--team) 70%,transparent);opacity:0;animation:info-rise 3.4s ease-out forwards}
+  .headline{color:var(--bone);font-weight:1000;font-style:italic;font-size:clamp(64px,min(30vh,11vw),420px);line-height:.78;letter-spacing:-.02em;-webkit-text-stroke:clamp(4px,.9vh,9px) var(--team);text-shadow:10px 12px 0 rgba(0,0,0,.4),0 0 60px color-mix(in srgb,var(--team) 75%,transparent);opacity:0;animation:head-in 3.4s cubic-bezier(.16,1,.3,1) forwards}
+  .name{display:inline-block;max-width:100%;white-space:nowrap;padding:clamp(8px,1.6vh,18px) clamp(18px,2.2vw,44px);background:var(--team);color:var(--bone);font-weight:1000;font-size:clamp(28px,min(7vh,5vw),100px);line-height:.9;letter-spacing:.01em;transform:skewX(-8deg);box-shadow:8px 8px 0 rgba(0,0,0,.32);opacity:0;animation:info-rise 3.4s .06s ease-out forwards}
+  .plus>span,.name>span{display:inline-block;transform:skewX(8deg)}
+  .name .num{color:var(--bone)}
+
+  .hint{position:fixed;right:22px;bottom:16px;color:#9ca3af;font-family:var(--mono);font-size:14px;letter-spacing:.08em;text-transform:uppercase;z-index:9}
+  .toggle{position:fixed;left:22px;bottom:16px;z-index:9;padding:8px 14px;border:1px solid #3a3936;border-radius:8px;background:#191817;color:#cbd5e1;font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;cursor:pointer}
+  .toggle:hover{border-color:var(--team);color:var(--bone)}
+
+  /* ---- keyframes ---- */
+  @keyframes flash{0%{opacity:0;transform:scale(.25)}12%{opacity:1}100%{opacity:0;transform:scale(1.45)}}
+  @keyframes ring{0%{opacity:.9;transform:translate(-50%,-50%) scale(.1)}100%{opacity:0;transform:translate(-50%,-50%) scale(7)}}
+  @keyframes fly{0%{opacity:1;transform:translate(-50%,-50%) scale(0)}72%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--x)),calc(-50% + var(--y))) scale(1.5) rotate(var(--r))}}
+  @keyframes card-in{
+    0%{opacity:0;transform:perspective(1400px) rotateY(-42deg) rotateX(9deg) scale(.5) translateY(24px);filter:blur(7px)}
+    16%{opacity:1}
+    30%{transform:perspective(1400px) rotateY(7deg) rotateX(-2deg) scale(1.05) translateY(-6px);filter:blur(0)}
+    42%{transform:perspective(1400px) rotateY(-3deg) rotateX(1deg) scale(1) translateY(0);filter:blur(0)}
+    86%{opacity:1;transform:perspective(1400px) rotateY(0) rotateX(0) scale(1) translateY(0);filter:blur(0)}
+    100%{opacity:0;transform:perspective(1400px) rotateY(9deg) scale(1.08) translateY(-16px);filter:blur(4px)}
+  }
+  @keyframes info-rise{0%{opacity:0;transform:translateY(46px) skewX(-8deg)}18%{opacity:1;transform:translateY(0) skewX(-8deg)}84%{opacity:1;transform:translateY(0) skewX(-8deg)}100%{opacity:0;transform:translateY(-26px) skewX(-8deg)}}
+  @keyframes head-in{
+    0%{opacity:0;transform:translateX(-60px) scale(.72)}
+    18%{opacity:1}
+    32%{transform:translateX(0) scale(1.05)}
+    44%{transform:scale(1)}
+    84%{opacity:1;transform:scale(1)}
+    100%{opacity:0;transform:scale(1.06) translateY(-18px)}
+  }
+  @keyframes foil{0%{opacity:0;background-position:0% 50%}22%{opacity:.5}82%{opacity:.5;background-position:180% 50%}100%{opacity:0;background-position:200% 50%}}
+  @keyframes lenti{0%{opacity:0;background-position:0% 0%}22%{opacity:.35}82%{opacity:.35;background-position:170% 0%}100%{opacity:0;background-position:190% 0%}}
+  @keyframes holo{0%{opacity:0;background-position:0% 0%}22%{opacity:.7}82%{opacity:.4;background-position:160% 100%}100%{opacity:0;background-position:180% 100%}}
+  @keyframes sheen{0%{opacity:0;background-position:-20% -20%}16%{opacity:0}24%{opacity:1}40%{opacity:0}56%{opacity:0}64%{opacity:.9}78%{opacity:0}100%{opacity:0;background-position:150% 150%}}
+  @keyframes gloss{0%{opacity:0}28%{opacity:1}82%{opacity:.8}100%{opacity:0}}
+
+  /* fallback per schermo verticale (non il caso d'uso, ma non rompe) */
+  @media (orientation:portrait){
+    .layout{grid-template-columns:1fr;justify-items:center;gap:3vh}
+    .card{height:52vh}
+    .info{align-items:center;text-align:center}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .flash,.ring,.particle,.foil,.lenti,.holo,.sheen,.gloss{animation:none;opacity:0}
+    .card,.plus,.headline,.name{animation:none;opacity:1}
+  }
+</style>
+</head>
+<body>
+  <main class="stage" id="stage">
+    <div class="flash"></div>
+    <div class="ring"></div>
+    <div class="particles" id="particles"></div>
+
+    <div class="layout">
+      <div class="card" id="card">
+        <div class="frame"><div class="inner">
+          <div class="media" id="media"><div class="scrim"></div></div>
+          <div class="foil"></div><div class="lenti"></div><div class="holo"></div><div class="sheen"></div><div class="gloss"></div>
+          <div class="card-num"><span id="cardNum">9</span></div>
+          <div class="card-name" id="cardName">Bovari J.</div>
+        </div></div>
+      </div>
+
+      <div class="info">
+        <div class="plus"><span>+3</span></div>
+        <div class="headline">Tripla!</div>
+        <div class="name" id="name"><span>#9 Jonathan Bovari</span></div>
+      </div>
+    </div>
+  </main>
+
+  <button class="toggle" id="toggle">Anteprima: con foto</button>
+  <div class="hint">Click / spazio per riavviare</div>
+
+  <script>
+    /* ====== DATI GIOCATORE (popolali dal DB) ======
+       photo: URL dal database, oppure null/"" se assente. */
+    const PLAYER = {
+      number:    "9",
+      firstName: "Jonathan",
+      lastName:  "Bovari",
+      photo:     null          // <-- URL foto dal DB, es. "/foto/9.jpg"
+    };
+
+    /* nome mostrato: "Cognome I." (es. Bovari J.) */
+    const displayName = p => `${p.lastName} ${(p.firstName||"").trim().charAt(0).toUpperCase()}.`.trim();
+
+    /* foto di esempio SVG: solo per l'anteprima del pulsante */
+    const DEMO_PHOTO = "data:image/svg+xml;utf8," + encodeURIComponent(
+      `<svg xmlns='http://www.w3.org/2000/svg' width='420' height='588'>
+         <defs><linearGradient id='b' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#3a86c9'/><stop offset='1' stop-color='#0d0c0b'/></linearGradient></defs>
+         <rect width='420' height='588' fill='url(#b)'/><circle cx='210' cy='220' r='104' fill='#f1d3b8'/>
+         <path d='M210 320c-100 0-158 64-168 168h336c-10-104-68-168-168-168z' fill='#e8e6e3'/></svg>`);
+
+    const stage = document.getElementById('stage');
+    const card  = document.getElementById('card');
+    const media = document.getElementById('media');
+
+    function render(p){
+      const dn = displayName(p);
+      document.getElementById('name').innerHTML = `<span><span class="num">#${p.number}</span> ${dn}</span>`;
+      document.getElementById('cardNum').textContent = p.number;
+      document.getElementById('cardName').textContent = dn;
+      const old = media.querySelector('img'); if(old) old.remove();
+      if(p.photo){
+        const img = document.createElement('img');
+        img.src = p.photo; img.alt = dn;
+        img.onerror = ()=>{ img.remove(); stage.classList.add('no-photo'); card.classList.remove('has-photo'); };
+        media.prepend(img);
+        stage.classList.remove('no-photo'); card.classList.add('has-photo');
+      }else{
+        stage.classList.add('no-photo'); card.classList.remove('has-photo');
+      }
+    }
+
+    function particles(){
+      const c=document.getElementById('particles'); c.replaceChildren();
+      for(let i=0;i<40;i++){const p=document.createElement('span');const a=(Math.PI*2*i)/40,d=220+Math.random()*560;
+        p.className='particle';p.style.setProperty('--x',Math.cos(a)*d+'px');p.style.setProperty('--y',Math.sin(a)*d+'px');
+        p.style.setProperty('--s',10+Math.random()*20+'px');p.style.setProperty('--r',300+Math.random()*720+'deg');
+        p.style.setProperty('--d',Math.random()*0.12+'s');c.appendChild(p);}
+    }
+
+    function replay(){particles();document.querySelectorAll('.stage *').forEach(e=>{e.style.animation='none';void e.offsetWidth;e.style.animation='';});}
+
+    render(PLAYER); particles();
+
+    /* demo: pulsante per confrontare con/senza foto */
+    let withPhoto = !!PLAYER.photo;
+    const toggle = document.getElementById('toggle');
+    const label = ()=> toggle.textContent = withPhoto ? 'Anteprima: con foto' : 'Anteprima: senza foto';
+    label();
+    toggle.addEventListener('click',(e)=>{e.stopPropagation();withPhoto=!withPhoto;render({...PLAYER,photo:withPhoto?(PLAYER.photo||DEMO_PHOTO):null});label();replay();});
+
+    addEventListener('click',replay);
+    addEventListener('keydown',e=>{if(e.code==='Space'){e.preventDefault();replay();}});
+  </script>
+</body>
+</html>
