@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { motion, AnimatePresence, useInView, animate as motionAnimate } from "motion/react";
 import { Trophy, Flame, Medal, ChevronDown, Star, Target, Shield, Zap, BarChart2, TrendingUp } from "lucide-react";
 import { defaultStatsData, type StatsData, type Player } from "../data/stats";
+import { useActiveEdition } from "../hooks/useActiveEdition";
 
 const API = import.meta.env.VITE_API_URL ?? "";
 
@@ -37,6 +38,7 @@ const statCategories = [
 type StatKey = typeof statCategories[number]["key"];
 
 export function Stats() {
+  const edition = useActiveEdition();
   const [data, setData] = useState<StatsData>(defaultStatsData);
   const [activeTab, setActiveTab] = useState<StatKey>("pts");
   const [openTeam, setOpenTeam] = useState<Set<string>>(new Set());
@@ -87,7 +89,7 @@ export function Stats() {
               </span>
             </div>
             <div className="relative z-10 text-center">
-              <p className="font-display text-brand-orange uppercase tracking-[0.3em] text-sm mb-3">Piazzetta Madness 2027</p>
+              <p className="font-display text-brand-orange uppercase tracking-[0.3em] text-sm mb-3">{edition.name}</p>
               <h1 className="font-display text-[40px] sm:text-[65px] md:text-[120px] uppercase leading-[0.85] tracking-[-1px] md:tracking-[-4px] text-white mb-6">
                 Statistiche<br /><span className="text-brand-orange">Giocatori</span>
               </h1>

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "motion/react";
 import { Calendar, MapPin, Trophy, BarChart2, ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { useActiveEdition } from "../hooks/useActiveEdition";
 
 const MAPS_URL = "https://maps.app.goo.gl/5kgGKRw5Hm3LJHbn9";
 
@@ -75,6 +76,7 @@ type HomeMatch = {
 };
 
 export function Home() {
+  const edition = useActiveEdition();
   const [kickoffState, setKickoffState] = useState<{ target: Date; show: boolean } | null>(null);
   const [allMatches, setAllMatches] = useState<HomeMatch[]>([]);
   const [homeStats, setHomeStats] = useState<HomeStats | null>(null);
@@ -230,7 +232,7 @@ export function Home() {
               <CountdownUnit value={countdown.seconds} label="Secondi" pulse />
             </div>
             <p className="font-mono text-xs text-zinc-700 mt-8 tracking-widest">
-              ESTATE 2027 — PORTO POTENZA PICENA
+              ESTATE {edition.year} — PORTO POTENZA PICENA
             </p>
           </div>
         </section>

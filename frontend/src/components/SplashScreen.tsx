@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { useActiveEdition } from "../hooks/useActiveEdition";
 
 export function SplashScreen({ onDone }: { onDone: () => void }) {
+  const edition = useActiveEdition();
+  const yearShort = String(edition.year).slice(-2);
   const [phase, setPhase] = useState(0);
   const [exiting, setExiting] = useState(false);
 
@@ -120,7 +123,7 @@ export function SplashScreen({ onDone }: { onDone: () => void }) {
             >
               <span className="block h-px flex-1 max-w-[60px] sm:max-w-[80px] bg-zinc-700" />
               <span className="font-sans text-[10px] sm:text-xs uppercase tracking-[0.25em] sm:tracking-[0.35em] text-zinc-500 whitespace-nowrap">
-                Summer '27 &mdash; Street Basketball
+                Summer '{yearShort} &mdash; Street Basketball
               </span>
               <span className="block h-px flex-1 max-w-[60px] sm:max-w-[80px] bg-zinc-700" />
             </motion.div>

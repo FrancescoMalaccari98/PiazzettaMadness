@@ -1,5 +1,6 @@
 import { motion } from "motion/react";
 import { BadgeInfo, CalendarDays, Timer, Shield, Target, AlertTriangle, MessageSquare, Trophy } from "lucide-react";
+import { useActiveEdition } from "../hooks/useActiveEdition";
 
 function Section({ icon: Icon, title, children }: { icon: React.ElementType; title: string; children: React.ReactNode }) {
   return (
@@ -18,6 +19,7 @@ function Section({ icon: Icon, title, children }: { icon: React.ElementType; tit
 }
 
 export function Info() {
+  const edition = useActiveEdition();
   return (
     <div className="pt-32 pb-20">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
@@ -34,7 +36,7 @@ export function Info() {
               Info & Rules
             </h1>
             <p className="text-base sm:text-xl font-sans text-zinc-400">
-              Regolamento Ufficiale — Piazzetta Madness 2027
+              Regolamento Ufficiale — {edition.name}
             </p>
           </div>
         </div>

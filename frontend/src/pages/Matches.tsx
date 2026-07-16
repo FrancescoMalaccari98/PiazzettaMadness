@@ -2,6 +2,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { Trophy, Flame, X, Swords, Calendar, ChevronRight } from "lucide-react";
+import { useActiveEdition } from "../hooks/useActiveEdition";
 
 // ── Helper link squadra → pagina Players filtrata su quella squadra ──
 const teamLink = (team: string) => `/giocatori?team=${encodeURIComponent(team)}`;
@@ -442,6 +443,7 @@ function PlayoffCard({ match, isFinal = false, small = false, onClick }: { match
 const API = import.meta.env.VITE_API_URL ?? "";
 
 export function Matches() {
+  const edition = useActiveEdition();
   const [groups,        setGroups]        = useState<Group[]>(defaultGroups);
   const [bracketMatches, setBracket]      = useState<Bracket>({ semis: [], third: null, final: null });
   const [standings,     setStandings]     = useState<StandingRow[]>([]);
@@ -588,7 +590,7 @@ export function Matches() {
             </span>
           </div>
           <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center pb-12">
-            <p className="font-display text-brand-orange uppercase tracking-[0.3em] text-sm mb-3">Piazzetta Madness 2027</p>
+            <p className="font-display text-brand-orange uppercase tracking-[0.3em] text-sm mb-3">{edition.name}</p>
             <h1 className="font-display text-[56px] sm:text-[80px] md:text-[120px] text-brand-orange uppercase leading-[0.8] mb-6 tracking-[-2px] md:tracking-[-4px]">
               Matches
             </h1>
