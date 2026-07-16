@@ -87,8 +87,11 @@ export function Home() {
       .then((matches: HomeMatch[] | null) => {
         if (!matches?.length) return;
         setAllMatches(matches);
-        const first = matches.find(m => m.date);
-        if (first) setKickoffState(getKickoffState(first.date));
+        // kickoffState NON viene impostato di proposito: nel DB ci sono solo le
+        // partite 2026 (già giocate), che farebbero nascondere il countdown.
+        // Il countdown resta fisso sul fallbackTarget (6 Lug 2027) finché non
+        // vengono inserite le partite della prossima edizione — a quel punto
+        // rimettere: `const first = matches.find(m => m.date); if (first) setKickoffState(getKickoffState(first.date));`
       })
       .catch(() => {});
 
@@ -136,12 +139,10 @@ export function Home() {
   const galleryPrev = () => setGalleryGroup(g => (g - 1 + galleryTotalGroups) % galleryTotalGroups);
 
 
-  const fallbackTarget = (() => {
-    const now = new Date();
-    const y = now.getFullYear();
-    const t = new Date(y, 6, 8, 21, 0, 0); // 8 Lug 21:00
-    return t > now ? t : new Date(y + 1, 6, 8, 21, 0, 0);
-  })();
+  // Override manuale: prossima edizione 6 Luglio 2027. Il DB ha ancora le partite
+  // 2026 (data passata) — ignorate finché non ci sono le partite 2027, vedi sopra
+  // dove kickoffState non viene più impostato dal fetch di /api-web/partite.
+  const fallbackTarget = new Date(2027, 6, 6, 21, 0, 0); // 6 Lug 2027, 21:00
   const countdown = useCountdown(kickoffState?.target ?? fallbackTarget);
   return (
     <div className="w-full">
