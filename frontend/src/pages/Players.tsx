@@ -45,7 +45,7 @@ export function Players() {
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
           className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 text-center"
         >
-          <p className="font-display text-brand-orange uppercase tracking-[0.3em] text-sm mb-3">Piazzetta Madness 2026</p>
+          <p className="font-display text-brand-orange uppercase tracking-[0.3em] text-sm mb-3">Piazzetta Madness 2027</p>
           <h1 className="font-display text-[56px] sm:text-[80px] md:text-[120px] uppercase leading-[0.8] tracking-[-2px] md:tracking-[-4px] text-brand-orange mb-6">
             Rosters
           </h1>

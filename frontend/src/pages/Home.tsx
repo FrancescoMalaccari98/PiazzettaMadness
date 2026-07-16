@@ -230,7 +230,7 @@ export function Home() {
               <CountdownUnit value={countdown.seconds} label="Secondi" pulse />
             </div>
             <p className="font-mono text-xs text-zinc-700 mt-8 tracking-widest">
-              ESTATE 2026 — PORTO POTENZA PICENA
+              ESTATE 2027 — PORTO POTENZA PICENA
             </p>
           </div>
         </section>

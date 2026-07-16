@@ -34,7 +34,7 @@ export function Info() {
               Info & Rules
             </h1>
             <p className="text-base sm:text-xl font-sans text-zinc-400">
-              Regolamento Ufficiale — Piazzetta Madness 2026
+              Regolamento Ufficiale — Piazzetta Madness 2027
             </p>
           </div>
         </div>
@@ -68,7 +68,7 @@ export function Info() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="bg-zinc-950 border border-zinc-800 p-4">
                 <p className="font-display text-xs uppercase tracking-widest text-zinc-500 mb-1">Date</p>
-                <p className="text-white font-bold">8, 9, 10 e 11 Luglio 2026</p>
+                <p className="text-white font-bold">8, 9, 10 e 11 Luglio 2027</p>
               </div>
               <div className="bg-zinc-950 border border-zinc-800 p-4">
                 <p className="font-display text-xs uppercase tracking-widest text-zinc-500 mb-1">Luogo</p>

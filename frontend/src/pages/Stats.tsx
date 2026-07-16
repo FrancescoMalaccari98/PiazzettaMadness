@@ -87,7 +87,7 @@ export function Stats() {
               </span>
             </div>
             <div className="relative z-10 text-center">
-              <p className="font-display text-brand-orange uppercase tracking-[0.3em] text-sm mb-3">Piazzetta Madness 2026</p>
+              <p className="font-display text-brand-orange uppercase tracking-[0.3em] text-sm mb-3">Piazzetta Madness 2027</p>
               <h1 className="font-display text-[40px] sm:text-[65px] md:text-[120px] uppercase leading-[0.85] tracking-[-1px] md:tracking-[-4px] text-white mb-6">
                 Statistiche<br /><span className="text-brand-orange">Giocatori</span>
               </h1>

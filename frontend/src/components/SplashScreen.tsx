@@ -120,7 +120,7 @@ export function SplashScreen({ onDone }: { onDone: () => void }) {
             >
               <span className="block h-px flex-1 max-w-[60px] sm:max-w-[80px] bg-zinc-700" />
               <span className="font-sans text-[10px] sm:text-xs uppercase tracking-[0.25em] sm:tracking-[0.35em] text-zinc-500 whitespace-nowrap">
-                Summer '26 &mdash; Street Basketball
+                Summer '27 &mdash; Street Basketball
               </span>
               <span className="block h-px flex-1 max-w-[60px] sm:max-w-[80px] bg-zinc-700" />
             </motion.div>
