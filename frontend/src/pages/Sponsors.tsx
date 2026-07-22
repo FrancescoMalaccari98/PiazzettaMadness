@@ -49,7 +49,7 @@ function SponsorCard({ sponsor, index }: { sponsor: Sponsor; index: number }) {
       {/* Logo */}
       <Wrapper
         {...wrapperProps}
-        className="flex items-center justify-center h-48 sm:h-64 p-8 relative cursor-pointer bg-[#d1d1d1]"
+        className="flex items-center justify-center h-44 sm:h-56 p-6 relative cursor-pointer bg-[#d1d1d1]"
       >
         <img
           src={sponsor.logo}
@@ -63,13 +63,13 @@ function SponsorCard({ sponsor, index }: { sponsor: Sponsor; index: number }) {
       </Wrapper>
 
       {/* Footer: nome + link */}
-      <div className="px-4 py-4 bg-zinc-950/80 flex items-center justify-between gap-3">
+      <div className="px-4 py-4 bg-zinc-950/80 flex items-center justify-between gap-3 min-w-0">
         {hasClick ? (
-          <a href={clickHref} target="_blank" rel="noreferrer" className={`font-display text-xl sm:text-2xl uppercase leading-tight ${color.text} min-w-0 hover:underline`}>
+          <a href={clickHref} target="_blank" rel="noreferrer" className={`font-display text-lg xl:text-xl uppercase leading-tight ${color.text} min-w-0 truncate hover:underline`}>
             {sponsor.nome}
           </a>
         ) : (
-          <p className={`font-display text-xl sm:text-2xl uppercase leading-tight ${color.text} min-w-0`}>
+          <p className={`font-display text-lg xl:text-xl uppercase leading-tight ${color.text} min-w-0 truncate`}>
             {sponsor.nome}
           </p>
         )}
@@ -135,7 +135,7 @@ export function Sponsors() {
             I Nostri<br />
             <span className="text-brand-orange">Sponsor</span>
           </h1>
-          <p className="font-sans text-zinc-400 text-base sm:text-lg max-w-xl mx-auto">
+          <p className="font-sans text-zinc-400 text-sm sm:text-lg max-w-[260px] sm:max-w-xl mx-auto leading-relaxed">
             Senza di loro Piazzetta Madness non esisterebbe.<br />Scegli chi crede nel campetto.
           </p>
         </div>
@@ -149,7 +149,7 @@ export function Sponsors() {
             <p className="font-display text-2xl uppercase text-zinc-600">Sponsor in arrivo</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {sponsors.map((sponsor, i) => (
               <motion.div
                 key={sponsor.id}

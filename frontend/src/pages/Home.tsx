@@ -68,11 +68,72 @@ type HomeStats = { pts: StatLeader | null; ast: StatLeader | null; reb: StatLead
 type HomeMatch = {
   id: string;
   round: string;
+  phase?: string;
   date: string;
   status: "COMPLETA" | "LIVE" | "IN PROGRAMMA";
-  team1: { name: string; score: number };
-  team2: { name: string; score: number };
+  team1: { name: string; score: number; color?: string | null };
+  team2: { name: string; score: number; color?: string | null };
 };
+
+// — Match Center: prossima partita (o quella live) in evidenza —
+
+function MatchCenterCard({ match }: { match: HomeMatch }) {
+  const isLive = match.status === "LIVE";
+  return (
+    <div className="border-[3px] border-brand-orange bg-zinc-900 shadow-brand-lg relative">
+      {isLive && (
+        <div className="absolute top-4 right-4 z-10 flex items-center gap-2 bg-brand-orange text-brand-bg font-display px-3 py-1 text-xs uppercase tracking-widest -rotate-2">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-bg opacity-75" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-bg" />
+          </span>
+          Live
+        </div>
+      )}
+      <div className="flex items-center justify-between px-5 sm:px-8 py-3 border-b-2 border-white/10">
+        <span className="font-display text-xs sm:text-sm uppercase tracking-[0.2em] text-brand-orange">{match.round}</span>
+        <span className="font-mono text-xs text-ink-dim">{match.date}</span>
+      </div>
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 sm:gap-6 px-5 sm:px-10 py-8 sm:py-10">
+        <div className="flex flex-col items-center gap-3 text-center min-w-0">
+          <span className="w-8 h-1 rounded-full" style={{ backgroundColor: match.team1.color ?? "var(--color-ink-dim)" }} />
+          <span className="font-display text-base sm:text-2xl uppercase tracking-wide leading-tight text-white truncate max-w-full">{match.team1.name}</span>
+          {isLive && <span className="font-display text-4xl sm:text-6xl text-brand-orange tabular-nums leading-none">{match.team1.score}</span>}
+        </div>
+        <div className="font-display text-sm sm:text-lg text-brand-yellow border-2 border-brand-yellow rounded-full w-10 h-10 sm:w-14 sm:h-14 flex items-center justify-center shrink-0 bg-brand-bg">VS</div>
+        <div className="flex flex-col items-center gap-3 text-center min-w-0">
+          <span className="w-8 h-1 rounded-full" style={{ backgroundColor: match.team2.color ?? "var(--color-ink-dim)" }} />
+          <span className="font-display text-base sm:text-2xl uppercase tracking-wide leading-tight text-white truncate max-w-full">{match.team2.name}</span>
+          {isLive && <span className="font-display text-4xl sm:text-6xl text-brand-orange tabular-nums leading-none">{match.team2.score}</span>}
+        </div>
+      </div>
+      <div className="flex items-center justify-between gap-4 px-5 sm:px-8 py-4 border-t-2 border-white/10">
+        <Link to={`/match/calendario`} className="font-display text-xs sm:text-sm uppercase tracking-widest text-ink-dim hover:text-white transition-colors">
+          Scheda completa →
+        </Link>
+        {isLive && (
+          <Link
+            to="/live"
+            className="bg-brand-orange text-brand-bg font-display px-4 sm:px-6 py-2.5 uppercase text-xs sm:text-sm tracking-widest hover:bg-white transition-colors shadow-brand-sm"
+          >
+            Segui live
+          </Link>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// — Tournament Pulse: numeri reali dell'edizione, derivati dalle partite già caricate —
+
+function PulseStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex flex-col items-center text-center gap-1.5 px-2">
+      <span className="font-display text-3xl sm:text-5xl text-white tabular-nums leading-none">{value}</span>
+      <span className="font-display text-[9px] sm:text-[10px] uppercase tracking-[0.22em] text-brand-orange">{label}</span>
+    </div>
+  );
+}
 
 export function Home() {
   const [kickoffState, setKickoffState] = useState<{ target: Date; show: boolean } | null>(null);
@@ -121,7 +182,13 @@ export function Home() {
   }, []);
 
   // Prossima partita da giocare (o la prima live)
-  const nextMatch = allMatches.find(m => m.status === "LIVE") ?? allMatches.find(m => m.status === "IN PROGRAMMA");
+  const liveMatch = allMatches.find(m => m.status === "LIVE");
+  const nextMatch = liveMatch ?? allMatches.find(m => m.status === "IN PROGRAMMA");
+
+  // Tournament Pulse — numeri reali, derivati dalle partite già caricate (nessuna nuova chiamata API)
+  const playedMatches = allMatches.filter(m => m.status === "COMPLETA");
+  const teamsCount = new Set(allMatches.flatMap(m => [m.team1.name, m.team2.name])).size;
+  const totalPoints = playedMatches.reduce((sum, m) => sum + m.team1.score + m.team2.score, 0);
 
   // Playoff: semifinali e finale
   const semis = allMatches.filter(m => m.round.includes("Semifinale") || m.round.includes("Final Four"));
@@ -149,7 +216,7 @@ export function Home() {
       <section className="relative min-h-[70vh] md:min-h-[90vh] flex items-center justify-center overflow-hidden pt-20">
         <div className="absolute inset-0 z-0">
           <img
-            src="/assets/campetto.jpeg"
+            src="/assets/campetto.webp"
             alt="Street Basketball Court"
             className="w-full h-full object-cover object-center opacity-40 grayscale"
             fetchPriority="high"
@@ -161,6 +228,23 @@ export function Home() {
 
 
         <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-start text-left pb-8 md:pb-0">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+            className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mb-5 font-mono text-[11px] sm:text-xs uppercase tracking-[0.15em] text-ink-dim"
+          >
+            <span className="flex items-center gap-1.5">
+              <MapPin className="w-3.5 h-3.5 text-brand-orange" /> Porto Potenza Picena
+            </span>
+            <span className="w-1 h-1 rounded-full bg-zinc-700" aria-hidden="true" />
+            <span>Estate 2026</span>
+            <span className="w-1 h-1 rounded-full bg-zinc-700" aria-hidden="true" />
+            <span className={liveMatch ? "text-brand-orange" : "text-ink-dim"}>
+              {liveMatch ? "Torneo in corso" : nextMatch ? "Torneo in avvicinamento" : "Prossima edizione"}
+            </span>
+          </motion.div>
+
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -196,10 +280,16 @@ export function Home() {
                 Scopri il Torneo
               </Link>
               <Link
-                to="/match"
-                className="px-6 sm:px-8 py-4 border-[3px] border-white text-white font-display text-base sm:text-xl uppercase tracking-wider hover:bg-white hover:text-black transition-colors w-fit shadow-[6px_6px_0_var(--color-brand-orange)] sm:shadow-[8px_8px_0_var(--color-brand-orange)] hover:shadow-[4px_4px_0_var(--color-brand-orange)] transform hover:translate-x-1 hover:translate-y-1"
+                to={liveMatch ? "/live" : "/match/calendario"}
+                className="px-6 sm:px-8 py-4 border-[3px] border-white text-white font-display text-base sm:text-xl uppercase tracking-wider hover:bg-white hover:text-black transition-colors w-fit shadow-[6px_6px_0_var(--color-brand-orange)] sm:shadow-[8px_8px_0_var(--color-brand-orange)] hover:shadow-[4px_4px_0_var(--color-brand-orange)] transform hover:translate-x-1 hover:translate-y-1 flex items-center gap-2.5"
               >
-                Vedi i Match
+                {liveMatch && (
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500" />
+                  </span>
+                )}
+                {liveMatch ? "Vedi il match live" : "Vedi i Match"}
               </Link>
             </div>
 
@@ -213,6 +303,39 @@ export function Home() {
           PIAZZETTA MADNESS // STREET BASKETBALL // NO EXCUSES // PLAY HARD // PIAZZETTA MADNESS // STREET BASKETBALL // NO EXCUSES // PLAY HARD // PIAZZETTA MADNESS // STREET BASKETBALL // NO EXCUSES // PLAY HARD //&nbsp;&nbsp;PIAZZETTA MADNESS // STREET BASKETBALL // NO EXCUSES // PLAY HARD // PIAZZETTA MADNESS // STREET BASKETBALL // NO EXCUSES // PLAY HARD // PIAZZETTA MADNESS // STREET BASKETBALL // NO EXCUSES // PLAY HARD //&nbsp;
         </div>
       </div>
+
+      {/* Match Center — prossima partita o live */}
+      {nextMatch && (
+        <section className="py-12 md:py-16 bg-brand-bg">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <p className="font-display text-xs uppercase tracking-[0.35em] text-ink-dim mb-6 text-center">
+              {liveMatch ? "In corso ora" : "Prossima partita"}
+            </p>
+            <MatchCenterCard match={nextMatch} />
+          </div>
+        </section>
+      )}
+
+      {/* Tournament Pulse — stato dell'edizione in numeri reali */}
+      {allMatches.length > 0 && (
+        <section className="py-10 md:py-14 bg-zinc-900/60 border-y-2 border-white/10">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-wrap items-center justify-around gap-y-6 gap-x-4">
+              <PulseStat label="Squadre" value={String(teamsCount)} />
+              <PulseStat label="Partite Giocate" value={String(playedMatches.length)} />
+              <PulseStat label="Punti Segnati" value={String(totalPoints)} />
+              {homeStats?.pts && (
+                <div className="flex flex-col items-center text-center gap-1.5 px-2 max-w-[160px]">
+                  <span className="font-display text-3xl sm:text-5xl text-brand-orange tabular-nums leading-none">{homeStats.pts.value}</span>
+                  <span className="font-display text-[9px] sm:text-[10px] uppercase tracking-[0.22em] text-ink-dim truncate w-full">
+                    Top Scorer — {homeStats.pts.name}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Countdown */}
       {(kickoffState === null || kickoffState.show) && !countdown.over && (
@@ -302,30 +425,21 @@ export function Home() {
               </div>
             </Link>
 
-            {/* Block 3: Fase a Gironi + prossima partita */}
-            <Link to="/match#calendario" className="md:col-span-5 bg-zinc-900/50 border-[4px] border-brand-blue p-8 flex flex-col justify-between group hover:-translate-y-1 transition-transform shadow-[8px_8px_0_var(--color-brand-blue)]">
+            {/* Block 3: Fase a Gironi */}
+            <Link to="/match/gironi" className="md:col-span-5 bg-zinc-900/50 border-[4px] border-brand-blue p-8 flex flex-col justify-between group hover:-translate-y-1 transition-transform shadow-[8px_8px_0_var(--color-brand-blue)]">
               <div>
                 <Calendar className="text-brand-blue w-10 h-10 mb-6" />
                 <h3 className="font-display text-2xl sm:text-3xl uppercase text-white mb-2">1. Fase a Gironi</h3>
                 <p className="font-sans text-zinc-400">8 squadre, 2 gironi da 4. Le prime 2 di ogni girone passano ai playoff.</p>
               </div>
-              {nextMatch && (
-                <div className="border-t border-zinc-800 pt-4 mt-6">
-                  <div className="flex justify-between items-center text-xs font-mono text-zinc-500 mb-2">
-                    <span>{nextMatch.status === "LIVE" ? "In corso" : "Prossima"}</span>
-                    <span>{nextMatch.date}</span>
-                  </div>
-                  <div className="flex items-center justify-between gap-2 font-sans font-bold text-sm sm:text-base uppercase">
-                    <span className="flex-1 text-left leading-tight text-zinc-200 truncate">{nextMatch.team1.name}</span>
-                    <span className="text-brand-orange shrink-0 px-1">VS</span>
-                    <span className="flex-1 text-right leading-tight text-zinc-200 truncate">{nextMatch.team2.name}</span>
-                  </div>
-                </div>
-              )}
+              <div className="border-t border-zinc-800 pt-4 mt-6 flex items-center justify-between">
+                <span className="font-mono text-xs text-zinc-500">{playedMatches.length} partite giocate</span>
+                <span className="font-display text-xs uppercase tracking-widest text-brand-blue">Classifica →</span>
+              </div>
             </Link>
 
             {/* Block 4: Playoff Bracket con squadre reali */}
-            <Link to="/match#playoff" className="md:col-span-7 bg-zinc-900/50 border-[4px] border-brand-orange p-8 flex flex-col justify-between group hover:-translate-y-1 transition-transform shadow-[8px_8px_0_var(--color-brand-orange)]">
+            <Link to="/match/bracket" className="md:col-span-7 bg-zinc-900/50 border-[4px] border-brand-orange p-8 flex flex-col justify-between group hover:-translate-y-1 transition-transform shadow-[8px_8px_0_var(--color-brand-orange)]">
               <div>
                 <Trophy className="text-brand-orange w-10 h-10 mb-6" />
                 <h3 className="font-display text-2xl sm:text-3xl uppercase text-white mb-2">2. Playoff Bracket</h3>
@@ -437,7 +551,7 @@ export function Home() {
                   STREET CRED
                 </div>
                 <img
-                  src="/assets/beer.png"
+                  src="/assets/beer.webp"
                   alt="Mascotte Piazzetta Madness"
                   className="w-full h-full object-contain p-8 scale-100 group-hover:scale-110 transition-all duration-700"
                 />

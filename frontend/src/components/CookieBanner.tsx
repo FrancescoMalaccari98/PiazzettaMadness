@@ -41,15 +41,15 @@ export function CookieBanner() {
       role="dialog"
       aria-label="Consenso cookie"
       aria-modal="false"
-      className="fixed bottom-0 left-0 right-0 z-[200] bg-zinc-950 border-t-4 border-brand-orange shadow-[0_-8px_30px_rgba(0,0,0,0.6)]"
+      className="fixed bottom-0 left-0 right-0 z-[200] bg-zinc-950 border-t-4 border-brand-orange shadow-[0_-8px_30px_rgba(0,0,0,0.6)] overflow-x-hidden"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col md:flex-row items-start md:items-center gap-5">
 
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 w-full max-w-[310px] sm:max-w-none">
           <p className="font-display text-sm uppercase tracking-widest text-brand-orange mb-1">
             Informativa Cookie
           </p>
-          <p className="font-sans text-sm text-zinc-300 leading-relaxed">
+          <p className="font-sans text-sm text-zinc-300 leading-relaxed break-words">
             Questo sito usa cookie tecnici necessari e, con il tuo consenso, cookie analitici
             (Google Analytics) e di terze parti (Google Maps) per misurare gli accessi e mostrare mappe interattive. I tuoi dati sono trattati da{" "}
             <strong className="text-white">Francesco Emiliani</strong> nel rispetto del GDPR (Reg. UE 2016/679).{" "}
@@ -62,16 +62,16 @@ export function CookieBanner() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3 flex-shrink-0 w-full md:w-auto">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-shrink-0 w-full md:w-auto">
           <button
             onClick={handleNecessaryOnly}
-            className="flex-1 md:flex-none px-5 py-3 border-2 border-zinc-600 text-zinc-300 font-display uppercase text-xs tracking-widest hover:border-white hover:text-white transition-colors"
+            className="w-full sm:flex-1 md:w-auto md:flex-none px-5 py-3 border-2 border-zinc-600 text-zinc-300 font-display uppercase text-xs tracking-widest hover:border-white hover:text-white transition-colors"
           >
             Solo necessari
           </button>
           <button
             onClick={handleAccept}
-            className="flex-1 md:flex-none px-6 py-3 bg-brand-orange text-brand-bg font-display uppercase text-xs tracking-widest hover:bg-white transition-colors"
+            className="w-full sm:flex-1 md:w-auto md:flex-none px-6 py-3 bg-brand-orange text-brand-bg font-display uppercase text-xs tracking-widest hover:bg-white transition-colors"
           >
             Accetta tutti
           </button>

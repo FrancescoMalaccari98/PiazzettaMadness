@@ -13,7 +13,7 @@ require_once __DIR__ . '/players.php';
 function handle_statistiche_compat(PDO $pdo): void {
     require_method('GET');
 
-    $eid = get_active_edition_id($pdo);
+    $eid = get_request_edition_id($pdo);
     if (!$eid) {
         send_json([
             'tournamentMvpSlug' => '',

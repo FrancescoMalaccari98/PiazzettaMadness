@@ -57,3 +57,51 @@ function handle_editions_active(PDO $pdo): void {
         ],
     ]);
 }
+
+function handle_editions_list(PDO $pdo): void {
+    require_method('GET');
+
+    $default_id = get_default_public_edition_id($pdo);
+
+    $sql = "
+        SELECT
+            e.id,
+            e.name,
+            e.year,
+            e.status,
+            e.start_date,
+            e.end_date,
+            t.id   AS tournament_id,
+            t.name AS tournament_name
+        FROM editions e
+        JOIN tournaments t ON t.id = e.tournament_id
+        WHERE e.status IN ('Active', 'Completed')
+        ORDER BY
+            CASE e.status WHEN 'Active' THEN 0 ELSE 1 END,
+            e.year DESC,
+            COALESCE(e.end_date, e.start_date) DESC,
+            e.id DESC
+    ";
+
+    $rows = $pdo->query($sql)->fetchAll();
+    $result = [];
+
+    foreach ($rows as $row) {
+        $id = (int)$row['id'];
+        $result[] = [
+            'id'         => $id,
+            'name'       => $row['name'],
+            'year'       => (int)$row['year'],
+            'status'     => $row['status'],
+            'start_date' => $row['start_date'],
+            'end_date'   => $row['end_date'],
+            'is_default' => $default_id !== null && $id === $default_id,
+            'tournament' => [
+                'id'   => (int)$row['tournament_id'],
+                'name' => $row['tournament_name'],
+            ],
+        ];
+    }
+
+    send_json($result);
+}

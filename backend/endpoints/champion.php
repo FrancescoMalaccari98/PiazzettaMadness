@@ -3,7 +3,7 @@
 // api/endpoints/champion.php
 //
 // GET /api-web/campione
-//   → Restituisce il campione dell'edizione attiva (vincitore della Finale).
+//   → Restituisce il campione dell'edizione selezionata (vincitore della Finale).
 //     Se la Finale non è ancora stata giocata risponde con has_champion=false.
 //
 // Risposta:
@@ -19,7 +19,7 @@
 function handle_champion(PDO $pdo): void {
     require_method('GET');
 
-    $eid = get_active_edition_id($pdo);
+    $eid = get_request_edition_id($pdo);
     if (!$eid) {
         send_json(['has_champion' => false, 'team' => null, 'final' => null]);
         return;

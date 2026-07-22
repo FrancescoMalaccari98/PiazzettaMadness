@@ -30,7 +30,7 @@ export function SplashScreen({ onDone }: { onDone: () => void }) {
         >
           {/* ── SFONDO CAMPETTO ── */}
           <img
-            src="/assets/campetto.jpeg"
+            src="/assets/campetto.webp"
             alt=""
             className="absolute inset-0 w-full h-full object-cover grayscale"
             style={{ filter: "grayscale(1) brightness(0.25)" }}

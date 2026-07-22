@@ -53,6 +53,10 @@ try {
         require_once __DIR__ . '/endpoints/editions.php';
         handle_editions_active(get_pdo());
 
+    } elseif ($seg0 === 'editions' && $seg1 === '') {
+        require_once __DIR__ . '/endpoints/editions.php';
+        handle_editions_list(get_pdo());
+
     // ── /squadre  (compat) ──────────────────────────────────
     } elseif ($seg0 === 'squadre' && $seg1 === '') {
         require_once __DIR__ . '/endpoints/teams.php';
@@ -184,6 +188,11 @@ try {
         require_once __DIR__ . '/endpoints/three_point_contest.php';
         handle_three_point_contest(get_pdo());
 
+    // ── /winners ───────────────────────────────────────────
+    } elseif ($seg0 === 'winners') {
+        require_once __DIR__ . '/endpoints/winners.php';
+        handle_winners(get_pdo());
+
     // ── /sponsor ────────────────────────────────────────────
     } elseif ($seg0 === 'sponsor') {
         require_once __DIR__ . '/endpoints/sponsors.php';
@@ -198,6 +207,11 @@ try {
     } elseif ($seg0 === 'campione') {
         require_once __DIR__ . '/endpoints/champion.php';
         handle_champion(get_pdo());
+
+    // ── /assets/final-cup ───────────────────────────────────
+    } elseif ($seg0 === 'assets' && $seg1 === 'final-cup') {
+        require_once __DIR__ . '/endpoints/assets.php';
+        handle_final_cup_asset();
 
     // ── /foto ───────────────────────────────────────────────
     } elseif ($seg0 === 'foto') {

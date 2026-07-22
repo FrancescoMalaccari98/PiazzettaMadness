@@ -12,10 +12,20 @@
 
 @theme {
   --color-brand-blue: #19658c;
+  --color-brand-blue-light: #4da6cf;
   --color-brand-orange: #ea6324;
   --color-brand-yellow: #f2a71e;
   --color-brand-bg: #141414;
   --color-brand-gray: #1E1E1E;
+
+  /* Verde energia: riservato a indicatori LIVE/stato attivo, mai come
+     colore dominante o tema — un solo accento puntuale, non un neon diffuso. */
+  --color-brand-live: #b6ff3c;
+
+  /* Bianco sporco caldo per testo su fondo scuro — più caldo del bianco
+     puro, coerente con l'identità "asfalto/notte" invece che un bianco freddo. */
+  --color-ink: #f5f1ea;
+  --color-ink-dim: #a49e94;
 
   /* Overwrite the default zincs to match the design.
      bg/950 alzati da #0A0A0A a #141414: nero meno profondo, più piacevole
@@ -23,9 +33,15 @@
   --color-zinc-950: #141414;
   --color-zinc-900: #1E1E1E;
   --color-zinc-800: rgba(255,255,255,0.1);
-  
+
   --font-sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-display: "Basketball", "Arial Black", "Helvetica Neue", sans-serif;
+
+  /* Ombra piena offset (stile "adesivo/poster"), già usata ovunque come
+     valore arbitrario ripetuto — qui diventa un vero token riutilizzabile. */
+  --shadow-brand-sm: 4px 4px 0 rgba(0,0,0,0.4);
+  --shadow-brand-md: 7px 7px 0 rgba(0,0,0,0.42);
+  --shadow-brand-lg: 10px 10px 0 rgba(0,0,0,0.48);
 }
 
 @layer base {
@@ -43,6 +59,14 @@
   h1, h2, h3, h4, h5, h6 {
     @apply font-display uppercase tracking-normal;
   }
+
+  /* Focus visibile reale — mancava quasi ovunque (audit a11y). Un solo
+     stile globale coerente invece di outline browser di default incoerenti. */
+  :focus-visible {
+    outline: 2px solid var(--color-brand-yellow);
+    outline-offset: 2px;
+    border-radius: 1px;
+  }
 }
 
 .text-stroke {
@@ -52,27 +76,6 @@
 .text-stroke-active {
   -webkit-text-stroke: 2px var(--color-brand-orange, #ea6324);
   color: transparent;
-}
-
-@keyframes logoPulse {
-  0%   { transform: rotate(0deg)   scale(1);    filter: drop-shadow(0 0 4px  rgba(234,99,36,0.5)); }
-  25%  { transform: rotate(90deg)  scale(1.08); filter: drop-shadow(0 0 14px rgba(234,99,36,0.9)); }
-  50%  { transform: rotate(180deg) scale(1.12); filter: drop-shadow(0 0 20px rgba(234,99,36,1));   }
-  75%  { transform: rotate(270deg) scale(1.08); filter: drop-shadow(0 0 14px rgba(234,99,36,0.9)); }
-  100% { transform: rotate(360deg) scale(1);    filter: drop-shadow(0 0 4px  rgba(234,99,36,0.5)); }
-}
-
-@keyframes logoSpin {
-  0%   { transform: rotate(0deg)   scale(1); }
-  25%  { transform: rotate(90deg)  scale(1.08); }
-  50%  { transform: rotate(180deg) scale(1.12); }
-  75%  { transform: rotate(270deg) scale(1.08); }
-  100% { transform: rotate(360deg) scale(1); }
-}
-
-@keyframes mascotFloat {
-  0%, 100% { transform: translateY(0px) rotate(0deg); }
-  50%       { transform: translateY(-14px) rotate(1deg); }
 }
 
 /* Marquee CSS puro — gira sul compositor thread, non blocca il main thread su mobile */
@@ -88,10 +91,7 @@
 
 /* Rispetta la preferenza di riduzione del movimento */
 @media (prefers-reduced-motion: reduce) {
-  .marquee-track,
-  [style*="mascotFloat"],
-  [style*="logoPulse"],
-  [style*="logoSpin"] {
+  .marquee-track {
     animation: none !important;
   }
 }

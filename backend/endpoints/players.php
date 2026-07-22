@@ -140,7 +140,7 @@ function row_to_player(array $r): array {
 function handle_giocatori_list(PDO $pdo): void {
     require_method('GET');
 
-    $eid = get_active_edition_id($pdo);
+    $eid = get_request_edition_id($pdo);
     if (!$eid) {
         send_json([]);
         return;
@@ -156,9 +156,9 @@ function handle_giocatori_list(PDO $pdo): void {
 function handle_giocatore_detail(PDO $pdo, string $slug): void {
     require_method('GET');
 
-    $eid = get_active_edition_id($pdo);
+    $eid = get_request_edition_id($pdo);
     if (!$eid) {
-        send_error('Nessuna edizione attiva', 404);
+        send_error('Nessuna edizione pubblica', 404);
     }
 
     $rows = fetch_players_with_stats($pdo, $eid);
@@ -251,11 +251,10 @@ function fetch_match_log(PDO $pdo, int $player_id, int $team_id, int $edition_id
 function handle_player_edition_stats(PDO $pdo, int $player_id): void {
     require_method('GET');
 
-    $eid = intval_positive($_GET['edition_id'] ?? null)
-        ?? get_active_edition_id($pdo);
+    $eid = get_request_edition_id($pdo);
 
     if (!$eid) {
-        send_error('edition_id non valido o nessuna edizione attiva', 400);
+        send_error('edition_id non valido o nessuna edizione pubblica', 400);
     }
 
     // Aggregazione diretta da match_player_stats (senza v_player_edition_stats)

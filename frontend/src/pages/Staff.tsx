@@ -42,7 +42,7 @@ function StaffCard({ member, index }: { member: StaffMember; index: number }) {
       className="bg-zinc-900 border-[3px] border-zinc-800 hover:border-brand-blue group transition-all duration-300 overflow-hidden flex flex-col"
     >
       {/* barra arancio in cima, diventa blu all'hover */}
-      <div className="h-[4px] bg-brand-orange group-hover:bg-brand-blue transition-colors duration-300 shrink-0" />
+      <div className="h-[3px] bg-brand-orange group-hover:bg-brand-blue transition-colors duration-300 shrink-0" />
 
       {/* foto o placeholder iniziali */}
       <div className="aspect-square overflow-hidden relative">
@@ -55,7 +55,7 @@ function StaffCard({ member, index }: { member: StaffMember; index: number }) {
           />
         ) : (
           <div className="w-full h-full bg-zinc-800 flex items-center justify-center">
-            <span className="font-display text-7xl text-zinc-600 uppercase select-none">
+            <span className="font-display text-4xl sm:text-5xl lg:text-6xl text-zinc-600 uppercase select-none">
               {member.nome.charAt(0)}
             </span>
           </div>
@@ -65,22 +65,22 @@ function StaffCard({ member, index }: { member: StaffMember; index: number }) {
       </div>
 
       {/* contenuto card */}
-      <div className="p-6 flex-1 flex flex-col relative z-10 -mt-8">
-        <h3 className="font-display text-2xl uppercase tracking-wide text-white leading-tight mb-1">
+      <div className="p-2.5 sm:p-4 flex-1 flex flex-col relative z-10 -mt-6">
+        <h3 className="font-display text-[13px] sm:text-lg lg:text-xl uppercase tracking-wide text-white leading-tight mb-1">
           {firstName && <span className="block">{firstName}</span>}
           <span className="block">{lastName}</span>
         </h3>
-        <p className="font-sans font-bold text-brand-yellow text-xs uppercase tracking-wider mb-4 line-clamp-2">
+        <p className="font-sans font-bold text-brand-yellow text-[9px] sm:text-[10px] lg:text-xs uppercase tracking-wider mb-2 sm:mb-3 line-clamp-2">
           {member.ruolo}
         </p>
-        <p className="font-sans text-zinc-400 text-sm mb-6 flex-1">{member.bio}</p>
-        <div className="border-t border-zinc-800 pt-4 mt-auto">
+        <p className="hidden sm:block font-sans text-zinc-400 text-xs lg:text-sm mb-4 flex-1 line-clamp-3">{member.bio}</p>
+        <div className="hidden sm:block border-t border-zinc-800 pt-3 mt-auto">
           {member.ig ? (
             <a
               href={`https://instagram.com/${member.ig}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-zinc-500 hover:text-brand-orange transition-colors flex items-center gap-2 text-sm font-sans uppercase font-bold"
+              className="text-zinc-500 hover:text-brand-orange transition-colors flex items-center gap-2 text-xs font-sans uppercase font-bold truncate"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
@@ -128,7 +128,7 @@ export function Staff() {
             <h1 className="font-display text-[44px] sm:text-[70px] md:text-[120px] text-brand-orange uppercase leading-[0.8] mb-6 tracking-[-2px] md:tracking-[-4px]">
               Crew
             </h1>
-            <p className="text-base sm:text-xl font-sans text-zinc-400 max-w-3xl mx-auto">
+            <p className="text-sm sm:text-xl font-sans text-zinc-400 max-w-[260px] sm:max-w-3xl mx-auto leading-relaxed">
               Le persone dietro le quinte che rendono possibile il Piazzetta Madness.
             </p>
           </div>
@@ -147,7 +147,7 @@ export function Staff() {
                 <div className="flex-1 h-[3px] bg-zinc-800" />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+              <div className="grid grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-5">
                 {group.members.map((member, i) => (
                   <StaffCard key={member.id} member={member} index={i} />
                 ))}

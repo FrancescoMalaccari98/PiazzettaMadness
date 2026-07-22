@@ -86,6 +86,40 @@ function get_active_edition_id(PDO $pdo): ?int {
     return $eid;
 }
 
+// Ritorna l'edizione pubblica di default:
+// 1. edizione Active piu' recente
+// 2. se non esiste, edizione Completed piu' recente
+function get_default_public_edition_id(PDO $pdo): ?int {
+    if (defined('ACTIVE_EDITION_ID') && ACTIVE_EDITION_ID > 0) {
+        return (int)ACTIVE_EDITION_ID;
+    }
+
+    $stmt = $pdo->query("
+        SELECT id
+        FROM editions
+        WHERE status = 'Active'
+        ORDER BY year DESC, COALESCE(end_date, start_date) DESC, id DESC
+        LIMIT 1
+    ");
+    $row = $stmt->fetch();
+    if ($row) return (int)$row['id'];
+
+    $stmt = $pdo->query("
+        SELECT id
+        FROM editions
+        WHERE status = 'Completed'
+        ORDER BY year DESC, COALESCE(end_date, start_date) DESC, id DESC
+        LIMIT 1
+    ");
+    $row = $stmt->fetch();
+    return $row ? (int)$row['id'] : null;
+}
+
+function get_request_edition_id(PDO $pdo): ?int {
+    return intval_positive($_GET['edition_id'] ?? null)
+        ?? get_default_public_edition_id($pdo);
+}
+
 // ── Mapping status partita ──────────────────────────────────
 
 // Mappa lo status DB nel formato atteso dal frontend React.

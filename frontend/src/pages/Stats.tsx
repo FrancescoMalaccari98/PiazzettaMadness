@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence, useInView, animate as motionAnimate } from "motion/react";
 import { Trophy, Flame, Medal, ChevronDown, Star, Target, Shield, Zap, BarChart2, TrendingUp } from "lucide-react";
 import { defaultStatsData, type StatsData, type Player } from "../data/stats";
-
-const API = import.meta.env.VITE_API_URL ?? "";
+import { EditionSelector } from "../components/EditionSelector";
+import { api, type ApiEdition } from "../lib/api";
 
 function AnimatedNumber({ value, className }: { value: number; className?: string }) {
   const ref = useRef<HTMLSpanElement>(null);
@@ -36,20 +36,62 @@ const statCategories = [
 
 type StatKey = typeof statCategories[number]["key"];
 
+const statsSectionLinks = [
+  { key: "individual", label: "Classifiche Individuali", path: "/statistiche/classifiche" },
+  { key: "rosters", label: "Rosters per Squadra", path: "/statistiche/rosters" },
+] as const;
+
+type StatsView = typeof statsSectionLinks[number]["key"];
+
 export function Stats() {
+  const [editions,      setEditions]      = useState<ApiEdition[]>([]);
+  const [editionsReady, setEditionsReady] = useState(false);
+  const [selectedEditionId, setSelectedEditionId] = useState<number | null>(null);
   const [data, setData] = useState<StatsData>(defaultStatsData);
   const [activeTab, setActiveTab] = useState<StatKey>("pts");
   const [openTeam, setOpenTeam] = useState<Set<string>>(new Set());
   const [expandedTeamShooting, setExpandedTeamShooting] = useState<string | null>(null);
+  const { pathname } = useLocation();
+
+  const activeView: StatsView = pathname.endsWith("/rosters") ? "rosters" : "individual";
+  const showIndividualRankings = activeView === "individual";
+  const showRosters = activeView === "rosters";
 
   useEffect(() => {
-    fetch(`${API}/api-web/statistiche`)
-      .then(r => r.ok ? r.json() as Promise<StatsData> : null)
-      .then(d => { if (d) setData(d); })
-      .catch(() => {});
+    api.getEditions()
+      .then(list => {
+        if (!list?.length) return;
+        setEditions(list);
+        setSelectedEditionId(list.find(edition => edition.is_default)?.id ?? list[0].id);
+      })
+      .catch(() => {})
+      .finally(() => setEditionsReady(true));
   }, []);
 
+  useEffect(() => {
+    if (!editionsReady) return;
+
+    const controller = new AbortController();
+    let active = true;
+
+    setData(defaultStatsData);
+
+    api.getStatistiche(selectedEditionId ?? undefined)
+      .then(d => {
+        if (active && !controller.signal.aborted && d) {
+          setData(d as StatsData);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      active = false;
+      controller.abort();
+    };
+  }, [editionsReady, selectedEditionId]);
+
   const { players: allPlayers, matchMvps, tournamentMvpSlug } = data;
+  const selectedEdition = editions.find(edition => edition.id === selectedEditionId) ?? editions.find(edition => edition.is_default);
 
   const topLeader = (key: StatKey, n = 5) =>
     [...allPlayers].sort((a, b) => b[key] - a[key]).slice(0, n);
@@ -87,16 +129,41 @@ export function Stats() {
               </span>
             </div>
             <div className="relative z-10 text-center">
-              <p className="font-display text-brand-orange uppercase tracking-[0.3em] text-sm mb-3">Piazzetta Madness 2026</p>
+              <p className="font-display text-brand-orange uppercase tracking-[0.3em] text-sm mb-3">
+                {selectedEdition?.name ?? "Piazzetta Madness"}
+              </p>
               <h1 className="font-display text-[40px] sm:text-[65px] md:text-[120px] uppercase leading-[0.85] tracking-[-1px] md:tracking-[-4px] text-white mb-6">
                 Statistiche<br /><span className="text-brand-orange">Giocatori</span>
               </h1>
-              <p className="font-sans text-zinc-400 text-base sm:text-lg max-w-xl mx-auto">
+              <p className="font-sans text-zinc-400 text-sm sm:text-lg max-w-[260px] sm:max-w-xl mx-auto leading-relaxed">
                 I numeri non mentono. Ogni canestro, ogni assist, ogni rimbalzo strappato.
               </p>
             </div>
           </div>
         </motion.div>
+
+        <EditionSelector
+          editions={editions}
+          selectedEditionId={selectedEditionId}
+          onChange={setSelectedEditionId}
+          className="mb-6 justify-end"
+        />
+
+        <div className="mb-10 flex flex-col sm:flex-row gap-2 sm:gap-3">
+          {statsSectionLinks.map(link => (
+            <Link
+              key={link.key}
+              to={link.path}
+              className={`px-4 py-3 border-[3px] font-display text-xs sm:text-sm uppercase tracking-widest transition-colors text-center
+                ${activeView === link.key
+                  ? "border-brand-orange bg-brand-orange/10 text-brand-orange"
+                  : "border-zinc-800 text-zinc-500 hover:border-zinc-600 hover:text-white"
+                }`}
+            >
+              {link.label}
+            </Link>
+          ))}
+        </div>
 
         {/* — MVP TORNEO — (disabilitato: rimuovere "false &&" per riabilitare) */}
         {false && tournamentMvp && (
@@ -184,7 +251,7 @@ export function Stats() {
               Statistiche non ancora disponibili
             </h2>
             <Link
-              to="/match"
+              to="/match/calendario"
               className="inline-block px-8 py-4 border-[3px] border-zinc-600 text-zinc-400 font-display uppercase tracking-widest text-sm hover:border-brand-orange hover:text-brand-orange transition-colors"
             >
               Vedi il Calendario
@@ -224,7 +291,7 @@ export function Stats() {
         </section>}
 
         {/* — CLASSIFICHE INDIVIDUALI — */}
-        {hasData && <section className="mb-16">
+        {hasData && showIndividualRankings && <section className="mb-16">
           <h2 className="font-display text-lg sm:text-2xl uppercase tracking-widest text-zinc-500 mb-6 flex items-center gap-3">
             <Trophy className="w-5 h-5 text-brand-blue" /> Classifiche Individuali
           </h2>
@@ -318,7 +385,7 @@ export function Stats() {
 
 
         {/* — STATISTICHE DI SQUADRA (medie per partita) — */}
-        {data.teamStats.length > 0 && (
+        {showRosters && data.teamStats.length > 0 && (
         <section className="mb-16">
           <h2 className="font-display text-lg sm:text-2xl uppercase tracking-widest text-zinc-500 mb-6 flex items-center gap-3">
             <BarChart2 className="w-5 h-5 text-brand-blue" /> Statistiche di Squadra
@@ -426,7 +493,7 @@ export function Stats() {
         )}
 
         {/* — ROSTER PER SQUADRA — */}
-        {hasData && <section>
+        {hasData && showRosters && <section>
           <h2 className="font-display text-lg sm:text-2xl uppercase tracking-widest text-zinc-500 mb-6 flex items-center gap-3">
             <Shield className="w-5 h-5 text-brand-yellow" /> Roster per Squadra
           </h2>

@@ -1,18 +1,46 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { ChevronDown } from "lucide-react";
 import { cn } from "../lib/utils";
 
-const navLinks: { name: string; path: string; live?: boolean }[] = [
-  { name: "Home", path: "/" },
+type NavLink = {
+  name: string;
+  path: string;
+  live?: boolean;
+  children?: { name: string; path: string }[];
+};
+
+const matchSubLinks = [
+  { name: "Calendario", path: "/match/calendario" },
+  { name: "Fase a Gironi", path: "/match/gironi" },
+  { name: "Playoff Bracket", path: "/match/bracket" },
+];
+
+const statsSubLinks = [
+  { name: "Classifiche Individuali", path: "/statistiche/classifiche" },
+  { name: "Rosters per Squadra", path: "/statistiche/rosters" },
+];
+
+const leagueSubLinks = [
   { name: "Info", path: "/info" },
-  { name: "Pics", path: "/foto" },
-  { name: "Matches", path: "/match" },
-  { name: "Stats", path: "/statistiche" },
-  { name: "Crew", path: "/staff" },
   { name: "Rosters", path: "/giocatori" },
   { name: "3PTs", path: "/3pt" },
-  { name: "Sponsor", path: "/sponsor" },
+  { name: "Winners", path: "/winners" },
+];
+
+const communitySubLinks = [
+  { name: "Pics", path: "/foto" },
+  { name: "Crew", path: "/staff" },
+];
+
+const navLinks: NavLink[] = [
+  { name: "Home", path: "/" },
+  { name: "League", path: "/info", children: leagueSubLinks },
+  { name: "Matches", path: "/match/calendario", children: matchSubLinks },
   { name: "Live", path: "/live", live: true },
+  { name: "Stats", path: "/statistiche", children: statsSubLinks },
+  { name: "Community", path: "/foto", children: communitySubLinks },
+  { name: "Sponsor", path: "/sponsor" },
 ];
 
 const MenuIcon = () => (
@@ -37,13 +65,29 @@ const InstagramIcon = ({ size = 24 }: { size?: number }) => (
 
 export function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
+  const [desktopOpenMenu, setDesktopOpenMenu] = useState<string | null>(null);
+  const [mobileOpenMenu, setMobileOpenMenu] = useState<string | null>(null);
   const [scrolled, setScrolled] = useState(false);
   const [visible, setVisible] = useState(true);
   const lastScrollY = useRef(0);
   const location = useLocation();
 
+  const isPathActive = (path: string) => {
+    if (path === "/") return location.pathname === "/";
+    return location.pathname === path || location.pathname.startsWith(`${path}/`);
+  };
+
+  const isLinkActive = (link: NavLink) => {
+    if (link.children) {
+      return isPathActive(link.path) || link.children.some(child => isPathActive(child.path));
+    }
+    return isPathActive(link.path);
+  };
+
   useEffect(() => {
     setIsOpen(false);
+    setDesktopOpenMenu(null);
+    setMobileOpenMenu(null);
   }, [location.pathname, location.search, location.hash]);
 
   useEffect(() => {
@@ -136,30 +180,92 @@ export function Navigation() {
 
           {/* Desktop links */}
           <div className="hidden md:flex items-center gap-7">
-            {navLinks.map((link) => (
-              <Link
-                key={link.name}
-                to={link.path}
-                className={cn(
-                  "relative font-sans text-sm font-extrabold uppercase tracking-wide transition-colors duration-200 group py-1 flex items-center gap-1.5",
-                  location.pathname === link.path
-                    ? "text-brand-orange"
-                    : "text-zinc-300 hover:text-white"
-                )}
-              >
-                {link.live && (
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
-                  </span>
-                )}
-                {link.name}
-                <span className={cn(
-                  "absolute bottom-0 left-0 h-[2px] bg-brand-orange transition-transform duration-300 origin-left",
-                  location.pathname === link.path ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
-                )} style={{ width: '100%' }} />
-              </Link>
-            ))}
+            {navLinks.map((link) => {
+              const active = isLinkActive(link);
+              const desktopMenuOpen = desktopOpenMenu === link.name;
+
+              if (link.children) {
+                return (
+                  <div
+                    key={link.name}
+                    className="relative"
+                    onMouseEnter={() => setDesktopOpenMenu(link.name)}
+                    onMouseLeave={() => setDesktopOpenMenu(null)}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setDesktopOpenMenu(open => open === link.name ? null : link.name)}
+                      className={cn(
+                        "relative font-sans text-sm font-extrabold uppercase tracking-wide transition-colors duration-200 group py-1 flex items-center gap-1.5",
+                        active ? "text-brand-orange" : "text-zinc-300 hover:text-white"
+                      )}
+                      aria-expanded={desktopMenuOpen}
+                    >
+                      {link.name}
+                      <ChevronDown className={cn("w-3.5 h-3.5 transition-transform", desktopMenuOpen ? "rotate-180" : "rotate-0")} />
+                      <span className={cn(
+                        "absolute bottom-0 left-0 h-[2px] bg-brand-orange transition-transform duration-300 origin-left",
+                        active ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
+                      )} style={{ width: '100%' }} />
+                    </button>
+
+                    <div
+                      className={cn(
+                        "absolute left-1/2 top-full w-56 -translate-x-1/2 pt-3 transition-all duration-150",
+                        desktopMenuOpen
+                          ? "opacity-100 translate-y-0 pointer-events-auto"
+                          : "opacity-0 -translate-y-2 pointer-events-none"
+                      )}
+                    >
+                      <div className="border-[3px] border-zinc-800 bg-zinc-950 shadow-[8px_8px_0_var(--color-brand-orange)]">
+                        {link.children.map(child => {
+                          const childActive = location.pathname === child.path;
+                          return (
+                            <Link
+                              key={child.path}
+                              to={child.path}
+                              className={cn(
+                                "block px-4 py-3 border-b border-zinc-800 last:border-0 font-sans text-sm font-extrabold uppercase tracking-wide transition-colors",
+                                childActive
+                                  ? "text-brand-orange bg-brand-orange/10"
+                                  : "text-zinc-400 hover:text-white hover:bg-zinc-900"
+                              )}
+                            >
+                              {child.name}
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+
+              return (
+                <Link
+                  key={link.name}
+                  to={link.path}
+                  className={cn(
+                    "relative font-sans text-sm font-extrabold uppercase tracking-wide transition-colors duration-200 group py-1 flex items-center gap-1.5",
+                    active
+                      ? "text-brand-orange"
+                      : "text-zinc-300 hover:text-white"
+                  )}
+                >
+                  {link.live && (
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
+                    </span>
+                  )}
+                  {link.name}
+                  <span className={cn(
+                    "absolute bottom-0 left-0 h-[2px] bg-brand-orange transition-transform duration-300 origin-left",
+                    active ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
+                  )} style={{ width: '100%' }} />
+                </Link>
+              );
+            })}
 
             <a
               href="https://www.instagram.com/piazzetta_madness/"
@@ -190,27 +296,72 @@ export function Navigation() {
           className="relative md:hidden w-full bg-zinc-950/98 backdrop-blur-md border-b-2 border-brand-orange/50 overflow-hidden"
         >
           <div className="px-4 py-4 space-y-1">
-            {navLinks.map((link) => (
-              <Link
-                key={link.name}
-                to={link.path}
-                onClick={() => setIsOpen(false)}
-                className={cn(
-                  "flex items-center gap-3 px-4 py-3 font-display text-lg tracking-wider uppercase transition-colors border-l-4",
-                  location.pathname === link.path
-                    ? "text-brand-orange border-brand-orange bg-brand-orange/5"
-                    : "text-zinc-300 border-transparent hover:text-white hover:border-zinc-600 hover:bg-zinc-800/40"
-                )}
-              >
-                {link.live && (
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
-                  </span>
-                )}
-                {link.name}
-              </Link>
-            ))}
+            {navLinks.map((link) => {
+              const active = isLinkActive(link);
+              const mobileMenuOpen = mobileOpenMenu === link.name;
+
+              if (link.children) {
+                return (
+                  <div key={link.name}>
+                    <button
+                      type="button"
+                      onClick={() => setMobileOpenMenu(open => open === link.name ? null : link.name)}
+                      className={cn(
+                        "w-full flex items-center justify-between gap-3 px-4 py-3 font-display text-lg tracking-wider uppercase transition-colors border-l-4",
+                        active
+                          ? "text-brand-orange border-brand-orange bg-brand-orange/5"
+                          : "text-zinc-300 border-transparent hover:text-white hover:border-zinc-600 hover:bg-zinc-800/40"
+                      )}
+                      aria-expanded={mobileMenuOpen}
+                    >
+                      <span>{link.name}</span>
+                      <ChevronDown className={cn("w-5 h-5 transition-transform", mobileMenuOpen ? "rotate-180" : "rotate-0")} />
+                    </button>
+                    {mobileMenuOpen && (
+                      <div className="ml-4 mt-1 mb-2 border-l border-zinc-800">
+                        {link.children.map(child => (
+                          <Link
+                            key={child.path}
+                            to={child.path}
+                            onClick={() => setIsOpen(false)}
+                            className={cn(
+                              "block px-4 py-3 font-display text-lg tracking-wider uppercase transition-colors",
+                              location.pathname === child.path
+                                ? "text-brand-orange"
+                                : "text-zinc-500 hover:text-white"
+                            )}
+                          >
+                            {child.name}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
+              return (
+                <Link
+                  key={link.name}
+                  to={link.path}
+                  onClick={() => setIsOpen(false)}
+                  className={cn(
+                    "flex items-center gap-3 px-4 py-3 font-display text-lg tracking-wider uppercase transition-colors border-l-4",
+                    active
+                      ? "text-brand-orange border-brand-orange bg-brand-orange/5"
+                      : "text-zinc-300 border-transparent hover:text-white hover:border-zinc-600 hover:bg-zinc-800/40"
+                  )}
+                >
+                  {link.live && (
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
+                    </span>
+                  )}
+                  {link.name}
+                </Link>
+              );
+            })}
             <a
               href="https://www.instagram.com/piazzetta_madness/"
               target="_blank"

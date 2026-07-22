@@ -26,6 +26,7 @@ const Sponsors = lazy(() => import("./pages/Sponsors").then(m => ({ default: m.S
 const PlayerDetail = lazy(() => import("./pages/PlayerDetail").then(m => ({ default: m.PlayerDetail })));
 const Players = lazy(() => import("./pages/Players").then(m => ({ default: m.Players })));
 const ThreePointContest = lazy(() => import("./pages/ThreePointContest").then(m => ({ default: m.ThreePointContest })));
+const Winners = lazy(() => import("./pages/Winners").then(m => ({ default: m.Winners })));
 
 export function App() {
   const location = useLocation();
@@ -37,7 +38,7 @@ export function App() {
   });
 
   return (
-    <div className="flex flex-col min-h-screen bg-brand-bg">
+    <div className="flex flex-col min-h-screen bg-brand-bg overflow-x-hidden">
       {showSplash && <SplashScreen onDone={() => setShowSplash(false)} />}
       {!isProjection && <ScrollToTop />}
       {!isProjection && <Navigation />}
@@ -49,7 +50,12 @@ export function App() {
             <Route path="/info" element={<Info />} />
             <Route path="/foto" element={<Photos />} />
             <Route path="/statistiche" element={<Stats />} />
+            <Route path="/statistiche/classifiche" element={<Stats />} />
+            <Route path="/statistiche/rosters" element={<Stats />} />
             <Route path="/match" element={<Matches />} />
+            <Route path="/match/calendario" element={<Matches />} />
+            <Route path="/match/gironi" element={<Matches />} />
+            <Route path="/match/bracket" element={<Matches />} />
             <Route path="/staff" element={<Staff />} />
             <Route path="/live" element={<Live />} />
             <Route path="/scoreboard" element={<Scoreboard />} />
@@ -59,6 +65,7 @@ export function App() {
             <Route path="/statistiche/:slug" element={<PlayerDetail />} />
             <Route path="/giocatori" element={<Players />} />
             <Route path="/3pt" element={<ThreePointContest />} />
+            <Route path="/winners" element={<Winners />} />
             <Route path="*" element={
               <div className="pt-40 pb-20 text-center">
                 <p className="font-display text-[80px] md:text-[120px] text-brand-orange uppercase leading-none tracking-[-4px] mb-4">404</p>

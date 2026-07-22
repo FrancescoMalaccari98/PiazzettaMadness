@@ -223,22 +223,31 @@ function handle_match_live(PDO $pdo, int $match_id): void {
 }
 
 // ── Helper: giocatori live da match_players ───────────────────
-// Colonne reali: jersey_number, points, personal_fouls
+// Punti/falli arrivano dallo snapshot live. Il numero maglia invece
+// preferisce il roster ufficiale, cosi' eventuali snapshot errati non
+// restano visibili nella diretta pubblica.
 
 function fetch_live_players(PDO $pdo, int $match_id, int $home_id, int $away_id): array {
     $stmt = $pdo->prepare("
         SELECT
             mp.player_id,
             mp.team_id,
-            mp.jersey_number,
+            COALESCE(NULLIF(tr.jersey_number, ''), mp.jersey_number) AS jersey_number,
             mp.points,
             mp.personal_fouls,
             p.first_name,
             p.last_name
         FROM match_players mp
         JOIN players p ON p.id = mp.player_id
+        LEFT JOIN team_rosters tr
+            ON tr.team_id = mp.team_id
+           AND tr.player_id = mp.player_id
+           AND tr.is_active = 1
         WHERE mp.match_id = ?
-        ORDER BY mp.team_id, mp.jersey_number
+        ORDER BY mp.team_id,
+                 CAST(COALESCE(NULLIF(tr.jersey_number, ''), mp.jersey_number) AS UNSIGNED),
+                 p.last_name,
+                 p.first_name
     ");
     $stmt->execute([$match_id]);
     $rows = $stmt->fetchAll();

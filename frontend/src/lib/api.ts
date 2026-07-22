@@ -23,6 +23,7 @@ export interface ApiEdition {
   status: string;
   start_date: string | null;
   end_date: string | null;
+  is_default?: boolean;
   tournament: { id: number; name: string };
 }
 
@@ -97,12 +98,59 @@ export interface ApiSnapshot {
   updated_at: string | null;
 }
 
+export interface ApiWinnerEdition {
+  edition: {
+    id: number;
+    name: string;
+    year: number;
+    start_date: string | null;
+    end_date: string | null;
+  };
+  champion: {
+    team_id: number | null;
+    team_name: string | null;
+    photo: string | null;
+    description: string;
+    final_match: {
+      id: number;
+      home_team: string | null;
+      away_team: string | null;
+      home_score: number | null;
+      away_score: number | null;
+    } | null;
+  };
+  threePoint: {
+    player_id: number;
+    player_name: string;
+    team_id: number;
+    team_name: string;
+    jersey_number: number | null;
+    final_score: number;
+    tiebreak_score: number;
+    total_score: number;
+    photo: string | null;
+    description: string;
+  } | null;
+}
+
+export interface ApiWinnersResponse {
+  editions: ApiWinnerEdition[];
+}
+
+export interface ApiFinalCupAsset {
+  found: boolean;
+  src: string | null;
+}
+
 // ── Endpoint functions ──────────────────────────────────────
 
 export const api = {
   // Edizione attiva
   getActiveEdition: () =>
     apiFetch<ApiEdition>("/api-web/editions/active"),
+
+  getEditions: () =>
+    apiFetch<ApiEdition[]>("/api-web/editions"),
 
   // Squadre
   getSquadre: () =>
@@ -132,15 +180,15 @@ export const api = {
     apiFetch<ApiLiveState>(`/api-web/matches/${matchId}/live`),
 
   // Statistiche
-  getStatistiche: () =>
-    apiFetch<unknown>("/api-web/statistiche"),
+  getStatistiche: (editionId?: number) =>
+    apiFetch<unknown>(`/api-web/statistiche${editionId ? `?edition_id=${editionId}` : ""}`),
 
   getMatchStats: (matchId: number) =>
     apiFetch<unknown>(`/api-web/matches/${matchId}/stats`),
 
   // Giocatori
-  getGiocatori: () =>
-    apiFetch<unknown[]>("/api-web/giocatori"),
+  getGiocatori: (editionId?: number) =>
+    apiFetch<unknown[]>(`/api-web/giocatori${editionId ? `?edition_id=${editionId}` : ""}`),
 
   getGiocatore: (slug: string) =>
     apiFetch<unknown>(`/api-web/giocatori/${slug}`),
@@ -155,4 +203,12 @@ export const api = {
   // Snapshot
   getSnapshot: (matchId: number, kind: "live" | "stats") =>
     apiFetch<ApiSnapshot>(`/api-web/snapshots/${matchId}/${kind}`),
+
+  // Albo d'oro
+  getWinners: () =>
+    apiFetch<ApiWinnersResponse>("/api-web/winners"),
+
+  // Asset opzionale coppa finale
+  getFinalCupAsset: () =>
+    apiFetch<ApiFinalCupAsset>("/api-web/assets/final-cup"),
 };

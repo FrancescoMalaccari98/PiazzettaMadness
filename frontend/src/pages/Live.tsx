@@ -449,7 +449,7 @@ function EmptyState({ message }: { message?: string }) {
         {message ?? "Al momento non ci sono partite in diretta."} Torna durante le giornate del torneo per seguire il punteggio in tempo reale.
       </p>
       <a
-        href="/match"
+        href="/match/calendario"
         className="inline-block bg-brand-orange text-brand-bg font-display uppercase tracking-widest px-8 py-4 text-lg hover:bg-white transition-colors"
       >
         Vedi il calendario

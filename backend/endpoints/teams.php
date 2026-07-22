@@ -15,9 +15,9 @@
 function handle_squadre_compat(PDO $pdo): void {
     require_method('GET');
 
-    $eid = get_active_edition_id($pdo);
+    $eid = get_request_edition_id($pdo);
     if (!$eid) {
-        send_json([]); // nessuna edizione attiva → lista vuota (fallback frontend)
+        send_json([]); // nessuna edizione pubblica → lista vuota (fallback frontend)
         return;
     }
 
@@ -54,11 +54,10 @@ function handle_squadre_compat(PDO $pdo): void {
 function handle_teams_list(PDO $pdo): void {
     require_method('GET');
 
-    $eid = intval_positive($_GET['edition_id'] ?? null)
-        ?? get_active_edition_id($pdo);
+    $eid = get_request_edition_id($pdo);
 
     if (!$eid) {
-        send_error('edition_id non valido o nessuna edizione attiva', 400);
+        send_error('edition_id non valido o nessuna edizione pubblica', 400);
     }
 
     $sql = "
@@ -164,11 +163,10 @@ function handle_team_roster(PDO $pdo, int $team_id): void {
 function handle_team_edition_stats(PDO $pdo, int $team_id): void {
     require_method('GET');
 
-    $eid = intval_positive($_GET['edition_id'] ?? null)
-        ?? get_active_edition_id($pdo);
+    $eid = get_request_edition_id($pdo);
 
     if (!$eid) {
-        send_error('edition_id non valido o nessuna edizione attiva', 400);
+        send_error('edition_id non valido o nessuna edizione pubblica', 400);
     }
 
     // Aggregazione diretta da match_team_stats (senza v_team_edition_stats)

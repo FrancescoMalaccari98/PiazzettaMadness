@@ -81,7 +81,7 @@ function fetch_match_periods(PDO $pdo, int $match_id): array {
 function handle_partite_compat(PDO $pdo): void {
     require_method('GET');
 
-    $eid = get_active_edition_id($pdo);
+    $eid = get_request_edition_id($pdo);
     if (!$eid) {
         send_json([]);
         return;
@@ -172,9 +172,13 @@ function handle_partite_compat(PDO $pdo): void {
 function handle_partita_detail_compat(PDO $pdo, int $match_id): void {
     require_method('GET');
 
+    $eid = intval_positive($_GET['edition_id'] ?? null);
     $match = fetch_match_row($pdo, $match_id);
     if (!$match) {
         send_error('Partita non trovata', 404);
+    }
+    if ($eid && (int)$match['edition_id'] !== $eid) {
+        send_error('Partita non trovata per questa edizione', 404);
     }
 
     // Parziali per quarto
@@ -359,11 +363,10 @@ function handle_partita_detail_compat(PDO $pdo, int $match_id): void {
 function handle_matches_list(PDO $pdo): void {
     require_method('GET');
 
-    $eid = intval_positive($_GET['edition_id'] ?? null)
-        ?? get_active_edition_id($pdo);
+    $eid = get_request_edition_id($pdo);
 
     if (!$eid) {
-        send_error('edition_id non valido o nessuna edizione attiva', 400);
+        send_error('edition_id non valido o nessuna edizione pubblica', 400);
     }
 
     $sql = "

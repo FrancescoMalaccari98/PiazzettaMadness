@@ -1,7 +1,9 @@
-﻿import { useState, useEffect } from "react";
+﻿import { useState, useEffect, type ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { Trophy, Flame, X, Swords, Calendar, ChevronRight } from "lucide-react";
+import { EditionSelector } from "../components/EditionSelector";
+import { api, type ApiEdition } from "../lib/api";
 
 // ── Helper link squadra → pagina Players filtrata su quella squadra ──
 const teamLink = (team: string) => `/giocatori?team=${encodeURIComponent(team)}`;
@@ -273,6 +275,12 @@ const defaultGroups: Group[] = [
 
 type Bracket = { semis: Match[]; third: Match | null; final: Match | null };
 
+function getMatchWinnerName(match: Match | null): string | null {
+  if (!match || match.status !== "COMPLETA") return null;
+  if (match.team1.score === match.team2.score) return null;
+  return match.team1.score > match.team2.score ? match.team1.name : match.team2.name;
+}
+
 // — Classifica —
 
 type StandingRow = {
@@ -395,43 +403,164 @@ function GroupMatchRow({ match, onClick }: { match: Match; onClick: () => void }
   );
 }
 
-// — Match card (playoff) —
+// — Match card (playoff) — stile "biglietto": ombra piena, striscia colore
+// squadra reale, punteggio nel font Basketball, riga vincente in oro pieno.
 
-function PlayoffCard({ match, isFinal = false, small = false, onClick }: { match: Match; isFinal?: boolean; small?: boolean; onClick?: () => void }) {
+function PlayoffCard({ match, tone = "orange", onClick }: { match: Match; tone?: "orange" | "blue"; onClick?: () => void }) {
   const isLive = match.status === "LIVE";
   const isPending = match.status === "IN PROGRAMMA";
-  const borderColor = isFinal ? "border-brand-yellow" : isLive ? "border-brand-orange" : isPending ? "border-zinc-700" : "border-zinc-800";
+  const team1Wins = !isPending && match.team1.score > match.team2.score;
+  const team2Wins = !isPending && match.team2.score > match.team1.score;
+  const borderColor = tone === "blue" ? "border-brand-blue-light" : "border-brand-orange";
+  const roundColor = tone === "blue" ? "text-brand-blue-light" : "text-brand-orange";
 
   return (
     <div
       onClick={onClick}
-      className={`border-[3px] ${borderColor} bg-zinc-950 cursor-pointer hover:border-white transition-all group relative
-        shadow-[4px_4px_0_rgba(0,0,0,0.4)] hover:-translate-y-0.5 flex flex-col`}
+      className={`relative border-[2.5px] ${borderColor} bg-zinc-900 cursor-pointer transition-all shadow-brand-md hover:-translate-y-1 hover:shadow-brand-lg flex flex-col`}
     >
       {isLive && (
-        <div className="absolute -top-3 -right-3 bg-brand-orange text-brand-bg font-display px-2 py-0.5 text-xs uppercase rotate-3 z-10 animate-pulse">
+        <div className="absolute top-3 right-3 bg-brand-orange text-brand-bg font-display px-2 py-0.5 text-xs uppercase rotate-2 z-10 animate-pulse">
           LIVE
         </div>
       )}
-      <div className={`flex justify-between items-center border-b border-zinc-800 bg-zinc-900 ${small ? "px-3 py-1.5" : "px-4 py-2"}`}>
-        <span className={`font-display text-zinc-400 uppercase tracking-widest ${small ? "text-[10px]" : "text-xs"}`}>{match.round}</span>
-        <span className={`font-sans text-zinc-500 ${small ? "text-[10px]" : "text-xs"}`}>{match.date}</span>
+      <div className="flex justify-between items-baseline px-4 py-2.5">
+        <span className={`font-display uppercase tracking-[0.16em] text-xs ${roundColor}`}>{match.round}</span>
+        <span className="font-mono text-[11px] text-ink-dim">{match.date}</span>
       </div>
-      <div className={`flex flex-col ${small ? "p-3 gap-2" : "p-4 gap-3"}`}>
-        <div className={`flex justify-between items-center ${!isPending && match.team1.score > match.team2.score ? "text-white" : "text-zinc-500"}`}>
-          <div className="flex items-center gap-1.5 min-w-0 flex-1">
-            {match.team1.color && <span className="w-[3px] h-4 shrink-0" style={{ backgroundColor: match.team1.color }} />}
-            <TeamLink name={match.team1.name} className={`font-sans font-[900] tracking-tight uppercase truncate block ${small ? "text-xs" : "text-sm"}`} />
-          </div>
-          <span className={`font-mono font-bold shrink-0 ${small ? "text-lg" : "text-2xl"}`}>{isPending ? "—" : match.team1.score}</span>
+      <TicketPerforation />
+      <div className="flex flex-col gap-2 p-3.5">
+        <TicketRow name={match.team1.name} score={match.team1.score} win={team1Wins} pending={isPending} color={match.team1.color} />
+        <TicketRow name={match.team2.name} score={match.team2.score} win={team2Wins} pending={isPending} color={match.team2.color} />
+      </div>
+    </div>
+  );
+}
+
+// Perforazione stile "biglietto staccabile" tra intestazione e tabellino.
+function TicketPerforation() {
+  return (
+    <div className="relative mx-3.5 border-t-2 border-dashed border-white/15" aria-hidden="true">
+      <span className="absolute -left-[22px] -top-2 w-4 h-4 rounded-full bg-brand-bg" />
+      <span className="absolute -right-[22px] -top-2 w-4 h-4 rounded-full bg-brand-bg" />
+    </div>
+  );
+}
+
+function TicketRow({ name, score, win, pending, color }: { name: string; score: number; win: boolean; pending: boolean; color?: string | null }) {
+  return (
+    <div className={`relative flex items-stretch overflow-hidden ${win ? "bg-brand-yellow" : "bg-white/[0.04]"}`}>
+      <span className="w-[5px] shrink-0" style={{ backgroundColor: color ?? "var(--color-ink-dim)" }} />
+      <div className="flex-1 min-w-0 flex items-center justify-between gap-2.5 px-3 py-2">
+        <TeamLink name={name} className={`font-sans font-[800] uppercase tracking-[0.01em] text-[12.5px] truncate ${win ? "text-zinc-950" : "text-ink-dim"}`} />
+        <span className={`font-display text-2xl shrink-0 tabular-nums ${win ? "text-zinc-950" : "text-ink-dim"}`}>{pending ? "—" : score}</span>
+      </div>
+    </div>
+  );
+}
+
+// — Finale: sfida diretta invece della lista a due righe —
+
+function FinaleShowdown({ match, onClick, isChampionDecided }: { match: Match; onClick?: () => void; isChampionDecided: boolean }) {
+  const isLive = match.status === "LIVE";
+  const isPending = match.status === "IN PROGRAMMA";
+  const team1Wins = !isPending && match.team1.score > match.team2.score;
+  const team2Wins = !isPending && match.team2.score > match.team1.score;
+
+  return (
+    <div
+      onClick={onClick}
+      className="relative border-[2.5px] border-brand-yellow bg-zinc-900 cursor-pointer transition-all shadow-brand-lg hover:-translate-y-1 flex flex-col"
+    >
+      {isLive && (
+        <div className="absolute top-3 right-3 bg-brand-orange text-brand-bg font-display px-2 py-0.5 text-xs uppercase rotate-2 z-10 animate-pulse">
+          LIVE
         </div>
-        <div className={`flex justify-between items-center ${!isPending && match.team2.score > match.team1.score ? "text-white" : "text-zinc-500"}`}>
-          <div className="flex items-center gap-1.5 min-w-0 flex-1">
-            {match.team2.color && <span className="w-[3px] h-4 shrink-0" style={{ backgroundColor: match.team2.color }} />}
-            <TeamLink name={match.team2.name} className={`font-sans font-[900] tracking-tight uppercase truncate block ${small ? "text-xs" : "text-sm"}`} />
-          </div>
-          <span className={`font-mono font-bold shrink-0 ${small ? "text-lg" : "text-2xl"}`}>{isPending ? "—" : match.team2.score}</span>
+      )}
+      <div className="flex justify-between items-baseline px-4 py-2.5">
+        <span className="font-display uppercase tracking-[0.16em] text-[13px] text-brand-yellow">Finale</span>
+        <span className="font-mono text-[11px] text-ink-dim">{match.date}</span>
+      </div>
+      <TicketPerforation />
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-3 sm:px-4 py-6">
+        <ShowdownSide name={match.team1.name} score={match.team1.score} win={team1Wins} pending={isPending} color={match.team1.color} />
+        <div className="font-display text-xs text-brand-yellow bg-zinc-950 border-2 border-brand-yellow rounded-full w-9 h-9 flex items-center justify-center shrink-0">VS</div>
+        <ShowdownSide name={match.team2.name} score={match.team2.score} win={team2Wins} pending={isPending} color={match.team2.color} />
+      </div>
+      {isChampionDecided && (
+        <div className="absolute -top-4 -right-4 w-[54px] h-[54px] rounded-full border-2 border-dashed border-zinc-950 bg-brand-yellow flex items-center justify-center rotate-[11deg] shadow-brand-sm z-10">
+          <span className="font-display text-[9px] tracking-[0.08em] text-zinc-950 text-center leading-tight px-1">CAMPIONE</span>
         </div>
+      )}
+    </div>
+  );
+}
+
+function ShowdownSide({ name, score, win, pending, color }: { name: string; score: number; win: boolean; pending: boolean; color?: string | null }) {
+  return (
+    <div className="flex flex-col items-center gap-2 text-center min-w-0">
+      <TeamLink name={name} className={`font-display text-sm sm:text-lg tracking-wide leading-tight ${win ? "text-brand-yellow" : "text-ink-dim"}`} />
+      <span className={`font-display text-3xl sm:text-[44px] leading-none ${win ? "text-white" : "text-ink-dim opacity-75"}`}>{pending ? "—" : score}</span>
+      <span className="w-9 h-1 rounded-full" style={{ backgroundColor: color ?? "var(--color-ink-dim)", opacity: win ? 1 : 0.4 }} />
+    </div>
+  );
+}
+
+// — Premiazione: la foto del campetto resta solo qui, in un formato corretto —
+
+function ChampionHero({ name, finalCupSrc, onCupError, finalScore }: { name: string | null; finalCupSrc: string | null; onCupError: () => void; finalScore: string | null }) {
+  return (
+    <div className="relative border-[3px] border-brand-yellow shadow-brand-lg overflow-hidden aspect-[16/9] sm:aspect-[16/7] flex items-end">
+      <div
+        className="absolute -inset-[6%] bg-cover bg-no-repeat grayscale contrast-[1.1] brightness-[0.85] blur-[1.2px]"
+        style={{ backgroundImage: 'url("/assets/playoff-bracket-bg.jpg")', backgroundPosition: "55% 58%" }}
+        aria-hidden="true"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/55 to-black/15" aria-hidden="true" />
+      <div className="absolute inset-0 mix-blend-color bg-gradient-to-tr from-brand-orange/15 to-brand-blue/20" aria-hidden="true" />
+      <div className="relative z-[2] w-full p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4">
+        <div>
+          <div className="w-9 h-9 sm:w-10 sm:h-10 mb-1.5">
+            {finalCupSrc ? (
+              <img src={finalCupSrc} alt="" className="w-full h-full object-contain" onError={onCupError} />
+            ) : (
+              <Trophy className="w-full h-full text-brand-yellow" />
+            )}
+          </div>
+          <span className="font-display text-[9.5px] tracking-[0.3em] text-brand-yellow/70 block">Vincitore</span>
+          {name ? (
+            <TeamLink name={name} className="font-display text-2xl sm:text-4xl tracking-wide leading-none mt-1.5 block text-brand-yellow" />
+          ) : (
+            <span className="font-display text-2xl sm:text-4xl tracking-wide leading-none mt-1.5 block text-white/20">???</span>
+          )}
+        </div>
+        {finalScore && (
+          <div className="text-left sm:text-right font-display text-ink-dim text-[11px] tracking-[0.1em] shrink-0">
+            Finale
+            <b className="block text-white text-xl sm:text-2xl font-normal mt-0.5">{finalScore}</b>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// — Scaletta verticale: un badge numerato, niente linee da disallineare —
+
+function BracketStep({ icon, number, tone, title, time, children }: { icon?: string; number?: string; tone: "gold" | "blue" | "orange"; title: string; time?: string; children: ReactNode }) {
+  const badgeColor = tone === "gold" ? "border-brand-yellow text-brand-yellow" : tone === "blue" ? "border-brand-blue-light text-brand-blue-light" : "border-brand-orange text-brand-orange";
+  const titleColor = tone === "gold" ? "text-brand-yellow" : "text-ink-dim";
+  return (
+    <div className="relative flex gap-5 sm:gap-6">
+      <div className={`relative z-10 shrink-0 w-10 h-10 rounded-full border-2 flex items-center justify-center font-display text-sm bg-brand-bg ${badgeColor}`}>
+        {icon ?? number}
+      </div>
+      <div className="flex-1 min-w-0 pt-2">
+        <div className="flex items-baseline justify-between gap-3 mb-3.5">
+          <span className={`font-display text-[13px] tracking-[0.18em] uppercase ${titleColor}`}>{title}</span>
+          {time && <span className="font-mono text-[11px] text-ink-dim">{time}</span>}
+        </div>
+        {children}
       </div>
     </div>
   );
@@ -441,7 +570,18 @@ function PlayoffCard({ match, isFinal = false, small = false, onClick }: { match
 
 const API = import.meta.env.VITE_API_URL ?? "";
 
+const matchSectionLinks = [
+  { key: "calendar", label: "Calendario", path: "/match/calendario" },
+  { key: "groups", label: "Fase a Gironi", path: "/match/gironi" },
+  { key: "bracket", label: "Playoff Bracket", path: "/match/bracket" },
+] as const;
+
+type MatchView = typeof matchSectionLinks[number]["key"];
+
 export function Matches() {
+  const [editions,      setEditions]      = useState<ApiEdition[]>([]);
+  const [editionsReady, setEditionsReady] = useState(false);
+  const [selectedEditionId, setSelectedEditionId] = useState<number | null>(null);
   const [groups,        setGroups]        = useState<Group[]>(defaultGroups);
   const [bracketMatches, setBracket]      = useState<Bracket>({ semis: [], third: null, final: null });
   const [standings,     setStandings]     = useState<StandingRow[]>([]);
@@ -449,11 +589,52 @@ export function Matches() {
   const [matchDetail,   setMatchDetail]   = useState<MatchDetail | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [champion,      setChampion]      = useState<string | null>(null);
+  const [finalCupSrc,   setFinalCupSrc]   = useState<string | null>(null);
   // Mappa nome giocatore (minuscolo) → slug, per linkare i nomi nei tabellini
   // alla pagina statistiche del giocatore.
   const [playerSlugs, setPlayerSlugs] = useState<Record<string, string>>({});
   const getPlayerSlug = (nome: string) => playerSlugs[nome.trim().toLowerCase()];
-  const { hash } = useLocation();
+  const { hash, pathname } = useLocation();
+
+  const activeView: MatchView =
+    pathname.endsWith("/gironi") || hash === "#gironi"
+      ? "groups"
+      : pathname.endsWith("/bracket") || hash === "#playoff"
+        ? "bracket"
+        : "calendar";
+
+  const showCalendar = activeView === "calendar";
+  const showGroups = activeView === "groups";
+  const showBracket = activeView === "bracket";
+  const selectedEdition = editions.find(edition => edition.id === selectedEditionId) ?? editions.find(edition => edition.is_default);
+  const editionQuery = selectedEditionId ? `?edition_id=${selectedEditionId}` : "";
+
+  useEffect(() => {
+    api.getEditions()
+      .then(list => {
+        if (!list?.length) return;
+        setEditions(list);
+        setSelectedEditionId(list.find(edition => edition.is_default)?.id ?? list[0].id);
+      })
+      .catch(() => {})
+      .finally(() => setEditionsReady(true));
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    api.getFinalCupAsset()
+      .then(asset => {
+        if (!cancelled && asset?.found && asset.src) {
+          setFinalCupSrc(asset.src);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Scrolla alla sezione indicata dall'hash dopo che i dati sono caricati.
   // Usa window.scrollTo con coordinate esplicite per gestire correttamente
@@ -472,7 +653,11 @@ export function Matches() {
   }, [hash]);
 
   useEffect(() => {
-    fetch(`${API}/api-web/giocatori`)
+    if (!editionsReady) return;
+
+    const controller = new AbortController();
+
+    fetch(`${API}/api-web/giocatori${editionQuery}`, { signal: controller.signal })
       .then(r => r.ok ? r.json() as Promise<{ name: string; slug: string }[]> : null)
       .then(list => {
         if (!list) return;
@@ -481,25 +666,46 @@ export function Matches() {
         setPlayerSlugs(map);
       })
       .catch(() => {});
-  }, []);
+
+    return () => controller.abort();
+  }, [editionsReady, editionQuery]);
 
   useEffect(() => {
-    fetch(`${API}/api-web/campione`)
+    if (!editionsReady) return;
+
+    const controller = new AbortController();
+    setChampion(null);
+
+    fetch(`${API}/api-web/campione${editionQuery}`, { signal: controller.signal })
       .then(r => r.ok ? r.json() : null)
       .then((data: { has_champion: boolean; team: { name: string } | null } | null) => {
-        if (data?.has_champion && data.team) setChampion(data.team.name);
+        setChampion(data?.has_champion && data.team ? data.team.name : null);
       })
       .catch(() => {});
-  }, []);
+
+    return () => controller.abort();
+  }, [editionsReady, editionQuery]);
 
   // Fetch squadre + partite + standings in parallelo dal backend
   useEffect(() => {
+    if (!editionsReady) return;
+
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    setGroups(defaultGroups);
+    setBracket({ semis: [], third: null, final: null });
+    setStandings([]);
+    setSelectedMatch(null);
+    setMatchDetail(null);
+
     Promise.all([
-      fetch(`${API}/api-web/squadre`).then(r => r.ok ? r.json() as Promise<TeamApi[]> : null),
-      fetch(`${API}/api-web/partite`).then(r => r.ok ? r.json() as Promise<Match[]>   : null),
-      fetch(`${API}/api-web/standings`).then(r => r.ok ? r.json() as Promise<StandingRow[]> : null),
+      fetch(`${API}/api-web/squadre${editionQuery}`, { signal }).then(r => r.ok ? r.json() as Promise<TeamApi[]> : null),
+      fetch(`${API}/api-web/partite${editionQuery}`, { signal }).then(r => r.ok ? r.json() as Promise<Match[]>   : null),
+      fetch(`${API}/api-web/standings${editionQuery}`, { signal }).then(r => r.ok ? r.json() as Promise<StandingRow[]> : null),
     ])
     .then(([squadre, partite, stnd]) => {
+      if (signal.aborted) return;
       if (!squadre && !partite) return; // backend non disponibile
 
       setGroups(defaultGroups.map(g => ({
@@ -514,7 +720,7 @@ export function Matches() {
           : g.matches,
       })));
 
-      if (stnd) setStandings(stnd);
+      setStandings(stnd ?? []);
 
       // Aggiorna bracket con partite playoff reali dal campo phase
       if (partite) {
@@ -526,7 +732,9 @@ export function Matches() {
       }
     })
     .catch(() => {}); // errore di rete → restano i dati statici
-  }, []);
+
+    return () => controller.abort();
+  }, [editionsReady, editionQuery]);
 
   const handleSelectMatch = async (match: Match) => {
     setSelectedMatch(match);
@@ -534,7 +742,8 @@ export function Matches() {
     if (match.status !== "COMPLETA") return;
     setLoadingDetail(true);
     try {
-      const res = await fetch(`${API}/api-web/partite/${match.id}`);
+      const detailQuery = editionQuery ? `${editionQuery}` : "";
+      const res = await fetch(`${API}/api-web/partite/${match.id}${detailQuery}`);
       if (res.ok) setMatchDetail(await res.json());
     } catch {
       // backend non ancora disponibile — mostra il summary base
@@ -550,6 +759,13 @@ export function Matches() {
     ...(bracketMatches.third ? [resolveMatch(bracketMatches.third)] : []),
     ...(bracketMatches.final ? [resolveMatch(bracketMatches.final)] : []),
   ];
+  const resolvedFinal = bracketMatches.final ? resolveMatch(bracketMatches.final) : null;
+  const bracketChampion = champion ?? getMatchWinnerName(resolvedFinal);
+  const semiOne = bracketMatches.semis[0] ?? null;
+  const semiTwo = bracketMatches.semis[1] ?? null;
+  const resolvedSemiOne = semiOne ? resolveMatch(semiOne, 0) : null;
+  const resolvedSemiTwo = semiTwo ? resolveMatch(semiTwo, 1) : null;
+  const resolvedThird = bracketMatches.third ? resolveMatch(bracketMatches.third) : null;
 
   const MESI: Record<string, number> = { Gen:1,Feb:2,Mar:3,Apr:4,Mag:5,Giu:6,Lug:7,Ago:8,Set:9,Ott:10,Nov:11,Dic:12 };
   const parseDayKey = (day: string) => {
@@ -588,19 +804,45 @@ export function Matches() {
             </span>
           </div>
           <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center pb-12">
-            <p className="font-display text-brand-orange uppercase tracking-[0.3em] text-sm mb-3">Piazzetta Madness 2026</p>
+            <p className="font-display text-brand-orange uppercase tracking-[0.3em] text-sm mb-3">
+              {selectedEdition?.name ?? "Piazzetta Madness"}
+            </p>
             <h1 className="font-display text-[56px] sm:text-[80px] md:text-[120px] text-brand-orange uppercase leading-[0.8] mb-6 tracking-[-2px] md:tracking-[-4px]">
               Matches
             </h1>
-            <p className="text-base sm:text-xl font-sans text-zinc-400 max-w-2xl mx-auto">
+            <p className="text-sm sm:text-xl font-sans text-zinc-400 max-w-[260px] sm:max-w-2xl mx-auto leading-relaxed">
               Dal girone all'italiana fino alla pazzesca finale dei playoff. Ripercorri ogni canestro.
             </p>
           </div>
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col">
+        <div className="mb-10 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-5">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+            {matchSectionLinks.map(link => (
+              <Link
+                key={link.key}
+                to={link.path}
+                className={`px-4 py-3 border-[3px] font-display text-xs sm:text-sm uppercase tracking-widest transition-colors text-center
+                  ${activeView === link.key
+                    ? "border-brand-orange bg-brand-orange/10 text-brand-orange"
+                    : "border-zinc-800 text-zinc-500 hover:border-zinc-600 hover:text-white"
+                  }`}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </div>
+          <EditionSelector
+            editions={editions}
+            selectedEditionId={selectedEditionId}
+            onChange={setSelectedEditionId}
+          />
+        </div>
+
         {/* — CALENDARIO — */}
-        <div id="calendario" className={`mb-24 scroll-mt-32 ${gironiFiniti ? "order-3" : "order-1"}`}>
+        {showCalendar && (
+        <div id="calendario" className="mb-24 scroll-mt-32">
           <h2 className="font-display text-2xl sm:text-4xl md:text-5xl uppercase flex items-center gap-4 border-t-[6px] border-zinc-800 pt-6 pb-10 text-white">
             <Calendar className="w-6 h-6 sm:w-10 sm:h-10 text-brand-orange shrink-0" /> Calendario
           </h2>
@@ -665,9 +907,11 @@ export function Matches() {
             ))}
           </div>
         </div>
+        )}
 
         {/* — FASE A GIRONI — */}
-        <div id="gironi" className="mb-24 order-2 scroll-mt-32">
+        {showGroups && (
+        <div id="gironi" className="mb-24 scroll-mt-32">
           <h2 className="font-display text-2xl sm:text-4xl md:text-5xl uppercase flex items-center gap-4 border-t-[6px] border-zinc-800 pt-6 pb-10 text-white">
             <Calendar className="w-6 h-6 sm:w-10 sm:h-10 text-brand-blue shrink-0" /> Fase a Gironi
           </h2>
@@ -708,89 +952,78 @@ export function Matches() {
             ))}
           </div>
         </div>
+        )}
 
         {/* — PLAYOFF — solo se ci sono partite playoff nel DB — */}
-        <div id="playoff" className={`scroll-mt-32 ${gironiFiniti ? "order-1" : "order-3"}`}>
+        {showBracket && (
+        <div id="playoff" className="scroll-mt-32">
         {(bracketMatches.semis.length > 0 || bracketMatches.final !== null || bracketMatches.third !== null) && (
         <div>
           <h2 className="font-display text-2xl sm:text-4xl md:text-5xl uppercase flex items-center gap-4 border-t-[6px] border-zinc-800 pt-6 pb-10 text-white">
             <Swords className="w-6 h-6 sm:w-10 sm:h-10 text-brand-orange shrink-0" /> Playoff Bracket
           </h2>
 
-          <div className="overflow-x-auto pb-6 cursor-grab active:cursor-grabbing">
-            <div className="min-w-[900px] flex bg-zinc-900/40 p-8 md:p-12 border-[4px] border-zinc-800 shadow-inner">
-
-              {/* ── Colonna semifinali ── */}
-              {bracketMatches.semis.length > 0 && (
-                <>
-                  <div className="flex flex-col justify-around w-[34%] pr-8 gap-16 relative z-10">
-                    {bracketMatches.semis.map((match, i) => (
-                      <div key={match.id} className="relative">
-                        <PlayoffCard match={resolveMatch(match, i)} onClick={() => handleSelectMatch(match)} />
-                        <div className="absolute top-1/2 -right-8 w-8 h-[3px] bg-zinc-700" />
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* ── Connettore: barra verticale + due uscite orizzontali ── */}
-                  <div className="w-0 relative z-0">
-                    <div className="absolute top-[25%] bottom-[25%] left-0 w-[3px] bg-zinc-700" />
-                    <div className="absolute top-[37%] left-0 w-8 h-[3px] bg-brand-orange" />
-                    {bracketMatches.third && (
-                      <div className="absolute top-[63%] left-0 w-8 h-[3px] bg-zinc-600" />
-                    )}
-                  </div>
-                </>
+          <div className="relative">
+            <div className="absolute left-[19px] top-6 bottom-6 w-0.5 bg-white/10" aria-hidden="true" />
+            <div className="flex flex-col gap-10">
+              {bracketMatches.final && (
+                <BracketStep icon="🏆" tone="gold" title="Campione del torneo">
+                  <ChampionHero
+                    name={bracketChampion}
+                    finalCupSrc={finalCupSrc}
+                    onCupError={() => setFinalCupSrc(null)}
+                    finalScore={resolvedFinal ? `${resolvedFinal.team1.score}–${resolvedFinal.team2.score}` : null}
+                  />
+                </BracketStep>
               )}
 
-              {/* ── Colonna destra: Finalissima (+ Campione) sopra, 3°-4° sotto ── */}
-              <div className="flex flex-col justify-center flex-1 gap-10 z-10">
+              {bracketMatches.final && resolvedFinal && (
+                <BracketStep number="01" tone="gold" title="Finale" time={bracketMatches.final.date}>
+                  <FinaleShowdown
+                    match={resolvedFinal}
+                    onClick={() => handleSelectMatch(bracketMatches.final!)}
+                    isChampionDecided={!!bracketChampion}
+                  />
+                </BracketStep>
+              )}
 
-                {/* FINALISSIMA + CAMPIONE */}
-                {bracketMatches.final && (
-                  <div className="flex items-center pl-8 gap-8">
-                    <div className="relative flex-1 min-w-0">
-                      <PlayoffCard
-                        match={resolveMatch(bracketMatches.final)}
-                        isFinal
-                        onClick={() => handleSelectMatch(bracketMatches.final!)}
-                      />
-                      <div className="absolute top-1/2 left-full w-8 h-[3px] bg-brand-yellow/50" />
-                    </div>
-                    <div className="shrink-0 w-[200px]">
-                      <div className={`border-[4px] bg-zinc-950 p-5 text-center rotate-2 ${champion ? "border-brand-yellow shadow-[12px_12px_0_var(--color-brand-yellow)]" : "border-brand-yellow/40 shadow-[12px_12px_0_rgba(0,0,0,0.4)]"}`}>
-                        <Trophy className={`w-12 h-12 mx-auto mb-3 ${champion ? "text-brand-yellow" : "text-brand-yellow/30"}`} />
-                        <span className="font-display text-xl text-zinc-400 uppercase tracking-widest block">Campione</span>
-                        <span className={`font-display text-xl uppercase tracking-widest block mt-1 leading-tight ${champion ? "text-brand-yellow" : "text-white opacity-20"}`}>
-                          {champion ? <TeamLink name={champion} /> : "???"}
-                        </span>
-                      </div>
-                    </div>
+              {bracketMatches.third && resolvedThird && (
+                <BracketStep number="02" tone="blue" title="Finale 3°-4° posto" time={bracketMatches.third.date}>
+                  <div className="max-w-[360px]">
+                    <PlayoffCard match={resolvedThird} tone="blue" onClick={() => handleSelectMatch(bracketMatches.third!)} />
                   </div>
-                )}
+                </BracketStep>
+              )}
 
-                {/* FINALE 3°-4° POSTO (più piccola, senza campione) */}
-                {bracketMatches.third && (
-                  <div className="flex items-center pl-8">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-display text-[10px] uppercase tracking-widest text-zinc-500 mb-2">Finale 3°-4° Posto</p>
-                      <PlayoffCard
-                        match={resolveMatch(bracketMatches.third)}
-                        small
-                        onClick={() => handleSelectMatch(bracketMatches.third!)}
-                      />
-                    </div>
-                    <div className="shrink-0 w-[200px]" />
+              {(resolvedSemiOne || resolvedSemiTwo) && (
+                <BracketStep number="03" tone="orange" title="Semifinali">
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    {resolvedSemiOne && (
+                      <PlayoffCard match={resolvedSemiOne} tone="orange" onClick={() => handleSelectMatch(semiOne!)} />
+                    )}
+                    {resolvedSemiTwo && (
+                      <PlayoffCard match={resolvedSemiTwo} tone="orange" onClick={() => handleSelectMatch(semiTwo!)} />
+                    )}
                   </div>
-                )}
-
-              </div>
-
+                </BracketStep>
+              )}
             </div>
           </div>
         </div>
         )}
+        {bracketMatches.semis.length === 0 && bracketMatches.final === null && bracketMatches.third === null && (
+          <div className="border-[3px] border-zinc-800 bg-zinc-900 py-16 px-8 text-center">
+            <Swords className="w-12 h-12 text-zinc-700 mx-auto mb-5" />
+            <h2 className="font-display text-3xl uppercase tracking-widest text-zinc-400 mb-4">
+              Bracket non ancora disponibile
+            </h2>
+            <p className="font-sans text-zinc-500 max-w-xl mx-auto">
+              Il tabellone comparira' quando saranno generate le partite playoff.
+            </p>
+          </div>
+        )}
         </div>
+        )}
         </div>
 
       </motion.div>

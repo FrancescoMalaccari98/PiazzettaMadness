@@ -14,11 +14,10 @@
 function handle_standings(PDO $pdo): void {
     require_method('GET');
 
-    $edition_id = intval_positive($_GET['edition_id'] ?? null)
-               ?? get_active_edition_id($pdo);
+    $edition_id = get_request_edition_id($pdo);
 
     if (!$edition_id) {
-        send_error('edition_id non valido o nessuna edizione attiva', 400);
+        send_error('edition_id non valido o nessuna edizione pubblica', 400);
     }
 
     // standings non ha edition_id: si filtra tramite group_id → tournament_groups

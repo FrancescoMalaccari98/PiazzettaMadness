@@ -1,31 +1,74 @@
-﻿import { useState, useEffect } from "react";
+﻿import { useState, useEffect, useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { motion } from "motion/react";
 import { allPlayers as defaultPlayers, type Player } from "../data/stats";
+import { EditionSelector } from "../components/EditionSelector";
+import { api, type ApiEdition } from "../lib/api";
 
 const API = import.meta.env.VITE_API_URL ?? "";
 
 export function Players() {
   const [players, setPlayers] = useState<Player[]>(defaultPlayers);
+  const [editions, setEditions] = useState<ApiEdition[]>([]);
+  const [editionsReady, setEditionsReady] = useState(false);
+  const [selectedEditionId, setSelectedEditionId] = useState<number | null>(null);
   // Filtro squadra pre-impostato dal parametro URL ?team= (link dalla pagina Stats)
   const [searchParams] = useSearchParams();
   const teamParam = searchParams.get("team");
   const [activeTeam, setActiveTeam] = useState<string>(teamParam ?? "all");
 
   useEffect(() => {
-    fetch(`${API}/api-web/giocatori`)
-      .then(r => r.ok ? r.json() as Promise<Player[]> : null)
-      .then(data => { if (data) setPlayers(data); })
-      .catch(() => {});
+    let cancelled = false;
+
+    api.getEditions()
+      .then(list => {
+        if (cancelled) return;
+        setEditions(list);
+        setSelectedEditionId(list.find(edition => edition.is_default)?.id ?? list[0]?.id ?? null);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setEditionsReady(true);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  // Se si arriva con un nuovo ?team= (es. cliccando un'altra squadra), aggiorna il filtro
   useEffect(() => {
-    if (teamParam) setActiveTeam(teamParam);
-  }, [teamParam]);
+    if (!editionsReady) return;
 
-  const teams = [...new Set(players.map(p => p.team))];
-  const teamColorMap = new Map(players.map(p => [p.team, p.teamColor || "#ea6324"]));
+    const controller = new AbortController();
+    const editionQuery = selectedEditionId ? `?edition_id=${selectedEditionId}` : "";
+
+    fetch(`${API}/api-web/giocatori${editionQuery}`, { signal: controller.signal })
+      .then(r => r.ok ? r.json() as Promise<Player[]> : null)
+      .then(data => { if (data) setPlayers(data); })
+      .catch(error => {
+        if (error?.name !== "AbortError") {
+          // Il fallback statico resta visibile se il backend non risponde.
+        }
+      });
+
+    return () => controller.abort();
+  }, [editionsReady, selectedEditionId]);
+
+  const selectedEdition = editions.find(edition => edition.id === selectedEditionId) ?? editions.find(edition => edition.is_default);
+  const teams = useMemo(() => [...new Set(players.map(p => p.team))], [players]);
+  const teamColorMap = useMemo(() => new Map(players.map(p => [p.team, p.teamColor || "#ea6324"])), [players]);
+
+  // Se si arriva con un nuovo ?team= o si cambia edizione, mantiene un filtro valido.
+  useEffect(() => {
+    if (teamParam && teams.includes(teamParam)) {
+      setActiveTeam(teamParam);
+      return;
+    }
+
+    if (activeTeam !== "all" && !teams.includes(activeTeam)) {
+      setActiveTeam("all");
+    }
+  }, [activeTeam, teamParam, teams]);
 
   const grouped = activeTeam === "all"
     ? teams.map(team => ({ team, players: players.filter(p => p.team === team) }))
@@ -45,17 +88,25 @@ export function Players() {
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
           className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 text-center"
         >
-          <p className="font-display text-brand-orange uppercase tracking-[0.3em] text-sm mb-3">Piazzetta Madness 2026</p>
+          <p className="font-display text-brand-orange uppercase tracking-[0.3em] text-sm mb-3">
+            {selectedEdition ? `Piazzetta Madness ${selectedEdition.year}` : "Piazzetta Madness"}
+          </p>
           <h1 className="font-display text-[56px] sm:text-[80px] md:text-[120px] uppercase leading-[0.8] tracking-[-2px] md:tracking-[-4px] text-brand-orange mb-6">
             Rosters
           </h1>
-          <p className="font-sans text-zinc-400 text-base sm:text-lg max-w-xl mx-auto">
+          <p className="font-sans text-zinc-400 text-sm sm:text-lg max-w-[260px] sm:max-w-xl mx-auto leading-relaxed">
             {players.length} atleti, {teams.length} squadre. Clicca su un giocatore per vedere le sue statistiche.
           </p>
         </motion.div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <EditionSelector
+          editions={editions}
+          selectedEditionId={selectedEditionId}
+          onChange={setSelectedEditionId}
+          className="mb-8 justify-end"
+        />
 
         {/* Filtro squadra */}
         <div className="flex flex-wrap gap-2 mb-10">
